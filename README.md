@@ -1,4 +1,4 @@
-# groupe3
+# TF26Numero1
 
 
 
@@ -15,14 +15,14 @@ Already a pro? Just edit this README.md and make it your own. Want to make it ea
 
 ```
 cd existing_repo
-git remote add origin https://disc.univ-fcomte.fr/cr700-gitlab/tf2026/groupe3.git
+git remote add origin https://disc.univ-fcomte.fr/cr700-gitlab/group3/tf26numero1.git
 git branch -M main
 git push -uf origin main
 ```
 
 ## Integrate with your tools
 
-* [Set up project integrations](https://disc.univ-fcomte.fr/cr700-gitlab/tf2026/groupe3/-/settings/integrations)
+* [Set up project integrations](https://disc.univ-fcomte.fr/cr700-gitlab/group3/tf26numero1/-/settings/integrations)
 
 ## Collaborate with your team
 
