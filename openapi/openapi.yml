@@ -1,0 +1,808 @@
+openapi: 3.1.0
+info:
+  title: Works Platform API
+  version: "0.1.0"
+  description: >
+    Contract owned jointly by backend and frontend (ticket #14).
+servers:
+  - url: /api
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: auth
+  - name: categories
+  - name: works
+  - name: moderation
+  - name: votes
+  - name: comments
+  - name: rankings
+  - name: profiles
+  - name: notifications
+
+paths:
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: Create an account (AUTH-001)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RegisterUser" }
+
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CurrentUser" }
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Log in (AUTH-002).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/LoginUser" }
+
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CurrentUser" }
+        "401":
+          description: >
+            Wrong email or wrong password.
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /auth/logout:
+    post:
+      tags: [auth]
+      summary: Log out (AUTH-004)
+      responses:
+        "204": { description: Logged out }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /auth/me:
+    get:
+      tags: [auth]
+      summary: Current session's user, if any
+      responses:
+        "200":
+          description: Currently authenticated user
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CurrentUser" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /auth/password/change:
+    post:
+      tags: [auth]
+      summary: Change password while logged in (AUTH-005)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ChangePassword" }
+
+      responses:
+        "204": { description: Password updated }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /auth/password/forgot:
+    post:
+      tags: [auth]
+      summary: Request a password reset e-mail (AUTH-005)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ForgotPassword" }
+      responses:
+        "202":
+          {
+            description: Reset e-mail sent if the address is known (no account enumeration),
+          }
+
+  /auth/password/reset:
+    post:
+      tags: [auth]
+      summary: Complete a password reset using the emailed token (AUTH-005)
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ResetPassword" }
+
+      responses:
+        "204": { description: Password reset }
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+  /profile:
+    get:
+      tags: [auth]
+      summary: My own profile, full fields (AUTH-007)
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OwnProfile" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+    patch:
+      tags: [auth]
+      summary: Edit my own profile, allow-listed editable fields only (AUTH-007)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateProfile" }
+
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OwnProfile" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /categories:
+    get:
+      tags: [categories]
+      summary: List categories, public (CAT-003)
+      security: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GetCategories" }
+
+    post:
+      tags: [categories]
+      summary: Create a category, admin only (CAT-001/ADM-001)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateCategory" }
+      responses:
+        "201":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Category" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+  /categories/{categoryId}:
+    delete:
+      tags: [categories]
+      summary: Delete a category, admin only; works are preserved (CAT-002/ADM-001)
+      parameters:
+        - $ref: "#/components/parameters/CategoryId"
+      responses:
+        "204": { description: Category deleted }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /categories/{categoryId}/works:
+    get:
+      tags: [categories]
+      summary: Published works of a category, paginated (CAT-005)
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/CategoryId"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkPage" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /works:
+    post:
+      tags: [works]
+      summary: Submit a new work, authenticated users (OEU-001..006)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { $ref: "#/components/schemas/SubmitWork" }
+      responses:
+        "201":
+          description: Created with status "pending"
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Work" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+  /works/{workId}:
+    get:
+      tags: [works]
+      summary: Work details (OEU-015/016). Non-public statuses hidden from non-owners.
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/WorkId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Work" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    patch:
+      tags: [works]
+      summary: Edit a work, author only; re-enters moderation (OEU-012/013)
+      parameters:
+        - $ref: "#/components/parameters/WorkId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateWork" }
+
+      responses:
+        "200":
+          description: Updated; status reset to "pending" per OEU-013
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Work" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+    delete:
+      tags: [works]
+      summary: Delete a work, author or admin (OEU-014/ADM-002)
+      parameters:
+        - $ref: "#/components/parameters/WorkId"
+      responses:
+        "204": { description: Deleted }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /works/{workId}/vote:
+    put:
+      tags: [votes]
+      summary: >
+        Cast, switch or withdraw my vote (VOTE-001/002/004/005). Send
+        value: 1 or -1 to cast/switch, null to withdraw. Refused with 403
+        if the target work is mine (VOTE-006) or 409 if a race produced a
+        duplicate active vote (VOTE-003).
+      parameters:
+        - $ref: "#/components/parameters/WorkId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/VoteForWork" }
+
+      responses:
+        "200":
+          description: Updated work with new score and the caller's current vote
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Work" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403":
+          description: Refused, voting on one's own work (VOTE-006)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "409":
+          description: A second active vote would be created (VOTE-003)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+  /works/{workId}/comments:
+    get:
+      tags: [comments]
+      summary: List a work's comments, paginated, with replies nested (COM-010/OEU-017)
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/WorkId"
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommentPage" }
+    post:
+      tags: [comments]
+      summary: >
+        Post a main comment or a reply (COM-001/004/009). A main comment
+        (parentCommentId omitted) on one's own work is refused with 403;
+        replying to a comment on one's own work is allowed.
+      parameters:
+        - $ref: "#/components/parameters/WorkId"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema: { $ref: "#/components/schemas/CreateComment" }
+      responses:
+        "201":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Comment" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403":
+          description: Main comment on one's own work (COM-009)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+  /comments/{commentId}:
+    patch:
+      tags: [comments]
+      summary: Edit my own comment (COM-002)
+      parameters:
+        - $ref: "#/components/parameters/CommentId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateComment" }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Comment" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    delete:
+      tags: [comments]
+      summary: Delete a comment, author or admin (COM-003/011/ADM-003)
+      parameters:
+        - $ref: "#/components/parameters/CommentId"
+      responses:
+        "204": { description: Deleted }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /moderation/works:
+    get:
+      tags: [moderation]
+      summary: List works pending moderation, admin only (ADM-004)
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/WorkPage" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /moderation/works/{workId}/accept:
+    post:
+      tags: [moderation]
+      summary: Accept a pending work, admin only; publishes it and notifies the author (MOD-004/NOTIF-001)
+      parameters:
+        - $ref: "#/components/parameters/WorkId"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Work" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /moderation/works/{workId}/refuse:
+    post:
+      tags: [moderation]
+      summary: Refuse a pending work, admin only; notifies the author (MOD-005/NOTIF-002)
+      parameters:
+        - $ref: "#/components/parameters/WorkId"
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RefuseWork" }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Work" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /rankings:
+    get:
+      tags: [rankings]
+      summary: Ranking, filterable by category and period (CLAS-001/002/003-005/011/012)
+      security: []
+      parameters:
+        - name: categoryId
+          in: query
+          schema: { type: string }
+          description: Omit for the global (all-category) ranking
+        - name: period
+          in: query
+          schema: { type: string, enum: [day, week, month, all] }
+          default: all
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GetRankings" }
+
+  /rankings/archive:
+    get:
+      tags: [rankings]
+      summary: List archived past-period rankings (CLAS-007)
+      security: []
+      parameters:
+        - name: period
+          in: query
+          required: true
+          schema: { type: string, enum: [week, month] }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/RankingSnapshot" }
+
+  /users/{username}:
+    get:
+      tags: [profiles]
+      summary: Public profile, e-mail never included (PROF-001/002/006)
+      security: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicProfile" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /users/{username}/activity:
+    get:
+      tags: [profiles]
+      summary: Published works, comments and favorites (positively-voted works) (PROF-003)
+      security: []
+      parameters:
+        - name: username
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/GetActivity" }
+
+  /notifications:
+    get:
+      tags: [notifications]
+      summary: My notifications (NOTIF-001/002/003)
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Notification" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /notifications/{notificationId}/read:
+    post:
+      tags: [notifications]
+      summary: Mark one notification as read
+      parameters:
+        - name: notificationId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "204": { description: Marked as read }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+# ------------------------------------------------------------------------------------------------------------
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+  parameters:
+    WorkId:
+      name: workId
+      in: path
+      required: true
+      schema: { type: string }
+    CategoryId:
+      name: categoryId
+      in: path
+      required: true
+      schema: { type: string }
+    CommentId:
+      name: commentId
+      in: path
+      required: true
+      schema: { type: string }
+    Page:
+      name: page
+      in: query
+      schema: { type: integer, minimum: 1, default: 1 }
+    PageSize:
+      name: pageSize
+      in: query
+      schema: { type: integer, minimum: 1, maximum: 100, default: 20 }
+
+  responses:
+    Unauthorized:
+      description: Not authenticated (401), uniform body per ticket #15
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Forbidden:
+      description: Authenticated but lacking rights (403), uniform body per ticket #15
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: Resource does not exist (404)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    ValidationError:
+      description: One or more fields are invalid (422)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    Error:
+      type: object
+      description: >
+        Every error response in this API, 401, 403, 404, 409, 422, 500,
+        uses this one envelope. `fields` is only present for 422 and keys
+        match the request body's field names exactly, so the frontend can
+        attach each message to its input without a translation table.
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message]
+          properties:
+            code:
+              type: string
+              enum:
+                [
+                  VALIDATION_ERROR,
+                  UNAUTHORIZED,
+                  FORBIDDEN,
+                  NOT_FOUND,
+                  CONFLICT,
+                  INTERNAL,
+                ]
+            message: { type: string }
+            fields:
+              type: object
+              additionalProperties: { type: string }
+      example:
+        error:
+          code: VALIDATION_ERROR
+          message: Some fields need to be corrected.
+          fields:
+            email: The e-mail address is invalid.
+
+    CurrentUser:
+      type: object
+      properties:
+        id: { type: string }
+        username: { type: string }
+        role: { type: string, enum: [user, admin] }
+
+    RegisterUser:
+      type: object
+      required: [username, email, password]
+      properties:
+        username: { type: string, minLength: 2, maxLength: 30 }
+        email: { type: string, format: email }
+        password: { type: string, minLength: 8 }
+
+    LoginUser:
+      type: object
+      required: [email, password]
+      properties:
+        email: { type: string, format: email }
+        password: { type: string }
+
+    ChangePassword:
+      type: object
+      required: [oldPassword, newPassword]
+      properties:
+        oldPassword: { type: string }
+        newPassword: { type: string, minLength: 8 }
+
+    ForgotPassword:
+      type: object
+      required: [email]
+      properties: { email: { type: string, format: email } }
+
+    ResetPassword:
+      type: object
+      required: [token, newPassword]
+      properties:
+        token: { type: string }
+        newPassword: { type: string, minLength: 8 }
+
+    OwnProfile:
+      allOf:
+        - $ref: "#/components/schemas/CurrentUser"
+        - type: object
+          properties:
+            email: { type: string, format: email }
+            username: { type: string }
+
+    UpdateProfile:
+      type: object
+      properties:
+        username: { type: string, minLength: 2, maxLength: 30 }
+
+    PublicProfile:
+      type: object
+      description: Never includes e-mail (PROF-006)
+      properties:
+        username: { type: string }
+
+    Category:
+      type: object
+      properties:
+        id: { type: string }
+        name: { type: string }
+
+    GetCategories:
+      type: array
+      items: { $ref: "#/components/schemas/Category" }
+
+    CreateCategory:
+      type: object
+      required: [name]
+      properties: { name: { type: string, minLength: 1 } }
+
+    Work:
+      type: object
+      properties:
+        id: { type: string }
+        title: { type: string }
+        description: { type: string }
+        imageUrl: { type: string, nullable: true }
+        author: { type: object, properties: { username: { type: string } } }
+        categories:
+          { type: array, items: { $ref: "#/components/schemas/Category" } }
+        status: { type: string, enum: [pending, accepted, refused] }
+        score: { type: integer }
+        totalVotes: { type: integer }
+        currentUserVote: { type: integer, enum: [1, -1], nullable: true }
+
+    SubmitWork:
+      type: object
+      required: [title, description, categoryIds]
+      properties:
+        title: { type: string, minLength: 1 }
+        description: { type: string, minLength: 1 }
+        categoryIds:
+          type: array
+          items: { type: string }
+          minItems: 1
+        image: { type: string, format: binary }
+
+    UpdateWork:
+      type: object
+      properties:
+        title: { type: string }
+        description: { type: string }
+        categoryIds: { type: array, items: { type: string } }
+
+    VoteForWork:
+      type: object
+      required: [value]
+      properties:
+        value: { type: ["integer", "null"], enum: [1, -1, null] }
+
+    WorkPage:
+      type: object
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/Work" } }
+        page: { type: integer }
+        pageSize: { type: integer }
+        total: { type: integer }
+
+    RefuseWork:
+      type: object
+      properties: { reason: { type: string } }
+
+    Comment:
+      type: object
+      properties:
+        id: { type: string }
+        content: { type: string }
+        imageUrl: { type: string, nullable: true }
+        author: { type: object, properties: { username: { type: string } } }
+        parentCommentId: { type: string, nullable: true }
+        replies:
+          { type: array, items: { $ref: "#/components/schemas/Comment" } }
+        createdAt: { type: string, format: date-time }
+
+    CreateComment:
+      type: object
+      required: [content]
+      properties:
+        content: { type: string, minLength: 1 }
+        parentCommentId: { type: string, nullable: true }
+        image: { type: string, format: binary }
+
+    UpdateComment:
+      type: object
+      required: [content]
+      properties: { content: { type: string, minLength: 1 } }
+
+    CommentPage:
+      type: object
+      properties:
+        items: { type: array, items: { $ref: "#/components/schemas/Comment" } }
+        page: { type: integer }
+        pageSize: { type: integer }
+        total: { type: integer }
+
+    RankingEntry:
+      type: object
+      properties:
+        rank: { type: integer }
+        work: { $ref: "#/components/schemas/Work" }
+
+    GetRankings:
+      type: object
+      properties:
+        period: { type: string }
+        categoryId: { type: string, nullable: true }
+        entries:
+          type: array
+          items: { $ref: "#/components/schemas/RankingEntry" }
+
+    RankingSnapshot:
+      type: object
+      properties:
+        period: { type: string }
+        periodStart: { type: string, format: date }
+        entries:
+          { type: array, items: { $ref: "#/components/schemas/RankingEntry" } }
+
+    GetActivity:
+      type: object
+      properties:
+        works: { type: array, items: { $ref: "#/components/schemas/Work" } }
+        comments:
+          { type: array, items: { $ref: "#/components/schemas/Comment" } }
+        favorites: { type: array, items: { $ref: "#/components/schemas/Work" } }
+
+    Notification:
+      type: object
+      properties:
+        id: { type: string }
+        type:
+          { type: string, enum: [work_accepted, work_refused, admin_action] }
+        message: { type: string }
+        read: { type: boolean }
+        createdAt: { type: string, format: date-time }
