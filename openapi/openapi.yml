@@ -5,10 +5,10 @@ info:
   description: >
     Contract owned jointly by backend and frontend (ticket #14).
 servers:
-  - url: /api
+  - url: http://localhost:8080
 
 security:
-  - bearerAuth: []
+  - sessionCookie: []
 
 tags:
   - name: auth
@@ -38,9 +38,11 @@ paths:
           description: Account created
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/CurrentUser" }
-        "422":
+              schema: { $ref: "#/components/schemas/AuthenticationUser" }
+        "400":
           $ref: "#/components/responses/ValidationError"
+        "409":
+          $ref: "#/components/responses/Conflict"
 
   /auth/login:
     post:
@@ -58,20 +60,22 @@ paths:
           description: Authenticated
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/CurrentUser" }
+              schema: { $ref: "#/components/schemas/AuthenticationUser" }
         "401":
           description: >
-            Wrong email or wrong password.
+            Nom d'utilisateur ou mot de passe incorrect.
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Error" }
+        "400":
+          $ref: "#/components/responses/ValidationError"
 
   /auth/logout:
     post:
       tags: [auth]
       summary: Log out (AUTH-004)
       responses:
-        "204": { description: Logged out }
+        "200": { description: Déconnexion réussie }
         "401": { $ref: "#/components/responses/Unauthorized" }
 
   /auth/me:
@@ -519,9 +523,10 @@ paths:
 # ------------------------------------------------------------------------------------------------------------
 components:
   securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: JSESSIONID
 
   parameters:
     WorkId:
@@ -550,12 +555,12 @@ components:
 
   responses:
     Unauthorized:
-      description: Not authenticated (401), uniform body per ticket #15
+      description: Non authentifié (401)
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
     Forbidden:
-      description: Authenticated but lacking rights (403), uniform body per ticket #15
+      description: Authentifié mais droits insuffisants (403)
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
@@ -564,8 +569,13 @@ components:
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
+    Conflict:
+      description: Nom d'utilisateur ou adresse e-mail déjà utilisé (409)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
     ValidationError:
-      description: One or more fields are invalid (422)
+      description: Un ou plusieurs champs sont invalides (400)
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
@@ -573,38 +583,19 @@ components:
   schemas:
     Error:
       type: object
-      description: >
-        Every error response in this API, 401, 403, 404, 409, 422, 500,
-        uses this one envelope. `fields` is only present for 422 and keys
-        match the request body's field names exactly, so the frontend can
-        attach each message to its input without a translation table.
-      required: [error]
+      description: Réponse d'erreur du backend. Les messages sont en français.
+      required: [status, error]
       properties:
-        error:
+        status: { type: integer, example: 400 }
+        error: { type: string, example: Échec de la validation }
+        fields:
           type: object
-          required: [code, message]
-          properties:
-            code:
-              type: string
-              enum:
-                [
-                  VALIDATION_ERROR,
-                  UNAUTHORIZED,
-                  FORBIDDEN,
-                  NOT_FOUND,
-                  CONFLICT,
-                  INTERNAL,
-                ]
-            message: { type: string }
-            fields:
-              type: object
-              additionalProperties: { type: string }
+          additionalProperties: { type: string }
       example:
-        error:
-          code: VALIDATION_ERROR
-          message: Some fields need to be corrected.
-          fields:
-            email: The e-mail address is invalid.
+        status: 400
+        error: Échec de la validation
+        fields:
+          username: Le nom d'utilisateur est requis.
 
     CurrentUser:
       type: object
@@ -612,6 +603,13 @@ components:
         id: { type: string }
         username: { type: string }
         role: { type: string, enum: [user, admin] }
+
+    AuthenticationUser:
+      type: object
+      required: [userId, username]
+      properties:
+        userId: { type: integer }
+        username: { type: string }
 
     RegisterUser:
       type: object
@@ -623,9 +621,9 @@ components:
 
     LoginUser:
       type: object
-      required: [email, password]
+      required: [username, password]
       properties:
-        email: { type: string, format: email }
+        username: { type: string }
         password: { type: string }
 
     ChangePassword:
