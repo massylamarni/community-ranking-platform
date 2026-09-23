@@ -1,0 +1,120 @@
+image: maven:3.9-eclipse-temurin-26
+
+stages:
+  - test
+  # - analysis
+  - build
+  - docker
+  - deploy
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+  MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end"
+  IMAGE_NAME: $CI_REGISTRY_IMAGE/backend
+
+cache:
+  key: maven
+  paths:
+    - .m2/repository/
+
+# ============================================================
+# TEST (BDD / Playwright / JUnit)
+# ============================================================
+test:
+  stage: test
+  image: mcr.microsoft.com/playwright/java:v1.62.0-noble
+  allow_failure: true
+  script:
+    - echo "Executing tests and BDD scenarios with Maven"
+    - cd backend
+    - mvn $MAVEN_CLI_OPTS verify
+  artifacts:
+    when: always
+    name: "Cucumber-Report-$CI_COMMIT_REF_SLUG"
+    reports:
+      junit:
+        - backend/target/surefire-reports/*.xml
+        - backend/target/failsafe-reports/*.xml
+    paths:
+      - backend/target/site
+      - backend/target/surefire-reports
+      - backend/target/failsafe-reports
+
+# ============================================================
+# ANALYSIS (SonarQube)
+# ============================================================
+# sonar-analysis:
+#   stage: analysis
+#   variables:
+#     GIT_DEPTH: "0"
+#   rules:
+#     - if: '$CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH == "dev"'
+#       when: on_success
+#       allow_failure: true
+#     - when: manual
+#       allow_failure: true
+#   script:
+#     - cd backend
+#     - mvn $MAVEN_CLI_OPTS verify sonar:sonar
+#         -Dsonar.projectKey=cr700:tf26:group3:backend
+#         -Dsonar.projectName="TF26 Group 3 Backend"
+#         -Dsonar.host.url=https://disc.univ-fcomte.fr/cr700-sonarqube
+#         -Dsonar.token=$SONAR_TOKEN
+
+# ============================================================
+# BUILD JAR
+# ============================================================
+build-jar:
+  stage: build
+  script:
+    - cd backend
+    - mvn $MAVEN_CLI_OPTS clean package -DskipTests
+  artifacts:
+    paths:
+      - backend/target/*.jar
+    expire_in: 1 hour
+
+# ============================================================
+# DOCKER (Push to GitLab Registry)
+# ============================================================
+docker-build-push:
+  stage: docker
+  image: docker:27
+  services:
+    - docker:27-dind
+  dependencies:
+    - build-jar
+  variables:
+    DOCKER_TLS_CERTDIR: "/certs"
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - |
+      TAG=$CI_COMMIT_REF_SLUG
+      if [ -n "$CI_COMMIT_TAG" ]; then
+        TAG=$CI_COMMIT_TAG
+      fi
+    - docker build -t $IMAGE_NAME:$TAG -t $IMAGE_NAME:latest ./backend
+    - docker push $IMAGE_NAME:$TAG
+    - docker push $IMAGE_NAME:latest
+
+# ============================================================
+# DEPLOY
+# ============================================================
+deploy-prod:
+  stage: deploy
+  image: alpine:latest
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      when: manual
+    - when: never
+  before_script:
+    - apk add --no-cache openssh-client
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan $IP_SERVER >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - ssh $SSH_USER@$IP_SERVER "docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY && docker pull $IMAGE_NAME:latest && cd $DEST_DIR && docker compose up -d"
