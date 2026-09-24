@@ -8,6 +8,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -64,5 +65,16 @@ public class AuthController {
         if (session != null) session.invalidate();
         SecurityContextHolder.clearContext();
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> me(Authentication auth) {
+        User user = userService.findByUsername(auth.getName());
+        return ResponseEntity.ok(Map.of(
+                "id", String.valueOf(user.getUserId()),
+                "username", user.getUsername(),
+                "email", user.getEmail(),
+                "role", user.isAdmin() ? "admin" : "user"
+        ));
     }
 }

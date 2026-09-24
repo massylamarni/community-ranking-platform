@@ -12,16 +12,23 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex) {
+    public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException ex, HttpServletRequest request) {
+        HttpStatus status = (request != null && request.getRequestURI() != null
+                && (request.getRequestURI().startsWith("/auth/login") || request.getRequestURI().startsWith("/auth/register")))
+                ? HttpStatus.BAD_REQUEST
+                : HttpStatus.UNPROCESSABLE_ENTITY;
+
         Map<String, String> fields = new LinkedHashMap<>();
         for (FieldError fe : ex.getBindingResult().getFieldErrors())
             fields.put(fe.getField(), fe.getDefaultMessage());
-        return ResponseEntity.badRequest().body(Map.of(
-            "status", HttpStatus.BAD_REQUEST.value(),
+        return ResponseEntity.status(status).body(Map.of(
+            "status", status.value(),
             "error", "Échec de la validation",
             "fields", fields));
     }
