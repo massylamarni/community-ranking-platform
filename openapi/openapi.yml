@@ -657,6 +657,7 @@ components:
       type: object
       properties:
         username: { type: string, minLength: 2, maxLength: 30 }
+        email: { type: string, format: email }
 
     PublicProfile:
       type: object

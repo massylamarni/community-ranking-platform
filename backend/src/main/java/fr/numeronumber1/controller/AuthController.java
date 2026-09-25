@@ -8,15 +8,20 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import fr.numeronumber1.dto.request.ChangePasswordRequest;
+import fr.numeronumber1.dto.request.ForgotPasswordRequest;
 import fr.numeronumber1.dto.request.LoginRequest;
 import fr.numeronumber1.dto.request.RegisterRequest;
+import fr.numeronumber1.dto.request.ResetPasswordRequest;
 import fr.numeronumber1.model.User;
 import fr.numeronumber1.service.AuthService;
+import fr.numeronumber1.service.PasswordService;
 import fr.numeronumber1.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,12 +34,14 @@ public class AuthController {
 
     private final AuthService authService;
     private final UserService userService;
+    private final PasswordService passwordService;
     private final HttpSessionSecurityContextRepository contextRepo
             = new HttpSessionSecurityContextRepository();
 
-    public AuthController(AuthService authService, UserService userService) {
+    public AuthController(AuthService authService, UserService userService, PasswordService passwordService) {
         this.authService = authService;
         this.userService = userService;
+        this.passwordService = passwordService;
     }
 
     @PostMapping("/register")
@@ -64,5 +71,45 @@ public class AuthController {
         if (session != null) session.invalidate();
         SecurityContextHolder.clearContext();
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> me(Authentication auth) {
+        User user = userService.findByUsername(auth.getName());
+        return ResponseEntity.ok(Map.of(
+                "id", String.valueOf(user.getUserId()),
+                "username", user.getUsername(),
+                "email", user.getEmail(),
+                "role", user.isAdmin() ? "admin" : "user"
+        ));
+    }
+
+    @PostMapping("/password/change")
+    public ResponseEntity<Void> changePassword(@Valid @RequestBody ChangePasswordRequest req,
+                                               Authentication auth) {
+        passwordService.changePassword(
+                auth.getName(),
+                req.getOldPassword(),
+                req.getNewPassword(),
+                req.getConfirmPassword()
+        );
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/password/forgot")
+    public ResponseEntity<Void> forgotPassword(@Valid @RequestBody ForgotPasswordRequest req) {
+        passwordService.forgotPassword(req.getEmail());
+        // Toujours 202 pour ne pas révéler si l'adresse est connue
+        return ResponseEntity.accepted().build();
+    }
+
+    @PostMapping("/password/reset")
+    public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest req) {
+        passwordService.resetPassword(
+                req.getToken(),
+                req.getNewPassword(),
+                req.getConfirmPassword()
+        );
+        return ResponseEntity.noContent().build();
     }
 }
