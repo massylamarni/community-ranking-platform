@@ -1,30 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { authRepository } from "@/repositories";
 import type { OwnProfile } from "@/types/api";
 
 export default function Profile() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading } = useAuth();
   const [profile, setProfile] = useState<OwnProfile | null>(null);
   const [profileError, setProfileError] = useState<unknown>(null);
   const [usernameEdit, setUsernameEdit] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  async function loadProfile() {
-    setProfileError(null);
-    try {
-      const p = await authRepository.getOwnProfile();
-      setProfile(p);
-      setUsernameEdit(p.username);
-    } catch (err) {
-      setProfileError(err);
+  useEffect(() => {
+    async function loadProfile() {
+      setProfileError(null);
+      try {
+        const p = await authRepository.getOwnProfile();
+        setProfile(p);
+        setUsernameEdit(p.username);
+      } catch (err) {
+        setProfileError(err);
+      }
     }
-  }
+    loadProfile();
+  }, []);
 
-  async function saveProfile(e: React.FormEvent) {
+  async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setProfileError(null);
+    setIsLoading(true);
     try {
       const p = await authRepository.updateOwnProfile({
         username: usernameEdit,
@@ -32,44 +48,49 @@ export default function Profile() {
       setProfile(p);
     } catch (err) {
       setProfileError(err);
+    } finally {
+      setIsLoading(false);
     }
   }
 
-  return (
-    <div>
-      <h2>Session</h2>
-      {loading ? (
-        <p>Loading...</p>
-      ) : user ? (
-        <div>
-          <div>{user.id}</div>
-          <div>{user.role}</div>
-          <div>{user.username}</div>
-          <button onClick={() => logout()}>Log out</button>
-        </div>
-      ) : (
-        <p>Not logged in.</p>
-      )}
+  if (!user) return "Not logged in.";
+  if (loading) return "Loading...";
 
-      <h2>My profile</h2>
-      <button onClick={loadProfile}>Load my profile</button>
-      <pre>{JSON.stringify(profileError, null, 2)}</pre>
-      <div>{profile?.id}</div>
-      <div>{profile?.role}</div>
-      <div>{profile?.username}</div>
-      <div>{profile?.email}</div>
-      {profile ? (
-        <form onSubmit={saveProfile}>
-          <label>
-            Username
-            <input
-              value={usernameEdit}
-              onChange={(e) => setUsernameEdit(e.target.value)}
-            />
-          </label>
-          <button type="submit">Save</button>
-        </form>
-      ) : null}
-    </div>
+  return (
+    <Card className="w-full max-w-sm">
+      <CardHeader>
+        <CardTitle>Profile</CardTitle>
+        <CardDescription>Manage your profile information.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        {profile ? (
+          <form onSubmit={handleSave}>
+            <div className="flex flex-col gap-6">
+              <div className="grid gap-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  value={usernameEdit}
+                  onChange={(e) => setUsernameEdit(e.target.value)}
+                  required
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" value={profile.email} disabled />
+              </div>
+            </div>
+          </form>
+        ) : (
+          "Failed to fetch profile"
+        )}
+      </CardContent>
+      <CardFooter className="flex-col gap-2">
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          Save
+        </Button>
+        <pre>{JSON.stringify(profileError, null, 2)}</pre>
+      </CardFooter>
+    </Card>
   );
 }
