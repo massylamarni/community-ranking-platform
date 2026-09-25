@@ -5,6 +5,7 @@ import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
@@ -31,6 +32,11 @@ public class GlobalExceptionHandler {
             "status", status.value(),
             "error", "Échec de la validation",
             "fields", fields));
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, Object>> handleMissingBody(HttpMessageNotReadableException ex) {
+        return error(HttpStatus.BAD_REQUEST, "Corps de la requête manquant ou illisible");
     }
 
     @ExceptionHandler(BadCredentialsException.class)
