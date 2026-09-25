@@ -16,6 +16,7 @@ import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Eye, EyeClosed } from "lucide-react";
+import { toast } from "sonner";
 
 export default function Register() {
   const { register } = useAuth();
@@ -32,8 +33,17 @@ export default function Register() {
     e.preventDefault();
     setAuthError(null);
     setAuthBusy(true);
+
+    const promise = register(registerForm);
+
+    toast.promise(promise, {
+      loading: "Creating your account...",
+      success: () => "Account created successfully",
+      error: (err) => err?.message ?? "Registration failed",
+    });
+
     try {
-      await register(registerForm);
+      await promise;
     } catch (err) {
       setAuthError(err);
     } finally {
@@ -52,7 +62,7 @@ export default function Register() {
         </CardAction>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleRegister}>
+        <form>
           <div className="flex flex-col gap-6">
             <div className="grid gap-2">
               <Label htmlFor="username">Username</Label>
@@ -102,7 +112,12 @@ export default function Register() {
         </form>
       </CardContent>
       <CardFooter className="flex-col gap-2">
-        <Button type="submit" className="w-full" disabled={authBusy}>
+        <Button
+          type="submit"
+          onClick={handleRegister}
+          className="w-full"
+          disabled={authBusy}
+        >
           Create account
         </Button>
         <pre>{JSON.stringify(authError, null, 2)}</pre>

@@ -15,6 +15,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { authRepository } from "@/repositories";
 import type { OwnProfile } from "@/types/api";
+import { toast } from "sonner";
 
 export default function Profile() {
   const { user, loading } = useAuth();
@@ -26,8 +27,16 @@ export default function Profile() {
   useEffect(() => {
     async function loadProfile() {
       setProfileError(null);
+
+      const promise = authRepository.getOwnProfile();
+
+      toast.promise(promise, {
+        loading: "Fetching profile...",
+        error: (err) => err?.message ?? "Failed to fetch profile",
+      });
+
       try {
-        const p = await authRepository.getOwnProfile();
+        const p = await promise;
         setProfile(p);
         setUsernameEdit(p.username);
       } catch (err) {
@@ -41,10 +50,19 @@ export default function Profile() {
     e.preventDefault();
     setProfileError(null);
     setIsLoading(true);
+
+    const promise = authRepository.updateOwnProfile({
+      username: usernameEdit,
+    });
+
+    toast.promise(promise, {
+      loading: "Saving profile...",
+      success: () => "Saved successfully",
+      error: (err) => err?.message ?? "Save failed",
+    });
+
     try {
-      const p = await authRepository.updateOwnProfile({
-        username: usernameEdit,
-      });
+      const p = await promise;
       setProfile(p);
     } catch (err) {
       setProfileError(err);
@@ -64,7 +82,7 @@ export default function Profile() {
       </CardHeader>
       <CardContent>
         {profile ? (
-          <form onSubmit={handleSave}>
+          <form>
             <div className="flex flex-col gap-6">
               <div className="grid gap-2">
                 <Label htmlFor="username">Username</Label>
@@ -86,7 +104,12 @@ export default function Profile() {
         )}
       </CardContent>
       <CardFooter className="flex-col gap-2">
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button
+          type="submit"
+          onClick={handleSave}
+          className="w-full"
+          disabled={isLoading}
+        >
           Save
         </Button>
         <pre>{JSON.stringify(profileError, null, 2)}</pre>

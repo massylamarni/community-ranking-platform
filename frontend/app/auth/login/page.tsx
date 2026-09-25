@@ -16,6 +16,7 @@ import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Eye, EyeClosed } from "lucide-react";
+import { toast } from "sonner";
 
 export default function Login() {
   const { login } = useAuth();
@@ -31,8 +32,17 @@ export default function Login() {
     e.preventDefault();
     setAuthError(null);
     setAuthBusy(true);
+
+    const promise = login(loginForm);
+
+    toast.promise(promise, {
+      loading: "Logging to your account...",
+      success: () => "Login success",
+      error: (err) => err?.message ?? "Login failed",
+    });
+
     try {
-      await login(loginForm);
+      await promise;
     } catch (err) {
       setAuthError(err);
     } finally {
@@ -51,7 +61,7 @@ export default function Login() {
         </CardAction>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleLogin}>
+        <form>
           <div className="flex flex-col gap-6">
             <div className="grid gap-2">
               <Label htmlFor="username">Username</Label>
@@ -97,7 +107,12 @@ export default function Login() {
         </form>
       </CardContent>
       <CardFooter className="flex-col gap-2">
-        <Button type="submit" className="w-full" disabled={authBusy}>
+        <Button
+          type="submit"
+          onClick={handleLogin}
+          className="w-full"
+          disabled={authBusy}
+        >
           Login
         </Button>
         <pre>{JSON.stringify(authError, null, 2)}</pre>

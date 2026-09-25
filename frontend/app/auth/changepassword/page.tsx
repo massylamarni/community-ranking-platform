@@ -14,6 +14,7 @@ import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Eye, EyeClosed } from "lucide-react";
+import { toast } from "sonner";
 
 export default function ChangePassword() {
   const { changePassword } = useAuth();
@@ -29,8 +30,17 @@ export default function ChangePassword() {
     setPwError(null);
     setPwResult(null);
     setIsLoading(true);
+
+    const promise = changePassword(pwForm);
+
+    toast.promise(promise, {
+      loading: "Saving...",
+      success: () => "Password change success",
+      error: (err) => err?.message ?? "Failed to change password",
+    });
+
     try {
-      await changePassword(pwForm);
+      await promise;
       setPwResult("Password updated.");
     } catch (err) {
       setPwError(err);
@@ -45,7 +55,7 @@ export default function ChangePassword() {
         <CardTitle>Change password</CardTitle>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleChangePassword}>
+        <form>
           <div className="flex flex-col gap-6">
             <div className="grid gap-2">
               <Label htmlFor="oldpassword">Old password</Label>
@@ -93,7 +103,12 @@ export default function ChangePassword() {
         </form>
       </CardContent>
       <CardFooter className="flex-col gap-2">
-        <Button type="submit" className="w-full" disabled={isLoading}>
+        <Button
+          type="submit"
+          onClick={handleChangePassword}
+          className="w-full"
+          disabled={isLoading}
+        >
           Save
         </Button>
         {pwResult ? <p>{pwResult}</p> : null}
