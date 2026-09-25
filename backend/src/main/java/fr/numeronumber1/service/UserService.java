@@ -8,6 +8,10 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
+import org.springframework.transaction.annotation.Transactional;
+
+import fr.numeronumber1.exception.EmailAlreadyExistsException;
+import fr.numeronumber1.exception.UsernameAlreadyExistsException;
 import fr.numeronumber1.model.User;
 import fr.numeronumber1.repository.UserRepository;
 
@@ -41,5 +45,25 @@ public class UserService implements UserDetailsService {
     public User findByUsername(String username) {
         return userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Utilisateur introuvable : " + username));
+    }
+    
+    @Transactional
+    public User updateProfile(String currentUsername, String newUsername, String newEmail) {
+        User user = findByUsername(currentUsername);
+
+        String finalUsername = (newUsername == null || newUsername.isBlank()) ? currentUsername : newUsername;
+        String finalEmail = (newEmail == null || newEmail.isBlank()) ? user.getEmail() : newEmail;
+
+        if (!currentUsername.equals(finalUsername) && userRepository.existsByUsername(finalUsername)) {
+            throw new UsernameAlreadyExistsException("Nom d'utilisateur déjà enregistré");
+        }
+
+        if (!user.getEmail().equals(finalEmail) && userRepository.existsByEmail(finalEmail)) {
+            throw new EmailAlreadyExistsException("Email déjà enregistré");
+        }
+
+        user.setUsername(finalUsername);
+        user.setEmail(finalEmail);
+        return userRepository.save(user);
     }
 }
