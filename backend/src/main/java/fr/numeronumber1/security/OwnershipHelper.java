@@ -34,7 +34,7 @@ public class OwnershipHelper {
                 .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
     }
 
-    public boolean isWorkAuthor(Integer workId) {
+    public boolean isWorkAuthor(Long workId) {
         String currentUsername = getCurrentUsername();
         if (currentUsername == null) return false;
 
@@ -43,7 +43,7 @@ public class OwnershipHelper {
         return currentUsername.equals(oeuvre.getAuthor().getUsername());
     }
 
-    public boolean isWorkAuthorOrAdmin(Integer workId) {
+    public boolean isWorkAuthorOrAdmin(Long workId) {
         return isAdmin() || isWorkAuthor(workId);
     }
 
@@ -60,13 +60,13 @@ public class OwnershipHelper {
         return isAdmin() || isCommentAuthor(commentId);
     }
 
-    public void checkWorkAuthor(Integer workId) {
+    public void checkWorkAuthor(Long workId) {
         if (!isWorkAuthor(workId)) {
             throw new UnauthorizedActionException("Action réservée à l'auteur de cette œuvre");
         }
     }
 
-    public void checkWorkAuthorOrAdmin(Integer workId) {
+    public void checkWorkAuthorOrAdmin(Long workId) {
         if (!isWorkAuthorOrAdmin(workId)) {
             throw new UnauthorizedActionException("Action réservée à l'auteur ou à un administrateur");
         }
@@ -84,13 +84,13 @@ public class OwnershipHelper {
         }
     }
 
-    public void checkCanVoteOnWork(Integer workId) {
+    public void checkCanVoteOnWork(Long workId) {
         if (isWorkAuthor(workId)) {
             throw new UnauthorizedActionException("Impossible de voter pour sa propre œuvre");
         }
     }
 
-    public void checkCanCreateCommentOnWork(Integer workId, Integer parentCommentId) {
+    public void checkCanCreateCommentOnWork(Long workId, Integer parentCommentId) {
         if (parentCommentId == null && isWorkAuthor(workId)) {
             throw new UnauthorizedActionException("Impossible d'ajouter un commentaire principal sur sa propre œuvre");
         }

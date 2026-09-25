@@ -15,6 +15,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
 
 @Entity
@@ -23,9 +25,9 @@ public class Oeuvre {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "oeuvre_id")
-    private Integer oeuvreId;
+    private Long oeuvreId;
 
-    @Column(nullable = false, length = 150)
+    @Column(nullable = false, unique = true, length = 150)
     private String title;
 
     @Column(columnDefinition = "TEXT")
@@ -40,7 +42,7 @@ public class Oeuvre {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 8)
-    private OeuvreStatus status = OeuvreStatus.pending;
+    private OeuvreStatus status = OeuvreStatus.created;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -60,11 +62,22 @@ public class Oeuvre {
     @OneToMany(mappedBy = "oeuvre")
     private List<Ranking> rankings = new ArrayList<>();
 
-        public Integer getOeuvreId() {
+    @PrePersist
+    void onCreate() {
+        createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+
+    public Long getOeuvreId() {
         return oeuvreId;
     }
 
-    public void setOeuvreId(Integer oeuvreId) {
+    public void setOeuvreId(Long oeuvreId) {
         this.oeuvreId = oeuvreId;
     }
 
