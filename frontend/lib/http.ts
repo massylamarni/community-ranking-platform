@@ -10,6 +10,7 @@ export interface RequestOptions {
   method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
   body?: unknown; // JSON | multipart/form-data.
   query?: Record<string, string | number | boolean | undefined | null>;
+  headers?: Record<string, string>;
 }
 
 function getMockSessionToken(): string | null {
@@ -44,9 +45,9 @@ export async function request<T>(
   path: string,
   options: RequestOptions = {},
 ): Promise<T> {
-  const { method = "GET", body, query } = options;
+  const { method = "GET", body, query, headers: extraHeaders } = options;
 
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = { ...extraHeaders };
   const mockToken = getMockSessionToken();
   if (mockToken) headers[MOCK_SESSION_HEADER] = mockToken;
 

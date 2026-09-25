@@ -30,8 +30,8 @@ export const authRepository = {
     return request<void>("/auth/logout", { method: "POST" });
   },
 
-  async me(): Promise<CurrentUser | null> {
-    return request<CurrentUser | null>("/auth/me");
+  async me(extraHeaders?: Record<string, string>): Promise<CurrentUser | null> {
+    return request<CurrentUser | null>("/auth/me", { headers: extraHeaders });
   },
 
   changePassword(payload: ChangePasswordPayload) {
