@@ -8,7 +8,7 @@ import java.util.Objects;
 @Embeddable
 public class OeuvreCategoryId implements Serializable {
     @Column(name = "oeuvre_id")
-    private Integer oeuvreId;
+    private Long oeuvreId;
 
     @Column(name = "category_id")
     private Integer categoryId;
@@ -16,7 +16,7 @@ public class OeuvreCategoryId implements Serializable {
     public OeuvreCategoryId() {
     }
 
-    public OeuvreCategoryId(Integer oeuvreId, Integer categoryId) {
+    public OeuvreCategoryId(Long oeuvreId, Integer categoryId) {
         this.oeuvreId = oeuvreId;
         this.categoryId = categoryId;
     }

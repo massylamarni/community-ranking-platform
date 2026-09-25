@@ -219,19 +219,50 @@ paths:
   /works:
     post:
       tags: [works]
-      summary: Submit a new work, authenticated users (OEU-001..006)
+      summary: Create a new work draft, authenticated users (OEU-001)
       requestBody:
         required: true
         content:
-          multipart/form-data:
-            schema: { $ref: "#/components/schemas/SubmitWork" }
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateWork" }
       responses:
         "201":
-          description: Created with status "pending"
+          description: Created with status "created"
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Work" }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "409":
+          description: Un titre identique existe déjà
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+  /works/{workId}/submit:
+    post:
+      tags: [works]
+      summary: Submit a work draft to one or more categories for admin review (OEU-002). Status → pending.
+      parameters:
+        - $ref: "#/components/parameters/WorkId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SubmitWork" }
+      responses:
+        "200":
+          description: Work submitted, status is now "pending"
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Work" }
+        "400":
+          description: Œuvre déjà soumise ou vous n'en êtes pas l'auteur
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
         "422": { $ref: "#/components/responses/ValidationError" }
 
   /works/{workId}:
@@ -533,7 +564,7 @@ components:
       name: workId
       in: path
       required: true
-      schema: { type: string }
+      schema: { type: integer, format: int64 }
     CategoryId:
       name: categoryId
       in: path
@@ -690,22 +721,26 @@ components:
         author: { type: object, properties: { username: { type: string } } }
         categories:
           { type: array, items: { $ref: "#/components/schemas/Category" } }
-        status: { type: string, enum: [pending, accepted, refused] }
+        status: { type: string, enum: [created, pending, approved, rejected] }
         score: { type: integer }
         totalVotes: { type: integer }
         currentUserVote: { type: integer, enum: [1, -1], nullable: true }
 
+    CreateWork:
+      type: object
+      required: [title, description]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 150 }
+        description: { type: string, minLength: 1 }
+
     SubmitWork:
       type: object
-      required: [title, description, categoryIds]
+      required: [categoryIds]
       properties:
-        title: { type: string, minLength: 1 }
-        description: { type: string, minLength: 1 }
         categoryIds:
           type: array
-          items: { type: string }
+          items: { type: integer }
           minItems: 1
-        image: { type: string, format: binary }
 
     UpdateWork:
       type: object
