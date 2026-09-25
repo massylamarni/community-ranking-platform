@@ -11,6 +11,7 @@ import {
 import { authRepository } from "@/repositories";
 import { ApiError } from "@/lib/errors";
 import type {
+  ChangePasswordPayload,
   CurrentUser,
   LoginUserPayload,
   RegisterUserPayload,
@@ -21,6 +22,7 @@ interface AuthContextValue {
   loading: boolean;
   login(payload: LoginUserPayload): Promise<void>;
   register(payload: RegisterUserPayload): Promise<void>;
+  changePassword(payload: ChangePasswordPayload): Promise<void>;
   logout(): Promise<void>;
   refresh(): Promise<void>;
 }
@@ -74,14 +76,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     [refresh],
   );
 
+  const changePassword = useCallback(async (payload: ChangePasswordPayload) => {
+    await authRepository.changePassword(payload);
+  }, []);
+
   const logout = useCallback(async () => {
     await authRepository.logout();
     setUser(null);
   }, []);
 
   const value = useMemo<AuthContextValue>(
-    () => ({ user, loading, login, register, logout, refresh }),
-    [user, loading, login, register, logout, refresh],
+    () => ({ user, loading, login, register, changePassword, logout, refresh }),
+    [user, loading, login, register, changePassword, logout, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

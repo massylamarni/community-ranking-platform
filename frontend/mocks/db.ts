@@ -201,7 +201,16 @@ const rankingSnapshots: DbRankingSnapshot[] = [
 ];
 
 // sessions: mock session token -> user id
-const sessions = new Map<string, string>();
+function loadSessions(): Map<string, string> {
+  if (typeof window === "undefined") return new Map();
+  try {
+    const raw = window.localStorage.getItem("__mock_sessions__");
+    return raw ? new Map(JSON.parse(raw)) : new Map();
+  } catch {
+    return new Map();
+  }
+}
+const sessions = loadSessions();
 
 // ---- helpers reused by handlers ------------------------------------------
 
@@ -213,16 +222,27 @@ export function findUserByUsername(username: string): DbUser | undefined {
   return users.find((u) => u.username.toLowerCase() === username.toLowerCase());
 }
 
+function persistSessions() {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(
+    "__mock_sessions__",
+    JSON.stringify([...sessions.entries()]),
+  );
+}
+
 export function createSession(userId: string): string {
   const token = generateId("session");
   sessions.set(token, userId);
+  persistSessions();
   return token;
 }
 
 export function destroySession(token: string | null) {
-  if (token) sessions.delete(token);
+  if (token) {
+    sessions.delete(token);
+    persistSessions();
+  }
 }
-
 export function userFromSessionToken(token: string | null): DbUser | undefined {
   if (!token) return undefined;
   const userId = sessions.get(token);
