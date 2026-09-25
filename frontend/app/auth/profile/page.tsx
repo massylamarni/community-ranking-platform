@@ -10,17 +10,22 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { authRepository } from "@/repositories";
-import type { OwnProfile } from "@/types/api";
+import type { ApiErrorBody, OwnProfile } from "@/types/api";
 import { toast } from "sonner";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 
 export default function Profile() {
   const { user, loading } = useAuth();
   const [profile, setProfile] = useState<OwnProfile | null>(null);
-  const [profileError, setProfileError] = useState<unknown>(null);
+  const [profileError, setProfileError] = useState<ApiErrorBody | null>(null);
   const [usernameEdit, setUsernameEdit] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -40,7 +45,7 @@ export default function Profile() {
         setProfile(p);
         setUsernameEdit(p.username);
       } catch (err) {
-        setProfileError(err);
+        setProfileError(err as ApiErrorBody);
       }
     }
     loadProfile();
@@ -65,7 +70,7 @@ export default function Profile() {
       const p = await promise;
       setProfile(p);
     } catch (err) {
-      setProfileError(err);
+      setProfileError(err as ApiErrorBody);
     } finally {
       setIsLoading(false);
     }
@@ -73,6 +78,8 @@ export default function Profile() {
 
   if (!user) return "Not logged in.";
   if (loading) return "Loading...";
+
+  const fe = profileError?.fields ?? {};
 
   return (
     <Card className="w-full max-w-sm">
@@ -82,22 +89,23 @@ export default function Profile() {
       </CardHeader>
       <CardContent>
         {profile ? (
-          <form>
-            <div className="flex flex-col gap-6">
-              <div className="grid gap-2">
-                <Label htmlFor="username">Username</Label>
+          <form id="profile-form" onSubmit={handleSave}>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="username">Username</FieldLabel>
                 <Input
                   id="username"
                   value={usernameEdit}
                   onChange={(e) => setUsernameEdit(e.target.value)}
                   required
                 />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="email">Email</Label>
+                {fe.username && <FieldError>{fe.username}</FieldError>}
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="email">Email</FieldLabel>
                 <Input id="email" value={profile.email} disabled />
-              </div>
-            </div>
+              </Field>
+            </FieldGroup>
           </form>
         ) : (
           "Failed to fetch profile"
@@ -106,13 +114,12 @@ export default function Profile() {
       <CardFooter className="flex-col gap-2">
         <Button
           type="submit"
-          onClick={handleSave}
+          form="profile-form"
           className="w-full"
           disabled={isLoading}
         >
           Save
         </Button>
-        <pre>{JSON.stringify(profileError, null, 2)}</pre>
       </CardFooter>
     </Card>
   );

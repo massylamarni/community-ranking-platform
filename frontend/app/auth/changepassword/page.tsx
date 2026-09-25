@@ -9,18 +9,24 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Eye, EyeClosed } from "lucide-react";
 import { toast } from "sonner";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { ApiErrorBody } from "@/types/api";
 
 export default function ChangePassword() {
   const { changePassword } = useAuth();
   const [pwForm, setPwForm] = useState({ oldPassword: "", newPassword: "" });
   const [pwResult, setPwResult] = useState<string | null>(null);
-  const [pwError, setPwError] = useState<unknown>(null);
+  const [pwError, setPwError] = useState<ApiErrorBody | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [showOldPassword, setShowOldPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
@@ -35,7 +41,7 @@ export default function ChangePassword() {
 
     toast.promise(promise, {
       loading: "Saving...",
-      success: () => "Password change success",
+      success: () => pwResult,
       error: (err) => err?.message ?? "Failed to change password",
     });
 
@@ -43,11 +49,13 @@ export default function ChangePassword() {
       await promise;
       setPwResult("Password updated.");
     } catch (err) {
-      setPwError(err);
+      setPwError(err as ApiErrorBody);
     } finally {
       setIsLoading(false);
     }
   }
+
+  const fe = pwError?.fields ?? {};
 
   return (
     <Card className="w-full max-w-sm">
@@ -55,10 +63,10 @@ export default function ChangePassword() {
         <CardTitle>Change password</CardTitle>
       </CardHeader>
       <CardContent>
-        <form>
-          <div className="flex flex-col gap-6">
-            <div className="grid gap-2">
-              <Label htmlFor="oldpassword">Old password</Label>
+        <form id="changepass-form" onSubmit={handleChangePassword}>
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="oldpassword">Old password</FieldLabel>
               <ButtonGroup className="w-full">
                 <Input
                   id="oldpassword"
@@ -77,9 +85,10 @@ export default function ChangePassword() {
                   {showOldPassword ? <Eye /> : <EyeClosed />}
                 </Button>
               </ButtonGroup>
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="newpassword">New password</Label>
+              {fe.oldPassword && <FieldError>{fe.oldPassword}</FieldError>}
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="newpassword">New password</FieldLabel>
               <ButtonGroup className="w-full">
                 <Input
                   id="newpassword"
@@ -97,22 +106,21 @@ export default function ChangePassword() {
                 >
                   {showNewPassword ? <Eye /> : <EyeClosed />}
                 </Button>
-              </ButtonGroup>
-            </div>
-          </div>
+              </ButtonGroup>{" "}
+              {fe.newPassword && <FieldError>{fe.newPassword}</FieldError>}
+            </Field>
+          </FieldGroup>
         </form>
       </CardContent>
       <CardFooter className="flex-col gap-2">
         <Button
           type="submit"
-          onClick={handleChangePassword}
+          form="changepass-form"
           className="w-full"
           disabled={isLoading}
         >
           Save
         </Button>
-        {pwResult ? <p>{pwResult}</p> : null}
-        <pre>{JSON.stringify(pwError, null, 2)}</pre>
       </CardFooter>
     </Card>
   );
