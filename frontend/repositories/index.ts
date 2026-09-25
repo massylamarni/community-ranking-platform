@@ -1,0 +1,9 @@
+export { authRepository } from "./auth.repository";
+export { categoriesRepository } from "./categories.repository";
+export { worksRepository } from "./works.repository";
+export { votesRepository } from "./votes.repository";
+export { commentsRepository } from "./comments.repository";
+export { moderationRepository } from "./moderation.repository";
+export { rankingsRepository } from "./rankings.repository";
+export { profilesRepository } from "./profiles.repository";
+export { notificationsRepository } from "./notifications.repository";
