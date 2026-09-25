@@ -96,6 +96,7 @@ export default function Login() {
                   required
                 />
                 <Button
+                  type="button"
                   variant="outline"
                   size="icon"
                   onClick={() => setShowPassword((prev) => !prev)}

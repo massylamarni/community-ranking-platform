@@ -110,6 +110,7 @@ export default function Register() {
                   required
                 />
                 <Button
+                  type="button"
                   variant="outline"
                   size="icon"
                   onClick={() => setShowPassword((prev) => !prev)}

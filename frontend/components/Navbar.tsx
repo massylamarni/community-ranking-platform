@@ -44,6 +44,7 @@ export function Navbar() {
                 className="cursor-pointer"
                 render={
                   <Button
+                    type="button"
                     variant="ghost"
                     className="flex items-center gap-2 p-0 rounded-full"
                   >

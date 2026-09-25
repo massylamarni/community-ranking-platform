@@ -78,6 +78,7 @@ export default function ChangePassword() {
                   required
                 />
                 <Button
+                  type="button"
                   variant="outline"
                   size="icon"
                   onClick={() => setShowOldPassword((prev) => !prev)}
@@ -100,6 +101,7 @@ export default function ChangePassword() {
                   required
                 />
                 <Button
+                  type="button"
                   variant="outline"
                   size="icon"
                   onClick={() => setShowNewPassword((prev) => !prev)}
