@@ -46,7 +46,7 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
-    @ExceptionHandler({UsernameAlreadyExistsException.class, EmailAlreadyExistsException.class})
+    @ExceptionHandler({UsernameAlreadyExistsException.class, EmailAlreadyExistsException.class, CategoryAlreadyExistsException.class})
     public ResponseEntity<Map<String, Object>> handleConflict(RuntimeException ex) {
         return error(HttpStatus.CONFLICT, ex.getMessage());
     }
