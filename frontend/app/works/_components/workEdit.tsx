@@ -58,7 +58,7 @@ export function WorkEdit({
   const isEdit = !!handleRemove;
   const [newWork, setNewWork] = useState<Work>(work ?? DEFAULT_WORK);
   const [categoryIds, setCategoryIds] = useState<string[]>(
-    work?.categories.map((c) => c.id) ?? [],
+    work?.categories.map((c) => c.id) ?? [DEFAULT_CATEGORY],
   );
   const [image, setImage] = useState<File | null>(null);
 

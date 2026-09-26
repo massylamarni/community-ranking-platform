@@ -6,7 +6,7 @@ import { categoriesRepository } from "@/repositories";
 import type { Category, Work } from "@/types/api";
 import FilterBar from "./_components/filterBar";
 import { WorkList } from "./_components/workList";
-import { WorkDetails } from "./_components/workDetails";
+import { WorkItem } from "./_components/workItem";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 export default function WorksDemoPage() {
@@ -44,14 +44,25 @@ export default function WorksDemoPage() {
         categoryId={categoryId}
         setCategoryId={setCategoryId}
       />
-      <WorkList works={works} setSelectedWork={setSelectedWork} />
+      <WorkList
+        works={works}
+        setWorks={setWorks}
+        setSelectedWork={setSelectedWork}
+      />
       {error ? <p role="alert">{String(error)}</p> : null}{" "}
       <Dialog
         open={!!selectedWork}
         onOpenChange={(open) => !open && setSelectedWork(null)}
       >
-        <DialogContent className="p-0">
-          <WorkDetails work={selectedWork} isAuthor={isAuthor} />
+        <DialogContent className="p-0 sm:max-w-lg">
+          <WorkItem
+            work={selectedWork}
+            setWork={(work) =>
+              setWorks((prev) => prev.map((w) => (w.id === work.id ? work : w)))
+            }
+          >
+            {isAuthor && <div>Manage this work</div>}
+          </WorkItem>
         </DialogContent>
       </Dialog>
     </div>

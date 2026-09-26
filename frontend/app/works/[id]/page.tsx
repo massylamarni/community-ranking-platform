@@ -5,7 +5,7 @@ import { useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { worksRepository } from "@/repositories";
 import type { Work } from "@/types/api";
-import { WorkDetails } from "../_components/workDetails";
+import { WorkItem } from "../_components/workItem";
 
 export default function EditWorkPage() {
   const { id } = useParams<{ id: string }>();
@@ -55,7 +55,7 @@ export default function EditWorkPage() {
         </p>
       ) : null}
       {work && isAuthor ? (
-        <WorkDetails work={work} isAuthor={isAuthor} />
+        <WorkItem work={work} setWork={(work: Work) => setWork(work)} />
       ) : null}
     </div>
   );

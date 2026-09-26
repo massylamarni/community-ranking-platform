@@ -1,34 +1,83 @@
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { ButtonGroup } from "@/components/ui/button-group";
 import {
   Card,
+  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Work } from "@/types/api";
+import { worksRepository } from "@/repositories";
+import { ApiErrorBody, VoteForWorkPayload, Work } from "@/types/api";
+import { ArrowBigDown, ArrowBigUp } from "lucide-react";
 import Image from "next/image";
+import { ReactNode, useState } from "react";
 
 export function WorkItem({
   work,
+  setWork,
   setSelectedWork,
+  children,
 }: {
-  work: Work;
-  setSelectedWork: (w: Work) => void;
+  work: Work | null;
+  setWork: (work: Work) => void;
+  setSelectedWork?: (w: Work | null) => void;
+  children?: ReactNode;
 }) {
+  const [errors, setErrors] = useState<ApiErrorBody | null>(null);
+
+  async function handleVote(vt: VoteForWorkPayload) {
+    if (!work) return;
+    setErrors(null);
+
+    try {
+      const updated = await worksRepository.vote(work.id, vt);
+      setWork(updated);
+    } catch (err) {
+      setErrors(err as ApiErrorBody);
+    }
+  }
+
+  if (!work) return;
   return (
-    <Card
-      className="relative w-full max-w-sm"
-      onClick={() => setSelectedWork(work)}
-    >
-      <CardHeader>
+    <Card className="relative w-full max-w-lg">
+      <CardHeader
+        onClick={() => (setSelectedWork ? setSelectedWork(work) : null)}
+      >
         <CardTitle>{work.title}</CardTitle>
         <CardDescription>{work.description}</CardDescription>
       </CardHeader>
-      {work.imageUrl && <Image src={work.imageUrl} alt={work.title} />}
+      {work.imageUrl && (
+        <CardContent
+          className="flex flex-col gap-3"
+          onClick={() => (setSelectedWork ? setSelectedWork(work) : null)}
+        >
+          <div className="relative aspect-4/3 overflow-hidden rounded-md border">
+            <Image src={work.imageUrl} alt={work.title} fill />
+          </div>
+          {children}
+        </CardContent>
+      )}
       <CardFooter className="flex justify-between">
-        <div>
-          score {work.score} ({work.totalVotes} votes)
+        <div className="flex gap-3">
+          <ButtonGroup>
+            <Button
+              variant={work.currentUserVote === 1 ? "default" : "outline"}
+              onClick={() => handleVote({ value: 1 })}
+            >
+              <ArrowBigUp />
+              {work.totalVotes - (work.totalVotes - work.score) / 2}
+            </Button>
+            <Button
+              variant={work.currentUserVote === -1 ? "default" : "outline"}
+              onClick={() => handleVote({ value: -1 })}
+            >
+              <ArrowBigDown />
+              {(work.totalVotes - work.score) / 2}
+            </Button>
+          </ButtonGroup>
         </div>
         <div className="flex justify-center items-center gap-2 w-fit">
           <Avatar>

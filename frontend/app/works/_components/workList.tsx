@@ -5,9 +5,11 @@ import { WorkItem } from "./workItem";
 
 export function WorkList({
   works,
+  setWorks,
   setSelectedWork,
 }: {
   works: Work[];
+  setWorks: Dispatch<SetStateAction<Work[]>>;
   setSelectedWork: Dispatch<SetStateAction<Work | null>>;
 }) {
   useEffect(() => {
@@ -23,7 +25,14 @@ export function WorkList({
   ) : (
     <div>
       {works.map((w) => (
-        <WorkItem key={w.id} work={w} setSelectedWork={setSelectedWork} />
+        <WorkItem
+          key={w.id}
+          work={w}
+          setWork={(work) =>
+            setWorks((prev) => prev.map((w) => (w.id === work.id ? work : w)))
+          }
+          setSelectedWork={setSelectedWork}
+        />
       ))}
     </div>
   );

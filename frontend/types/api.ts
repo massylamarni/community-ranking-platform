@@ -101,6 +101,9 @@ export interface UpdateWorkPayload {
   description?: string;
   categoryIds?: string[];
   image?: File | null;
+  score?: number;
+  totalVotes?: number;
+  currentUserVote?: 1 | -1 | null;
 }
 
 export interface Page<T> {

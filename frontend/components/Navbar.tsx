@@ -32,7 +32,7 @@ export function Navbar() {
             <Button variant="ghost" size="icon" className="relative mt-1">
               <Bell />
               {unreadCount > 0 && (
-                <span className="absolute top-0 right-0 flex items-center justify-center rounded-full bg-red-300 h-4 w-4 text-[8px] text-accent-foreground">
+                <span className="absolute top-0 right-0 flex items-center justify-center rounded-full bg-accent-foreground h-4 w-4 text-[8px] text-accent">
                   {" "}
                   {unreadCount > 99 ? "99+" : unreadCount}
                 </span>
