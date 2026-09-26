@@ -31,6 +31,9 @@ COPY --from=builder /app/target/*.jar app.jar
 
 RUN chown appuser:appgroup app.jar
 
+# Dossier pour les uploads d'images
+RUN mkdir -p /uploads/works /uploads/comments && chown -R appuser:appgroup /uploads
+
 USER appuser
 
 # Expose the default Spring Boot port

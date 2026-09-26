@@ -9,6 +9,7 @@ public class OeuvreResponse {
     private String description;
     private String status;
     private String author;
+    private String imageUrl;
 
     public OeuvreResponse(Oeuvre o) {
         this.id = o.getOeuvreId();
@@ -16,6 +17,7 @@ public class OeuvreResponse {
         this.description = o.getDescription();
         this.status = o.getStatus().name();
         this.author = o.getAuthor().getUsername();
+        this.imageUrl = o.getImageUrl();
     }
 
     public Long getId() { return id; }
@@ -23,4 +25,5 @@ public class OeuvreResponse {
     public String getDescription() { return description; }
     public String getStatus() { return status; }
     public String getAuthor() { return author; }
+    public String getImageUrl() { return imageUrl; }
 }
