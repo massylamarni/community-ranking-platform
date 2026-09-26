@@ -7,6 +7,8 @@ import { categoriesRepository } from "@/repositories";
 import { ApiError } from "@/lib/errors";
 import type { Category, Work } from "@/types/api";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Card,
   CardHeader,
@@ -14,6 +16,14 @@ import {
   CardDescription,
   CardContent,
 } from "@/components/ui/card";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
 
 const PAGE_SIZE = 20;
 
@@ -31,8 +41,6 @@ export default function CategoryWorksPage() {
   const [worksLoading, setWorksLoading] = useState(true);
   const [worksError, setWorksError] = useState<string | null>(null);
 
-  // Resolve the category name from the public list (no single-category
-  // fetch endpoint exists, so we find it among all categories).
   useEffect(() => {
     let cancelled = false;
     setCategoryLoading(true);
@@ -90,30 +98,48 @@ export default function CategoryWorksPage() {
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 p-6">
-      <Link
-        href="/categories"
-        className="text-sm text-muted-foreground hover:underline"
-      >
-        ← Toutes les catégories
-      </Link>
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 p-6">
+      <div>
+        <Link
+          href="/categories"
+          className="text-sm text-muted-foreground hover:underline"
+        >
+          ← Toutes les catégories
+        </Link>
+      </div>
+
+      {/* Page header — dashboard-panel style */}
+      <div className="flex flex-col gap-1">
+        {categoryLoading ? (
+          <Skeleton className="h-8 w-48" />
+        ) : (
+          <h1 className="text-2xl font-semibold tracking-tight">
+            {category?.name ?? "Catégorie"}
+          </h1>
+        )}
+        <p className="text-sm text-muted-foreground">
+          Œuvres publiées dans cette catégorie.
+        </p>
+      </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>
-            {categoryLoading
-              ? "Chargement..."
-              : (category?.name ?? "Catégorie")}
-          </CardTitle>
-          <CardDescription>Œuvres publiées dans cette catégorie.</CardDescription>
+          <CardTitle>Œuvres</CardTitle>
+          <CardDescription>
+            {worksLoading ? "Chargement..." : `${total} œuvre${total > 1 ? "s" : ""}`}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {categoryError && (
-            <p className="text-sm text-destructive">{categoryError}</p>
+            <p className="mb-3 text-sm text-destructive">{categoryError}</p>
           )}
 
           {worksLoading && (
-            <p className="text-sm text-muted-foreground">Chargement...</p>
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </div>
           )}
 
           {!worksLoading && worksError && (
@@ -127,20 +153,39 @@ export default function CategoryWorksPage() {
           )}
 
           {!worksLoading && !worksError && works.length > 0 && (
-            <ul className="flex flex-col gap-3">
-              {works.map((work) => (
-                <li key={work.id} className="rounded-md border p-3">
-                  <p className="font-medium">{work.title}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {work.description}
-                  </p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Par {work.author.username} · Score {work.score} (
-                    {work.totalVotes} votes)
-                  </p>
-                </li>
-              ))}
-            </ul>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Titre</TableHead>
+                  <TableHead>Auteur</TableHead>
+                  <TableHead className="text-right">Score</TableHead>
+                  <TableHead className="text-right">Votes</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {works.map((work) => (
+                  <TableRow key={work.id}>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{work.title}</span>
+                        <span className="line-clamp-1 text-xs text-muted-foreground">
+                          {work.description}
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{work.author.username}</Badge>
+                    </TableCell>
+                    <TableCell className="text-right font-medium">
+                      {work.score}
+                    </TableCell>
+                    <TableCell className="text-right text-muted-foreground">
+                      {work.totalVotes}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
 
           {!worksLoading && !worksError && total > PAGE_SIZE && (

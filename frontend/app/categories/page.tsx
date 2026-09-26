@@ -9,6 +9,8 @@ import type { Category } from "@/types/api";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Card,
   CardHeader,
@@ -17,6 +19,22 @@ import {
   CardContent,
   CardFooter,
 } from "@/components/ui/card";
+import {
+  Table,
+  TableHeader,
+  TableRow,
+  TableHead,
+  TableBody,
+  TableCell,
+} from "@/components/ui/table";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 export default function CategoriesPage() {
   const { user, loading: authLoading } = useAuth();
@@ -116,7 +134,16 @@ export default function CategoriesPage() {
   };
 
   return (
-    <div className="mx-auto flex w-full max-w-2xl flex-col gap-6 p-6">
+    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 p-6">
+      {/* Page header — dashboard-panel style */}
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-semibold tracking-tight">Catégories</h1>
+        <p className="text-sm text-muted-foreground">
+          Parcourez les catégories disponibles et retrouvez les œuvres
+          associées.
+        </p>
+      </div>
+
       {/* CAT-001 / ADM-001 — admin-only creation form */}
       {!authLoading && admin && (
         <Card>
@@ -152,104 +179,118 @@ export default function CategoriesPage() {
         </Card>
       )}
 
-      {/* CAT-003 — public category list */}
+      {/* CAT-003 — public category list, dashboard-style table */}
       <Card>
         <CardHeader>
-          <CardTitle>Catégories</CardTitle>
+          <CardTitle>Toutes les catégories</CardTitle>
           <CardDescription>
-            Parcourez les catégories disponibles.
+            {listLoading
+              ? "Chargement..."
+              : `${categories.length} catégorie${categories.length > 1 ? "s" : ""}`}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {listLoading && (
-            <p className="text-sm text-muted-foreground">Chargement...</p>
+            <div className="flex flex-col gap-2">
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+              <Skeleton className="h-10 w-full" />
+            </div>
           )}
+
           {!listLoading && listError && (
             <p className="text-sm text-destructive">{listError}</p>
           )}
+
           {!listLoading && !listError && categories.length === 0 && (
             <p className="text-sm text-muted-foreground">
               Aucune catégorie pour le moment.
             </p>
           )}
+
           {!listLoading && !listError && categories.length > 0 && (
-            <ul className="flex flex-col gap-2">
-              {categories.map((category) => (
-                <li
-                  key={category.id}
-                  className="flex items-center justify-between gap-2 rounded-md border px-3 py-2 text-sm"
-                >
-                  <Link
-                    href={`/categories/${category.id}`}
-                    className="flex-1 hover:underline"
-                  >
-                    {category.name}
-                  </Link>
-                  {/* CAT-002 / ADM-001 — admin-only delete action */}
-                  {!authLoading && admin && (
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => {
-                        setDeleteError(null);
-                        setPendingDelete(category);
-                      }}
-                    >
-                      Supprimer
-                    </Button>
-                  )}
-                </li>
-              ))}
-            </ul>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nom</TableHead>
+                  <TableHead className="w-1 text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {categories.map((category) => (
+                  <TableRow key={category.id}>
+                    <TableCell>
+                      <Link
+                        href={`/categories/${category.id}`}
+                        className="inline-flex"
+                      >
+                        <Badge
+                          variant="secondary"
+                          className="cursor-pointer hover:bg-secondary/80"
+                        >
+                          {category.name}
+                        </Badge>
+                      </Link>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      {!authLoading && admin && (
+                        <Button
+                          type="button"
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => {
+                            setDeleteError(null);
+                            setPendingDelete(category);
+                          }}
+                        >
+                          Supprimer
+                        </Button>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           )}
         </CardContent>
       </Card>
 
-      {/* CAT-002 — delete confirmation modal */}
-      {pendingDelete && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="delete-category-title"
-        >
-          <Card className="w-full max-w-sm">
-            <CardHeader>
-              <CardTitle id="delete-category-title">
-                Supprimer la catégorie ?
-              </CardTitle>
-              <CardDescription>
-                Voulez-vous vraiment supprimer « {pendingDelete.name} » ? Les
-                œuvres associées seront conservées.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {deleteError && (
-                <p className="text-sm text-destructive">{deleteError}</p>
-              )}
-            </CardContent>
-            <CardFooter className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                disabled={deleting}
-                onClick={() => setPendingDelete(null)}
-              >
-                Annuler
-              </Button>
-              <Button
-                type="button"
-                variant="destructive"
-                disabled={deleting}
-                onClick={confirmDelete}
-              >
-                {deleting ? "Suppression..." : "Supprimer"}
-              </Button>
-            </CardFooter>
-          </Card>
-        </div>
-      )}
+      {/* CAT-002 — delete confirmation dialog */}
+      <Dialog
+        open={!!pendingDelete}
+        onOpenChange={(open) => !open && setPendingDelete(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Supprimer la catégorie ?</DialogTitle>
+            <DialogDescription>
+              Voulez-vous vraiment supprimer « {pendingDelete?.name} » ? Les
+              œuvres associées seront conservées.
+            </DialogDescription>
+          </DialogHeader>
+          {deleteError && (
+            <p className="text-sm text-destructive">{deleteError}</p>
+          )}
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              disabled={deleting}
+              onClick={() => setPendingDelete(null)}
+            >
+              Annuler
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={deleting}
+              onClick={confirmDelete}
+            >
+              {deleting ? "Suppression..." : "Supprimer"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
