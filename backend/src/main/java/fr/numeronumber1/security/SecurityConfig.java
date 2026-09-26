@@ -64,7 +64,7 @@ public class SecurityConfig {
                                 "/auth/password/forgot",
                                 "/auth/password/reset"
                         ).permitAll()
-                        .requestMatchers(HttpMethod.GET, "/categories/**", "/works/**", "/rankings/**", "/users/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/categories/**", "/works/**", "/rankings/**", "/users/**", "/uploads/**").permitAll()
                         .requestMatchers("/moderation/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.POST, "/categories/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.DELETE, "/categories/**").hasRole("ADMIN")

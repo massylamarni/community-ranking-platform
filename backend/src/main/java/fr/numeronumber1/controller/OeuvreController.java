@@ -1,13 +1,17 @@
 package fr.numeronumber1.controller;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import fr.numeronumber1.dto.request.CreateOeuvreRequest;
 import fr.numeronumber1.dto.request.SubmitOeuvreRequest;
@@ -30,12 +34,29 @@ public class OeuvreController {
         this.userService = userService;
     }
 
-    @PostMapping
-    public ResponseEntity<OeuvreResponse> create(@Valid @RequestBody CreateOeuvreRequest req,
-                                                  Authentication auth) {
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<OeuvreResponse> createJson(@Valid @RequestBody CreateOeuvreRequest req,
+                                                     Authentication auth) {
         User user = userService.findByUsername(auth.getName());
         Oeuvre saved = oeuvreService.create(req, user);
         return ResponseEntity.status(HttpStatus.CREATED).body(new OeuvreResponse(saved));
+    }
+
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<OeuvreResponse> createMultipart(@Valid @ModelAttribute CreateOeuvreRequest req,
+                                                          Authentication auth) {
+        User user = userService.findByUsername(auth.getName());
+        Oeuvre saved = oeuvreService.create(req, user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(new OeuvreResponse(saved));
+    }
+
+    @PostMapping(value = "/{id}/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<OeuvreResponse> uploadImage(@PathVariable Long id,
+                                                      @RequestParam("image") MultipartFile image,
+                                                      Authentication auth) {
+        User user = userService.findByUsername(auth.getName());
+        Oeuvre updated = oeuvreService.uploadImage(id, image, user);
+        return ResponseEntity.ok(new OeuvreResponse(updated));
     }
 
     @PostMapping("/{id}/submit")
