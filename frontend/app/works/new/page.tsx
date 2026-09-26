@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { categoriesRepository, worksRepository } from "@/repositories";
-import type { Category } from "@/types/api";
+import type { ApiErrorBody, Category } from "@/types/api";
 import { WorkEdit, WorkFormData } from "../_components/workEdit";
 
 export default function EditWorkPage() {
@@ -12,19 +12,19 @@ export default function EditWorkPage() {
   const { user } = useAuth();
 
   const [categories, setCategories] = useState<Category[]>([]);
-  const [error, setError] = useState<unknown>(null);
+  const [errors, setErrors] = useState<ApiErrorBody | null>(null);
 
   useEffect(() => {
     categoriesRepository.list().then(setCategories);
   }, []);
 
   async function handleCreate(data: WorkFormData) {
-    setError(null);
+    setErrors(null);
     try {
       await worksRepository.submit(data);
       router.push(`/works`);
     } catch (err) {
-      setError(err);
+      setErrors(err as ApiErrorBody);
     }
   }
 
@@ -36,10 +36,10 @@ export default function EditWorkPage() {
         <WorkEdit
           work={null}
           categories={categories}
+          errors={errors}
           handleSave={handleCreate}
         />
       )}
-      {error ? <p role="alert">{String(error)}</p> : null}
     </div>
   );
 }

@@ -7,10 +7,15 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Category, Work } from "@/types/api";
+import { ApiErrorBody, Category, Work } from "@/types/api";
 import { FormEvent, useState } from "react";
 import { AttachmentUploader } from "./attachmentUploader";
 
@@ -27,6 +32,8 @@ const DEFAULT_WORK: Work = {
   currentUserVote: null,
 };
 
+const DEFAULT_CATEGORY = "Uncategorized";
+
 export type WorkFormData = {
   // TODO
   title: string;
@@ -38,11 +45,13 @@ export type WorkFormData = {
 export function WorkEdit({
   work,
   categories,
+  errors,
   handleSave,
   handleRemove,
 }: {
   work: Work | null;
   categories: Category[] | null;
+  errors: ApiErrorBody | null;
   handleSave: (data: WorkFormData) => Promise<void>;
   handleRemove?: () => Promise<void>;
 }) {
@@ -54,9 +63,14 @@ export function WorkEdit({
   const [image, setImage] = useState<File | null>(null);
 
   function toggleSubmitCategory(id: string) {
-    setCategoryIds((prev) =>
-      prev.includes(id) ? prev.filter((c) => c !== id) : [...prev, id],
-    );
+    setCategoryIds((prev) => {
+      const withoutUncategorized = prev.filter((c) => c !== DEFAULT_CATEGORY);
+      const next = withoutUncategorized.includes(id)
+        ? withoutUncategorized.filter((c) => c !== id)
+        : [...withoutUncategorized, id];
+
+      return next.length === 0 ? [DEFAULT_CATEGORY] : next;
+    });
   }
 
   function onSubmit(e: FormEvent) {
@@ -68,6 +82,8 @@ export function WorkEdit({
       image,
     });
   }
+
+  const fe = errors?.fields ?? {};
 
   return (
     <form onSubmit={onSubmit}>
@@ -84,6 +100,7 @@ export function WorkEdit({
                 }
                 required
               />
+              {fe.title && <FieldError>{fe.title}</FieldError>}
             </Field>
           </CardTitle>
         </CardHeader>
@@ -99,6 +116,7 @@ export function WorkEdit({
                 }
                 required
               />
+              {fe.description && <FieldError>{fe.description}</FieldError>}
             </Field>
             {categories?.map((cat) => (
               <Field key={cat.id} orientation="horizontal">
@@ -109,6 +127,7 @@ export function WorkEdit({
                   onCheckedChange={() => toggleSubmitCategory(cat.id)}
                 />
                 <Label htmlFor={cat.id}>{cat.name}</Label>
+                {fe.username && <FieldError>{fe.username}</FieldError>}
               </Field>
             ))}
             <AttachmentUploader

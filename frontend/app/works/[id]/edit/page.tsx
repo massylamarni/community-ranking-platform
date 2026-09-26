@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { categoriesRepository, worksRepository } from "@/repositories";
-import type { Category, Work } from "@/types/api";
+import type { ApiErrorBody, Category, Work } from "@/types/api";
 import { WorkEdit, WorkFormData } from "../../_components/workEdit";
 
 export default function EditWorkPage() {
@@ -14,7 +14,7 @@ export default function EditWorkPage() {
 
   const [work, setWork] = useState<Work | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [error, setError] = useState<unknown>(null);
+  const [errors, setErrors] = useState<ApiErrorBody | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -29,11 +29,11 @@ export default function EditWorkPage() {
       .then((w) => {
         if (!isCurrent) return;
         setWork(w);
-        setError(null);
+        setErrors(null);
       })
       .catch((err) => {
         if (!isCurrent) return;
-        setError(err);
+        setErrors(err);
       })
       .finally(() => {
         if (!isCurrent) return;
@@ -47,23 +47,23 @@ export default function EditWorkPage() {
 
   async function handleSave(data: WorkFormData) {
     if (!work) return;
-    setError(null);
+    setErrors(null);
     try {
       const updated = await worksRepository.update(work.id, data);
       setWork(updated);
     } catch (err) {
-      setError(err);
+      setErrors(err as ApiErrorBody);
     }
   }
 
   async function handleRemove() {
     if (!work) return;
-    setError(null);
+    setErrors(null);
     try {
       await worksRepository.remove(work.id);
       router.push("/works");
     } catch (err) {
-      setError(err);
+      setErrors(err as ApiErrorBody);
     }
   }
 
@@ -72,7 +72,6 @@ export default function EditWorkPage() {
   return (
     <div>
       {loading ? <p>Loading...</p> : null}
-      {error ? <p role="alert">{String(error)}</p> : null}
 
       {!loading && !work ? <p>This work could not be found.</p> : null}
 
@@ -87,6 +86,7 @@ export default function EditWorkPage() {
         <WorkEdit
           work={work}
           categories={categories}
+          errors={errors}
           handleSave={handleSave}
           handleRemove={handleRemove}
         />
