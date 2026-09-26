@@ -100,6 +100,7 @@ export interface UpdateWorkPayload {
   title?: string;
   description?: string;
   categoryIds?: string[];
+  image?: File | null;
 }
 
 export interface Page<T> {

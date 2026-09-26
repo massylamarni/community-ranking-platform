@@ -48,6 +48,7 @@ export const worksHandlers = [
   // GET /works/:workId (OEU-015/016)
   http.get("*/works/:workId", async ({ request, params }) => {
     await delay(80);
+    console.log(db.works);
     const work = db.works.find((w) => w.id === params.workId);
     if (!work) return notFound("Œuvre introuvable.");
     const viewer = currentUserFrom(request);
@@ -66,28 +67,42 @@ export const worksHandlers = [
     if (work.authorId !== user.id)
       return forbidden("Seul l'auteur peut modifier cette œuvre.");
 
-    const body = (await request.json()) as UpdateWorkPayload;
-    if (body.title !== undefined) {
-      if (!body.title.trim())
+    const form = await request.formData();
+    const title = form.has("title")
+      ? String(form.get("title") ?? "").trim()
+      : undefined;
+    const description = form.has("description")
+      ? String(form.get("description") ?? "").trim()
+      : undefined;
+    const categoryIds = form.has("categoryIds")
+      ? form.getAll("categoryIds").map(String)
+      : undefined;
+
+    if (title !== undefined) {
+      if (!title)
         return errorResponse(422, "Échec de la validation", {
           title: "Le titre est requis.",
         });
-      work.title = body.title.trim();
+      work.title = title;
     }
-    if (body.description !== undefined) {
-      if (!body.description.trim())
+    if (description !== undefined) {
+      if (!description)
         return errorResponse(422, "Échec de la validation", {
           description: "La description est requise.",
         });
-      work.description = body.description.trim();
+      work.description = description;
     }
-    if (body.categoryIds !== undefined) {
-      if (body.categoryIds.length === 0)
+    if (categoryIds !== undefined) {
+      if (categoryIds.length === 0)
         return errorResponse(422, "Échec de la validation", {
           categoryIds: "Au moins une catégorie est requise.",
         });
-      work.categoryIds = body.categoryIds;
+      work.categoryIds = categoryIds;
     }
+
+    const newImageUrl = imageUrlFromForm(form);
+    if (newImageUrl) work.imageUrl = newImageUrl;
+
     work.status = "pending";
     return HttpResponse.json(db.serializeWork(work, user));
   }),
