@@ -2,15 +2,11 @@ image: maven:3.9-eclipse-temurin-26
 
 stages:
   - test
-  # - analysis
-  - build
-  - docker
   - deploy
 
 variables:
   MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
   MAVEN_CLI_OPTS: "--batch-mode --errors --fail-at-end"
-  IMAGE_NAME: $CI_REGISTRY_IMAGE/backend
 
 workflow:
   rules:
@@ -20,6 +16,8 @@ workflow:
     - if: '$CI_COMMIT_BRANCH || $CI_COMMIT_TAG || $CI_PIPELINE_SOURCE == "merge_request_event"'
       changes:
         - backend/**/*
+        - frontend/**/*
+        - infrastructure/**/*
         - .gitlab-ci.yml
     - when: never
 
@@ -72,46 +70,6 @@ test:
 #         -Dsonar.token=$SONAR_TOKEN
 
 # ============================================================
-# BUILD JAR
-# ============================================================
-build-jar:
-  stage: build
-  script:
-    - cd backend
-    - mvn $MAVEN_CLI_OPTS clean package -DskipTests
-  artifacts:
-    paths:
-      - backend/target/*.jar
-    expire_in: 1 hour
-
-# ============================================================
-# DOCKER (Push to GitLab Registry)
-# ============================================================
-docker-build-push:
-  stage: docker
-  allow_failure: true
-  image: docker:27
-  services:
-    - name: docker:27-dind
-      command: ["--insecure-registry=registry.cr700.ad.univ-fcomte.fr"]
-  dependencies:
-    - build-jar
-  variables:
-    DOCKER_TLS_CERTDIR: "/certs"
-  before_script:
-    - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
-  script:
-    - TAG=${CI_COMMIT_TAG:-$CI_COMMIT_REF_SLUG}
-    - docker build -t $IMAGE_NAME:$TAG ./backend
-    - docker push $IMAGE_NAME:$TAG
-    # only main publishes "latest", so feature branches don't overwrite production
-    - |
-      if [ "$CI_COMMIT_BRANCH" = "main" ]; then
-        docker tag $IMAGE_NAME:$TAG $IMAGE_NAME:latest
-        docker push $IMAGE_NAME:latest
-      fi
-
-# ============================================================
 # DEPLOY
 # ============================================================
 deploy-prod:
@@ -122,12 +80,17 @@ deploy-prod:
       when: manual
     - when: never
   before_script:
-    - apk add --no-cache openssh-client
+    - apk add --no-cache openssh-client tar
     - eval $(ssh-agent -s)
-    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    - chmod 400 "$SSH_PRIVATE_KEY"
+    - ssh-add "$SSH_PRIVATE_KEY"
     - mkdir -p ~/.ssh
     - chmod 700 ~/.ssh
     - ssh-keyscan $IP_SERVER >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
   script:
-    - ssh $SSH_USER@$IP_SERVER "docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY && docker pull $IMAGE_NAME:latest && cd $DEST_DIR && docker compose up -d"
+    - printf 'MYSQL_ROOT_PASSWORD=%s\nMAIL_HOST=%s\nMAIL_PORT=%s\nMAIL_USERNAME=%s\nMAIL_PASSWORD=%s\n' "$MYSQL_ROOT_PASSWORD" "${MAIL_HOST:-smtp.gmail.com}" "${MAIL_PORT:-587}" "$MAIL_USERNAME" "$MAIL_PASSWORD" > .env
+    - ssh $SSH_USER@$IP_SERVER "mkdir -p $DEST_DIR"
+    - tar --exclude='backend/target' --exclude='frontend/node_modules' --exclude='frontend/.next' -czf - backend frontend infrastructure | ssh $SSH_USER@$IP_SERVER "tar -xzf - -C $DEST_DIR"
+    - scp .env $SSH_USER@$IP_SERVER:$DEST_DIR/.env
+    - ssh $SSH_USER@$IP_SERVER "docker volume create group3_mysql_data >/dev/null && docker volume create group3_uploads_data >/dev/null && cd $DEST_DIR && docker compose -f infrastructure/docker/docker-compose.yml up --build -d --remove-orphans"
