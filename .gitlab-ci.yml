@@ -33,7 +33,6 @@ cache:
 # ============================================================
 test:
   stage: test
-  image: mcr.microsoft.com/playwright/java:v1.62.0-noble
   allow_failure: true
   script:
     - echo "Executing tests and BDD scenarios with Maven"

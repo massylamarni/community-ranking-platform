@@ -62,7 +62,8 @@ public class SecurityConfig {
                                 "/auth/register",
                                 "/auth/login",
                                 "/auth/password/forgot",
-                                "/auth/password/reset"
+                                "/auth/password/reset",
+                                "/test-security/public"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/categories/**", "/works/**", "/rankings/**", "/users/**", "/uploads/**").permitAll()
                         .requestMatchers("/moderation/**").hasRole("ADMIN")
