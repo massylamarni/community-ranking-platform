@@ -10,7 +10,7 @@ import LoadingGuard from "@/components/guards/loadingGuard";
 import WorkNotFoundGuard from "../../_components/guards/workNotFoundGuard";
 import AuthorGuard from "../../_components/guards/authorGuard";
 
-export default function EditWorkPage() {
+export default function EditWork() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();

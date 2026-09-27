@@ -6,7 +6,7 @@ import { categoriesRepository, worksRepository } from "@/repositories";
 import type { ApiErrorBody, Category } from "@/types/api";
 import { WorkEdit, WorkFormData } from "../_components/workEdit";
 
-export default function EditWorkPage() {
+export default function NewWork() {
   const router = useRouter();
 
   const [categories, setCategories] = useState<Category[]>([]);
