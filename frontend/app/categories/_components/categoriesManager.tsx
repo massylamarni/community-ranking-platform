@@ -5,7 +5,7 @@ import { useAuth, isAdmin } from "@/context/AuthContext";
 import { categoriesRepository } from "@/repositories";
 import type { Category } from "@/types/api";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -13,17 +13,10 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { Plus, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { ConfirmDialog } from "@/components/confirmDialog";
 
 export default function CategoriesManager() {
   const { user } = useAuth();
@@ -61,20 +54,20 @@ export default function CategoriesManager() {
     }
   }
 
-    async function confirmRemove() {
-      if (!pendingDelete) return;
-      setError(null);
-      setDeleting(true);
-      try {
-        await categoriesRepository.remove(pendingDelete.id);
-        setPendingDelete(null);
-        await load();
-      } catch (err) {
-        setError(err);
-      } finally {
-        setDeleting(false);
-      }
+  async function confirmRemove() {
+    if (!pendingDelete) return;
+    setError(null);
+    setDeleting(true);
+    try {
+      await categoriesRepository.remove(pendingDelete.id);
+      setPendingDelete(null);
+      await load();
+    } catch (err) {
+      setError(err);
+    } finally {
+      setDeleting(false);
     }
+  }
 
   return (
     <div>
@@ -142,41 +135,20 @@ export default function CategoriesManager() {
           </ScrollArea>
         </CardContent>
       </Card>
-            <Dialog
-              open={!!pendingDelete}
-              onOpenChange={(isOpen) => !isOpen && setPendingDelete(null)}
-            >
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Supprimer la catégorie ?</DialogTitle>
-                  <DialogDescription>
-                    Voulez-vous vraiment supprimer « {pendingDelete?.name} » ? Les
-                    œuvres associées seront conservées.
-                  </DialogDescription>
-                </DialogHeader>
-                {error ? (
-                  <p className="text-sm text-destructive">{String(error)}</p>
-                ) : null}
-                <DialogFooter>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    disabled={deleting}
-                    onClick={() => setPendingDelete(null)}
-                  >
-                    Annuler
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    disabled={deleting}
-                    onClick={confirmRemove}
-                  >
-                    {deleting ? "Suppression..." : "Supprimer"}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+      <ConfirmDialog
+        open={!!pendingDelete}
+        onOpenChange={(isOpen) => !isOpen && setPendingDelete(null)}
+        title="Supprimer la catégorie ?"
+        description={
+          <>
+            Voulez-vous vraiment supprimer « {pendingDelete?.name} » ? Les
+            œuvres associées seront conservées.
+          </>
+        }
+        onConfirm={confirmRemove}
+        loading={deleting}
+        error={error}
+      />
     </div>
   );
 }
