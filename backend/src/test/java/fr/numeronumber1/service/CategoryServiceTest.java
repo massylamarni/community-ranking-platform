@@ -4,13 +4,20 @@ import fr.numeronumber1.dto.request.CategoryRequest;
 import fr.numeronumber1.exception.CategoryAlreadyExistsException;
 import fr.numeronumber1.exception.ResourceNotFoundException;
 import fr.numeronumber1.model.Category;
+import fr.numeronumber1.model.Oeuvre;
+import fr.numeronumber1.model.enums.OeuvreStatus;
 import fr.numeronumber1.repository.CategoryRepository;
+import fr.numeronumber1.repository.OeuvreCategoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Optional;
@@ -23,6 +30,10 @@ class CategoryServiceTest {
 
     @Mock
     private CategoryRepository categoryRepository;
+
+    @Mock
+    private OeuvreCategoryRepository oeuvreCategoryRepository;
+
 
     @InjectMocks
     private CategoryService categoryService;
@@ -220,5 +231,136 @@ class CategoryServiceTest {
 
         verify(categoryRepository).existsById(999);
         verify(categoryRepository, never()).deleteById(anyInt());
+    }
+
+
+
+
+    @Test
+    void shouldReturnPublishedWorksByCategory() {
+        Integer categoryId = 1;
+
+        Category category = new Category();
+        category.setCategoryId(categoryId);
+        category.setName("Musique");
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Oeuvre oeuvre1 = new Oeuvre();
+        oeuvre1.setOeuvreId(1L);
+        oeuvre1.setTitle("Œuvre 1");
+
+        Oeuvre oeuvre2 = new Oeuvre();
+        oeuvre2.setOeuvreId(2L);
+        oeuvre2.setTitle("Œuvre 2");
+
+        Page<Oeuvre> expectedPage = new PageImpl<>(
+                List.of(oeuvre1, oeuvre2),
+                pageable,
+                2
+        );
+
+        when(categoryRepository.findById(categoryId))
+                .thenReturn(Optional.of(category));
+
+        when(oeuvreCategoryRepository.findPublishedWorksByCategory(
+                categoryId,
+                OeuvreStatus.approved,
+                pageable
+        )).thenReturn(expectedPage);
+
+        Page<Oeuvre> result =
+                categoryService.getPublishedWorksByCategoryId(categoryId, pageable);
+
+        assertNotNull(result);
+        assertEquals(2, result.getContent().size());
+        assertEquals("Œuvre 1", result.getContent().get(0).getTitle());
+        assertEquals("Œuvre 2", result.getContent().get(1).getTitle());
+        assertEquals(0, result.getNumber());
+        assertEquals(10, result.getSize());
+        assertEquals(2, result.getTotalElements());
+
+        verify(categoryRepository).findById(categoryId);
+
+        verify(oeuvreCategoryRepository).findPublishedWorksByCategory(
+                categoryId,
+                OeuvreStatus.approved,
+                pageable
+        );
+    }
+
+    @Test
+    void shouldThrowExceptionWhenCategoryDoesNotExist() {
+        Integer categoryId = 999;
+        Pageable pageable = PageRequest.of(0, 10);
+
+        when(categoryRepository.findById(categoryId))
+                .thenReturn(Optional.empty());
+
+        ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> categoryService.getPublishedWorksByCategoryId(
+                        categoryId,
+                        pageable
+                )
+        );
+
+        assertEquals(
+                "Catégorie introuvable avec l'id : " + categoryId,
+                exception.getMessage()
+        );
+
+        verify(categoryRepository).findById(categoryId);
+
+        verify(
+                oeuvreCategoryRepository,
+                never()
+        ).findPublishedWorksByCategory(
+                anyInt(),
+                any(OeuvreStatus.class),
+                any(Pageable.class)
+        );
+    }
+
+    @Test
+    void shouldReturnEmptyPageWhenCategoryHasNoPublishedWorks() {
+        Integer categoryId = 1;
+
+        Category category = new Category();
+        category.setCategoryId(categoryId);
+        category.setName("Musique");
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Page<Oeuvre> emptyPage = new PageImpl<>(
+                List.of(),
+                pageable,
+                0
+        );
+
+        when(categoryRepository.findById(categoryId))
+                .thenReturn(Optional.of(category));
+
+        when(oeuvreCategoryRepository.findPublishedWorksByCategory(
+                categoryId,
+                OeuvreStatus.approved,
+                pageable
+        )).thenReturn(emptyPage);
+
+        Page<Oeuvre> result =
+                categoryService.getPublishedWorksByCategoryId(
+                        categoryId,
+                        pageable
+                );
+
+        assertNotNull(result);
+        assertTrue(result.isEmpty());
+        assertEquals(0, result.getTotalElements());
+
+        verify(oeuvreCategoryRepository).findPublishedWorksByCategory(
+                categoryId,
+                OeuvreStatus.approved,
+                pageable
+        );
     }
 }
