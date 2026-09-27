@@ -6,6 +6,9 @@ import { useAuth } from "@/context/AuthContext";
 import { worksRepository } from "@/repositories";
 import type { Work } from "@/types/api";
 import { WorkItem } from "../_components/workItem";
+import LoadingGuard from "@/components/guards/loadingGuard";
+import WorkNotFoundGuard from "../_components/guards/workNotFoundGuard";
+import AuthorGuard from "../_components/guards/authorGuard";
 
 export default function EditWorkPage() {
   const { id } = useParams<{ id: string }>();
@@ -40,23 +43,13 @@ export default function EditWorkPage() {
   }, [id]);
 
   const isAuthor = !!user && !!work && user.username === work.author.username;
-
+  if (loading) return <LoadingGuard />;
+  if (!work) return <WorkNotFoundGuard />;
+  if (!isAuthor) return <AuthorGuard />;
   return (
     <div>
-      {loading ? <p>Loading...</p> : null}
+      <WorkItem work={work} />
       {error ? <p role="alert">{String(error)}</p> : null}
-
-      {!loading && !work ? <p>This work could not be found.</p> : null}
-
-      {work && !isAuthor ? (
-        <p>
-          You are not the author of this work, so you can&apos;t edit or delete
-          it.
-        </p>
-      ) : null}
-      {work && isAuthor ? (
-        <WorkItem work={work} setWork={(work: Work) => setWork(work)} />
-      ) : null}
     </div>
   );
 }

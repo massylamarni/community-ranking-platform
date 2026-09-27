@@ -2,14 +2,12 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
 import { categoriesRepository, worksRepository } from "@/repositories";
 import type { ApiErrorBody, Category } from "@/types/api";
 import { WorkEdit, WorkFormData } from "../_components/workEdit";
 
 export default function EditWorkPage() {
   const router = useRouter();
-  const { user } = useAuth();
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [errors, setErrors] = useState<ApiErrorBody | null>(null);
@@ -30,16 +28,12 @@ export default function EditWorkPage() {
 
   return (
     <div>
-      {!user ? (
-        <p>Log in first, a visitor cannot submit a work.</p>
-      ) : (
-        <WorkEdit
-          work={null}
-          categories={categories}
-          errors={errors}
-          handleSave={handleCreate}
-        />
-      )}
+      <WorkEdit
+        work={null}
+        categories={categories}
+        errors={errors}
+        handleSave={handleCreate}
+      />
     </div>
   );
 }

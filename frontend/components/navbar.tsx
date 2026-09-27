@@ -14,10 +14,13 @@ import {
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "./ui/avatar";
 import { Separator } from "./ui/separator";
+import LoadingGuard from "./guards/loadingGuard";
 
 export function Navbar() {
   const { user, loading, logout } = useAuth();
   const { unreadCount } = useNotifications();
+
+  if (loading) return <LoadingGuard />;
 
   return (
     <nav className="flex items-center justify-between h-13 px-6 border-b">
@@ -25,9 +28,7 @@ export function Navbar() {
         <Link href="/">Goodle</Link>
       </div>
       <div>
-        {loading ? (
-          "Checking session..."
-        ) : user ? (
+        {user ? (
           <div className="flex items-center justify-center gap-5">
             <Button variant="ghost" size="icon" className="relative mt-1">
               <Bell />

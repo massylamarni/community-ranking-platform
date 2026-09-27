@@ -1,10 +1,5 @@
 import { request } from "@/lib/http";
-import type {
-  SubmitWorkPayload,
-  UpdateWorkPayload,
-  VoteForWorkPayload,
-  Work,
-} from "@/types/api";
+import type { SubmitWorkPayload, UpdateWorkPayload, Work } from "@/types/api";
 
 function toFormData(payload: SubmitWorkPayload | UpdateWorkPayload): FormData {
   const form = new FormData();
@@ -32,13 +27,6 @@ export const worksRepository = {
     return request<Work>(`/works/${workId}`, {
       method: "PATCH",
       body: toFormData(payload),
-    });
-  },
-
-  vote(workId: string, payload: VoteForWorkPayload): Promise<Work> {
-    return request(`/works/${workId}/vote`, {
-      method: "PATCH",
-      body: payload,
     });
   },
 

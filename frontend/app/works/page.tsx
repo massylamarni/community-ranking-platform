@@ -8,6 +8,7 @@ import FilterBar from "./_components/filterBar";
 import { WorkList } from "./_components/workList";
 import { WorkItem } from "./_components/workItem";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import LoadingGuard from "@/components/guards/loadingGuard";
 
 export default function WorksDemoPage() {
   const { user } = useAuth();
@@ -16,6 +17,7 @@ export default function WorksDemoPage() {
   const [works, setWorks] = useState<Work[]>([]);
   const [selectedWork, setSelectedWork] = useState<Work | null>(null);
   const [error, setError] = useState<unknown>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     categoriesRepository.list().then((cats) => {
@@ -29,14 +31,20 @@ export default function WorksDemoPage() {
     categoriesRepository
       .worksOf(categoryId)
       .then((page) => setWorks(page.items))
-      .catch(setError);
+      .catch(setError)
+      .finally(() => {
+        setLoading(false);
+      });
   }, [categoryId]);
+
+  function handleSetWork(work: Work) {
+    setWorks((prev) => prev.map((w) => (w.id === work.id ? work : w)));
+  }
 
   const isAuthor =
     !!user && !!selectedWork && user.username === selectedWork.author.username;
 
-  if (!user) return "Log in first to submit a work or manage your own.";
-
+  if (loading) return <LoadingGuard />;
   return (
     <div>
       <FilterBar
@@ -48,6 +56,7 @@ export default function WorksDemoPage() {
         works={works}
         setWorks={setWorks}
         setSelectedWork={setSelectedWork}
+        username={user?.username}
       />
       {error ? <p role="alert">{String(error)}</p> : null}{" "}
       <Dialog
@@ -57,9 +66,7 @@ export default function WorksDemoPage() {
         <DialogContent className="p-0 sm:max-w-lg">
           <WorkItem
             work={selectedWork}
-            setWork={(work) =>
-              setWorks((prev) => prev.map((w) => (w.id === work.id ? work : w)))
-            }
+            setWork={isAuthor ? undefined : handleSetWork}
           >
             {isAuthor && <div>Manage this work</div>}
           </WorkItem>

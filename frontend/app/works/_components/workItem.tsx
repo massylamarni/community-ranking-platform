@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { worksRepository } from "@/repositories";
+import { votesRepository } from "@/repositories";
 import { ApiErrorBody, VoteForWorkPayload, Work } from "@/types/api";
 import { ArrowBigDown, ArrowBigUp } from "lucide-react";
 import Image from "next/image";
@@ -22,23 +22,24 @@ export function WorkItem({
   children,
 }: {
   work: Work | null;
-  setWork: (work: Work) => void;
+  setWork?: (work: Work) => void | undefined;
   setSelectedWork?: (w: Work | null) => void;
   children?: ReactNode;
 }) {
   const [errors, setErrors] = useState<ApiErrorBody | null>(null);
 
   async function handleVote(vt: VoteForWorkPayload) {
-    if (!work) return;
+    if (!work || !setWork) return;
     setErrors(null);
 
     try {
-      const updated = await worksRepository.vote(work.id, vt);
+      const updated = await votesRepository.vote(work.id, vt);
       setWork(updated);
     } catch (err) {
       setErrors(err as ApiErrorBody);
     }
   }
+  const disableVote = !setWork;
 
   if (!work) return;
   return (
@@ -66,6 +67,7 @@ export function WorkItem({
             <Button
               variant={work.currentUserVote === 1 ? "default" : "outline"}
               onClick={() => handleVote({ value: 1 })}
+              disabled={disableVote}
             >
               <ArrowBigUp />
               {work.totalVotes - (work.totalVotes - work.score) / 2}
@@ -73,6 +75,7 @@ export function WorkItem({
             <Button
               variant={work.currentUserVote === -1 ? "default" : "outline"}
               onClick={() => handleVote({ value: -1 })}
+              disabled={disableVote}
             >
               <ArrowBigDown />
               {(work.totalVotes - work.score) / 2}

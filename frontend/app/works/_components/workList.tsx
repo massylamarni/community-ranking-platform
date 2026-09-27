@@ -7,14 +7,21 @@ export function WorkList({
   works,
   setWorks,
   setSelectedWork,
+  username,
 }: {
   works: Work[];
   setWorks: Dispatch<SetStateAction<Work[]>>;
   setSelectedWork: Dispatch<SetStateAction<Work | null>>;
+  username: string | undefined;
 }) {
   useEffect(() => {
     setSelectedWork(null);
   }, [works, setSelectedWork]);
+
+  function handleSetWork(work: Work) {
+    if (!setWorks) return;
+    setWorks((prev) => prev.map((w) => (w.id === work.id ? work : w)));
+  }
 
   return works.length === 0 ? (
     <Card className="relative w-full max-w-sm">
@@ -28,9 +35,7 @@ export function WorkList({
         <WorkItem
           key={w.id}
           work={w}
-          setWork={(work) =>
-            setWorks((prev) => prev.map((w) => (w.id === work.id ? work : w)))
-          }
+          setWork={w.author.username === username ? undefined : handleSetWork}
           setSelectedWork={setSelectedWork}
         />
       ))}

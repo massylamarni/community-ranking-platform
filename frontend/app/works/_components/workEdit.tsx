@@ -1,3 +1,4 @@
+import { AttachmentUploader } from "@/components/attachmentUploader";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -17,7 +18,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ApiErrorBody, Category, Work } from "@/types/api";
 import { FormEvent, useState } from "react";
-import { AttachmentUploader } from "./attachmentUploader";
 
 const DEFAULT_WORK: Work = {
   id: "",
