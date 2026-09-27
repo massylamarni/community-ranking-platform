@@ -112,6 +112,36 @@ const works: DbWork[] = [
     id: "w1",
     title: "Sunset over the harbour",
     description: "A long-exposure shot taken from the old pier.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=900&auto=format&fit=crop&q=80",
+    authorId: "u2",
+    categoryIds: ["c1"],
+    status: "accepted",
+    votes: [
+      { userId: "u1", value: 1, createdAt: daysAgo(0) },
+      { userId: "u3", value: 1, createdAt: daysAgo(1) },
+    ],
+    createdAt: daysAgo(10),
+  },
+  {
+    id: "w11",
+    title: "Sunset over the sun",
+    description: "A long-exposure shot taken from the old pier.",
+    imageUrl:
+      "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=900&auto=format&fit=crop&q=80",
+    authorId: "u2",
+    categoryIds: ["c1"],
+    status: "accepted",
+    votes: [
+      { userId: "u1", value: 1, createdAt: daysAgo(0) },
+      { userId: "u3", value: 1, createdAt: daysAgo(1) },
+    ],
+    createdAt: daysAgo(10),
+  },
+  {
+    id: "w12",
+    title: "Sunset over the moon",
+    description: "A long-exposure shot taken from the old pier.",
     imageUrl: null,
     authorId: "u2",
     categoryIds: ["c1"],

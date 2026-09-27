@@ -94,4 +94,4 @@ deploy-prod:
     - ssh $SSH_USER@$IP_SERVER "mkdir -p $DEST_DIR"
     - tar --exclude='backend/target' --exclude='frontend/node_modules' --exclude='frontend/.next' -czf - backend frontend infrastructure | ssh $SSH_USER@$IP_SERVER "tar -xzf - -C $DEST_DIR"
     - scp .env $SSH_USER@$IP_SERVER:$DEST_DIR/.env
-    - ssh $SSH_USER@$IP_SERVER "docker volume create group3_mysql_data >/dev/null && docker volume create group3_uploads_data >/dev/null && cd $DEST_DIR && docker compose -f infrastructure/docker/docker-compose.yml up --build -d --remove-orphans"
+    - ssh $SSH_USER@$IP_SERVER "docker volume create group3_mysql_data >/dev/null && docker volume create group3_uploads_data >/dev/null && cd $DEST_DIR && docker compose -p group3 -f infrastructure/docker/docker-compose.yml up --build -d --remove-orphans"
