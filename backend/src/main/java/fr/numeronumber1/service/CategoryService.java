@@ -4,7 +4,12 @@ import fr.numeronumber1.dto.request.CategoryRequest;
 import fr.numeronumber1.exception.CategoryAlreadyExistsException;
 import fr.numeronumber1.exception.ResourceNotFoundException;
 import fr.numeronumber1.model.Category;
+import fr.numeronumber1.model.Oeuvre;
+import fr.numeronumber1.model.enums.OeuvreStatus;
 import fr.numeronumber1.repository.CategoryRepository;
+import fr.numeronumber1.repository.OeuvreCategoryRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,9 +18,11 @@ import java.util.Optional;
 @Service
 public class CategoryService {
     private final CategoryRepository categoryRepository;
+    private final  OeuvreCategoryRepository oeuvreCategoryRepository;
 
-    public CategoryService(CategoryRepository categoryRepository) {
+    public CategoryService(CategoryRepository categoryRepository, OeuvreCategoryRepository oeuvreCategoryRepository) {
         this.categoryRepository = categoryRepository;
+        this.oeuvreCategoryRepository = oeuvreCategoryRepository;
     }
 
     public Category createCategory(CategoryRequest request) {
@@ -79,5 +86,19 @@ public class CategoryService {
         category.setName(request.getName());
 
         return categoryRepository.save(category);
+    }
+
+    public Page<Oeuvre> getPublishedWorksByCategoryId(Integer categoryId, Pageable pageable) {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Catégorie introuvable avec l'id : " + categoryId
+                        ));
+
+        return oeuvreCategoryRepository.findPublishedWorksByCategory(
+                category.getCategoryId(),
+                OeuvreStatus.approved,
+                pageable
+        );
     }
 }

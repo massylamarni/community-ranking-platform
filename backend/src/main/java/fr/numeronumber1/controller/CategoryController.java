@@ -2,8 +2,11 @@ package fr.numeronumber1.controller;
 
 import fr.numeronumber1.dto.request.CategoryRequest;
 import fr.numeronumber1.model.Category;
+import fr.numeronumber1.model.Oeuvre;
 import fr.numeronumber1.security.RequireAdmin;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -71,6 +74,16 @@ public class CategoryController {
         Category category = categoryService.updateCategory(id, request);
 
         return ResponseEntity.ok(category);
+    }
+
+    @GetMapping("/{id}/works")
+    public ResponseEntity<Page<Oeuvre>> getPublishedWorksByCategory(
+            @PathVariable Integer id,
+            Pageable pageable) {
+
+        return ResponseEntity.ok(
+                categoryService.getPublishedWorksByCategoryId(id, pageable)
+        );
     }
 }
 
