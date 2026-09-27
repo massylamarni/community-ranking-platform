@@ -101,6 +101,12 @@ volumes:
 networks:
   frontend-net:
     driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.3.0/24
   data-net:
     driver: bridge
     internal: true
+    ipam:
+      config:
+        - subnet: 172.30.23.0/24
