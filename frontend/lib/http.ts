@@ -28,7 +28,14 @@ function setMockSessionToken(token: string | null) {
 }
 
 function buildUrl(path: string, query?: RequestOptions["query"]) {
-  const url = new URL(path.replace(/^\//, ""), `${API_BASE_URL}/`);
+  const baseUrl =
+    typeof window === "undefined"
+      ? (process.env.INTERNAL_API_URL ?? "http://localhost:8080")
+      : API_BASE_URL;
+  const absoluteBaseUrl = baseUrl.startsWith("/")
+    ? new URL(baseUrl, window.location.origin).toString()
+    : baseUrl;
+  const url = new URL(path.replace(/^\//, ""), `${absoluteBaseUrl}/`);
   if (query) {
     for (const [key, value] of Object.entries(query)) {
       if (value === undefined || value === null) continue;
