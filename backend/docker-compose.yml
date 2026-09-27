@@ -52,18 +52,23 @@ services:
       DB_URL: jdbc:mysql://db:3306/numero_number_one?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       DB_USERNAME: root
       DB_PASSWORD: root
+      UPLOAD_DIR: /uploads
       MAIL_HOST: smtp.gmail.com
       MAIL_PORT: 587
       MAIL_USERNAME: ${MAIL_USERNAME}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
     ports:
       - "8080:8080"
+    volumes:
+      - uploads_data:/uploads
     networks:
       - numero1-net
 
 # Shared resources
 volumes:
   mysql_data:
+    driver: local
+  uploads_data:
     driver: local
 
 networks:

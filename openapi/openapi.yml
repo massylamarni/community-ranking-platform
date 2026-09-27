@@ -219,19 +219,117 @@ paths:
   /works:
     post:
       tags: [works]
-      summary: Submit a new work, authenticated users (OEU-001..006)
+      summary: Create a new work draft, authenticated users (OEU-001)
       requestBody:
         required: true
         content:
           multipart/form-data:
-            schema: { $ref: "#/components/schemas/SubmitWork" }
+            schema: { $ref: "#/components/schemas/CreateWork" }
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateWork" }
       responses:
         "201":
-          description: Created with status "pending"
+          description: Created with status "created"
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Work" }
+        "400":
+          description: Fichier invalide (type non supporté ou taille > 5Mo)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "409":
+          description: Un titre identique existe déjà
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "422": { $ref: "#/components/responses/ValidationError" }
+
+  /works/{workId}/image:
+    post:
+      tags: [works]
+      summary: Upload or update image for a work draft (author only)
+      parameters:
+        - $ref: "#/components/parameters/WorkId"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [image]
+              properties:
+                image: { type: string, format: binary }
+      responses:
+        "200":
+          description: Image enregistrée avec succès
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Work" }
+        "400":
+          description: Fichier invalide (type non supporté ou taille > 5Mo)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403":
+          description: Vous n'êtes pas l'auteur de cette œuvre
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /uploads/works/{filename}:
+    get:
+      tags: [works]
+      summary: Retrieve an uploaded work image
+      description: Public URL returned as imageUrl in the work response.
+      security: []
+      parameters:
+        - name: filename
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Image file
+          content:
+            image/jpeg:
+              schema: { type: string, format: binary }
+            image/png:
+              schema: { type: string, format: binary }
+            image/webp:
+              schema: { type: string, format: binary }
+            image/gif:
+              schema: { type: string, format: binary }
+        "404":
+          description: Image not found
+
+  /works/{workId}/submit:
+    post:
+      tags: [works]
+      summary: Submit a work draft to one or more categories for admin review (OEU-002). Status → pending.
+      parameters:
+        - $ref: "#/components/parameters/WorkId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SubmitWork" }
+      responses:
+        "200":
+          description: Work submitted, status is now "pending"
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Work" }
+        "400":
+          description: Œuvre déjà soumise ou vous n'en êtes pas l'auteur
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
         "422": { $ref: "#/components/responses/ValidationError" }
 
   /works/{workId}:
@@ -533,7 +631,7 @@ components:
       name: workId
       in: path
       required: true
-      schema: { type: string }
+      schema: { type: integer, format: int64 }
     CategoryId:
       name: categoryId
       in: path
@@ -690,22 +788,28 @@ components:
         author: { type: object, properties: { username: { type: string } } }
         categories:
           { type: array, items: { $ref: "#/components/schemas/Category" } }
-        status: { type: string, enum: [pending, accepted, refused] }
+        status: { type: string, enum: [created, pending, approved, rejected] }
         score: { type: integer }
         totalVotes: { type: integer }
         currentUserVote: { type: integer, enum: [1, -1], nullable: true }
 
+    CreateWork:
+      type: object
+      required: [title, description]
+      properties:
+        title: { type: string, minLength: 1, maxLength: 150 }
+        description: { type: string, minLength: 1 }
+        image: { type: string, format: binary }
+        imageUrl: { type: string, maxLength: 255, nullable: true }
+
     SubmitWork:
       type: object
-      required: [title, description, categoryIds]
+      required: [categoryIds]
       properties:
-        title: { type: string, minLength: 1 }
-        description: { type: string, minLength: 1 }
         categoryIds:
           type: array
-          items: { type: string }
+          items: { type: integer }
           minItems: 1
-        image: { type: string, format: binary }
 
     UpdateWork:
       type: object
