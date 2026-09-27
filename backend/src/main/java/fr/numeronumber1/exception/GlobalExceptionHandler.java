@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -68,7 +69,7 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
-    @ExceptionHandler({UsernameAlreadyExistsException.class, EmailAlreadyExistsException.class})
+    @ExceptionHandler({UsernameAlreadyExistsException.class, EmailAlreadyExistsException.class, CategoryAlreadyExistsException.class})
     public ResponseEntity<Map<String, Object>> handleConflict(RuntimeException ex) {
         return error(HttpStatus.CONFLICT, ex.getMessage());
     }
@@ -103,5 +104,22 @@ public class GlobalExceptionHandler {
 
     private ResponseEntity<Map<String, Object>> error(HttpStatus status, String message) {
         return ResponseEntity.status(status).body(Map.of("status", status.value(), "error", message));
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Map<String, Object>> handleTypeMismatch(
+            MethodArgumentTypeMismatchException ex) {
+
+        if ("id".equals(ex.getName())) {
+            return error(
+                    HttpStatus.BAD_REQUEST,
+                    "L'identifiant doit être un nombre entier"
+            );
+        }
+
+        return error(
+                HttpStatus.BAD_REQUEST,
+                "La valeur fournie pour le paramètre '" + ex.getName() + "' est invalide"
+        );
     }
 }
