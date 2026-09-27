@@ -1,0 +1,44 @@
+import { Dispatch, SetStateAction, useEffect } from "react";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Work } from "@/types/api";
+import { WorkItem } from "./workItem";
+
+export function WorkList({
+  works,
+  setWorks,
+  setSelectedWork,
+  username,
+}: {
+  works: Work[];
+  setWorks: Dispatch<SetStateAction<Work[]>>;
+  setSelectedWork: Dispatch<SetStateAction<Work | null>>;
+  username: string | undefined;
+}) {
+  useEffect(() => {
+    setSelectedWork(null);
+  }, [works, setSelectedWork]);
+
+  function handleSetWork(work: Work) {
+    if (!setWorks) return;
+    setWorks((prev) => prev.map((w) => (w.id === work.id ? work : w)));
+  }
+
+  return works.length === 0 ? (
+    <Card className="relative w-full max-w-sm">
+      <CardHeader className="flex justify-center items-center">
+        <CardTitle>No work is available in this category yet.</CardTitle>
+      </CardHeader>
+    </Card>
+  ) : (
+    <div>
+      {works.map((w) => (
+        <WorkItem
+          key={w.id}
+          work={w}
+          setWork={w.author.username === username ? undefined : handleSetWork}
+          setSelectedWork={setSelectedWork}
+        />
+      ))}
+    </div>
+  );
+}

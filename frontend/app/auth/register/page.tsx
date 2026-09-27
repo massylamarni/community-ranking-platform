@@ -10,12 +10,19 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
 import Link from "next/link";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Eye, EyeClosed } from "lucide-react";
+import { toast } from "sonner";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { ApiErrorBody } from "@/types/api";
 
 export default function Register() {
   const { register } = useAuth();
@@ -24,7 +31,7 @@ export default function Register() {
     email: "",
     password: "",
   });
-  const [authError, setAuthError] = useState<unknown>(null);
+  const [authError, setAuthError] = useState<ApiErrorBody | null>(null);
   const [authBusy, setAuthBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -32,14 +39,25 @@ export default function Register() {
     e.preventDefault();
     setAuthError(null);
     setAuthBusy(true);
+
+    const promise = register(registerForm);
+
+    toast.promise(promise, {
+      loading: "Creating your account...",
+      success: () => "Account created successfully",
+      error: (err) => err?.message ?? "Registration failed",
+    });
+
     try {
-      await register(registerForm);
+      await promise;
     } catch (err) {
-      setAuthError(err);
+      setAuthError(err as ApiErrorBody);
     } finally {
       setAuthBusy(false);
     }
   }
+
+  const fe = authError?.fields ?? {};
 
   return (
     <Card className="w-full max-w-sm">
@@ -52,10 +70,10 @@ export default function Register() {
         </CardAction>
       </CardHeader>
       <CardContent>
-        <form onSubmit={handleRegister}>
-          <div className="flex flex-col gap-6">
-            <div className="grid gap-2">
-              <Label htmlFor="username">Username</Label>
+        <form id="register-form" onSubmit={handleRegister}>
+          <FieldGroup>
+            <Field>
+              <FieldLabel htmlFor="username">Username</FieldLabel>
               <Input
                 id="username"
                 value={registerForm.username}
@@ -64,9 +82,10 @@ export default function Register() {
                 }
                 required
               />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="email">Email</Label>
+              {fe.username && <FieldError>{fe.username}</FieldError>}
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="email">Email</FieldLabel>
               <Input
                 id="email"
                 type="email"
@@ -76,9 +95,10 @@ export default function Register() {
                 }
                 required
               />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
+              {fe.email && <FieldError>{fe.email}</FieldError>}
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="password">Password</FieldLabel>
               <ButtonGroup className="w-full">
                 <Input
                   id="password"
@@ -90,6 +110,7 @@ export default function Register() {
                   required
                 />
                 <Button
+                  type="button"
                   variant="outline"
                   size="icon"
                   onClick={() => setShowPassword((prev) => !prev)}
@@ -97,15 +118,20 @@ export default function Register() {
                   {showPassword ? <Eye /> : <EyeClosed />}
                 </Button>
               </ButtonGroup>
-            </div>
-          </div>
+              {fe.password && <FieldError>{fe.password}</FieldError>}
+            </Field>
+          </FieldGroup>
         </form>
       </CardContent>
       <CardFooter className="flex-col gap-2">
-        <Button type="submit" className="w-full" disabled={authBusy}>
+        <Button
+          type="submit"
+          form="register-form"
+          className="w-full"
+          disabled={authBusy}
+        >
           Create account
         </Button>
-        <pre>{JSON.stringify(authError, null, 2)}</pre>
       </CardFooter>
     </Card>
   );
