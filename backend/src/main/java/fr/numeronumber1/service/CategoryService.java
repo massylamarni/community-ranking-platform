@@ -59,4 +59,25 @@ public class CategoryService {
 
         categoryRepository.deleteById(id);
     }
+
+    public Category updateCategory(Integer id, CategoryRequest request) {
+
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException(
+                                "Catégorie introuvable avec l'id : " + id
+                        ));
+
+        if (categoryRepository.existsByName(request.getName())
+                && !category.getName().equals(request.getName())) {
+
+            throw new CategoryAlreadyExistsException(
+                    "Une catégorie avec ce nom existe déjà"
+            );
+        }
+
+        category.setName(request.getName());
+
+        return categoryRepository.save(category);
+    }
 }

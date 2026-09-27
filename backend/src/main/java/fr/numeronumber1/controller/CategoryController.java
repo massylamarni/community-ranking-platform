@@ -61,5 +61,16 @@ public class CategoryController {
         categoryService.deleteCategory(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PutMapping("/{id}")
+    @RequireAdmin
+    public ResponseEntity<Category> updateCategory(
+            @PathVariable Integer id,
+            @Valid @RequestBody CategoryRequest request) {
+
+        Category category = categoryService.updateCategory(id, request);
+
+        return ResponseEntity.ok(category);
+    }
 }
 
