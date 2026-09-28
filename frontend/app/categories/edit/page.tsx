@@ -14,11 +14,18 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Plus, X } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { ConfirmDialog } from "@/components/confirmDialog";
+import { HeaderPortal } from "@/components/header-portal";
 
-export default function CategoriesManager() {
+export default function EditCategories() {
   const { user } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState<unknown>(null);
@@ -70,39 +77,42 @@ export default function CategoriesManager() {
   }
 
   return (
-    <div>
-      <Card className="max-w-xs">
+    <>
+      <HeaderPortal>
+        <div className="flex justify-end w-full">
+          {isAdmin(user) ? (
+            <Popover open={open} onOpenChange={setOpen}>
+              <PopoverTrigger
+                render={
+                  <Button variant="ghost" size="icon">
+                    <Plus className="h-4 w-4" />
+                  </Button>
+                }
+              ></PopoverTrigger>
+              <PopoverContent className="w-64" align="end">
+                <form onSubmit={create} className="flex flex-col gap-2">
+                  <Label htmlFor="new-category-name">Name</Label>
+                  <Input
+                    id="new-category-name"
+                    value={newName}
+                    onChange={(e) => setNewName(e.target.value)}
+                    autoFocus
+                  />
+                  <Button type="submit" size="sm">
+                    Create
+                  </Button>
+                </form>
+              </PopoverContent>
+            </Popover>
+          ) : null}
+        </div>
+      </HeaderPortal>
+      <Card>
         <CardHeader>
-          <CardTitle>
-            <div className="flex justify-between items-center">
-              <div>Manage categories</div>
-              {isAdmin(user) ? (
-                <Popover open={open} onOpenChange={setOpen}>
-                  <PopoverTrigger
-                    render={
-                      <Button variant="ghost" size="icon">
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                    }
-                  ></PopoverTrigger>
-                  <PopoverContent className="w-64" align="end">
-                    <form onSubmit={create} className="flex flex-col gap-2">
-                      <Label htmlFor="new-category-name">Name</Label>
-                      <Input
-                        id="new-category-name"
-                        value={newName}
-                        onChange={(e) => setNewName(e.target.value)}
-                        autoFocus
-                      />
-                      <Button type="submit" size="sm">
-                        Create
-                      </Button>
-                    </form>
-                  </PopoverContent>
-                </Popover>
-              ) : null}
-            </div>
-          </CardTitle>
+          <CardTitle>Manage categories</CardTitle>
+          <CardDescription>
+            Add or remove the categories that works can be filed under.
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <ScrollArea className="max-h-72 rounded-md border overflow-scroll">
@@ -149,6 +159,6 @@ export default function CategoriesManager() {
         loading={deleting}
         error={error}
       />
-    </div>
+    </>
   );
 }

@@ -15,24 +15,19 @@ import {
 } from "@/components/ui/sidebar";
 import {
   GalleryVerticalEndIcon,
-  AudioLinesIcon,
-  TerminalIcon,
   TerminalSquareIcon,
   BotIcon,
-  BookOpenIcon,
-  Settings2Icon,
   FrameIcon,
   PieChartIcon,
   MapIcon,
+  User,
+  BriefcaseBusiness,
 } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
+import { categoriesRepository } from "@/repositories";
+import { Category } from "@/types/api";
 
-// This is sample data.
 const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
   teams: [
     {
       name: "Number1",
@@ -43,56 +38,48 @@ const data = {
   navMain: [
     {
       title: "Profile",
-      url: "#",
-      icon: <TerminalSquareIcon />,
+      url: "/auth/profile",
+      icon: <User />,
       isActive: true,
       items: [
-        {
+        /*{
           title: "View",
           url: "#",
-        },
+        },*/
         {
           title: "Edit",
-          url: "#",
+          url: "/auth/profile",
         },
       ],
     },
     {
       title: "Works",
       url: "#",
-      icon: <BotIcon />,
+      icon: <BriefcaseBusiness />,
       items: [
-        {
-          title: "New",
-          url: "#",
-        },
         {
           title: "My works",
           url: "#",
         },
+        {
+          title: "New",
+          url: "/works/new",
+        },
       ],
-    },
-  ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: <FrameIcon />,
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: <PieChartIcon />,
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: <MapIcon />,
     },
   ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user, logout } = useAuth();
+  const [categories, setCategories] = React.useState<Category[]>([]);
+
+  React.useEffect(() => {
+    categoriesRepository.list().then((cats) => {
+      setCategories(cats);
+    });
+  }, []);
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -100,10 +87,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
+        <NavProjects
+          projects={categories.slice(0, 3).map((category) => ({
+            name: category.name,
+            url: `/categories/${category.id}`,
+          }))}
+        />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        {user && (
+          <NavUser
+            user={{
+              name: user.username,
+              email: "",
+            }}
+            logout={logout}
+          />
+        )}
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

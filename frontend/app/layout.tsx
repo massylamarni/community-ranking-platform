@@ -50,16 +50,17 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
             <AppSidebar />
             <SidebarInset>
               <Navbar />
-              <header className="flex h-12 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b">
-                <div className="flex items-center gap-2 px-4">
+              <header className="sticky top-13 flex h-12 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 border-b bg-background z-10">
+                <div className="flex flex-1 items-center gap-2 px-4">
                   <SidebarTrigger className="-ml-1" />
                   <Separator
                     orientation="vertical"
                     className="mr-2 data-vertical:h-4 data-vertical:self-auto"
                   />
+                  <div id="header-slot" className="flex w-full" />
                 </div>
               </header>
-              <div className="flex flex-1 items-center justify-center flex-col p-4">
+              <div className="relative flex flex-1 items-center flex-col p-4">
                 {children}
               </div>
             </SidebarInset>

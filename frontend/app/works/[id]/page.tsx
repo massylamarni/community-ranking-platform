@@ -46,10 +46,5 @@ export default function DisplayWork() {
   if (loading) return <LoadingGuard />;
   if (!work) return <WorkNotFoundGuard />;
   if (!isAuthor) return <AuthorGuard />;
-  return (
-    <div>
-      <WorkItem work={work} />
-      {error ? <p role="alert">{String(error)}</p> : null}
-    </div>
-  );
+  return <WorkItem work={work} />;
 }

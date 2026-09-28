@@ -9,15 +9,17 @@ import LoadingGuard from "@/components/guards/loadingGuard";
 import { WorkList } from "../works/_components/workList";
 import { WorkItem } from "../works/_components/workItem";
 import FilterBar from "./_components/filterBar";
+import { HeaderPortal } from "@/components/header-portal";
 
 export default function WorksByCategory() {
   const { user } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [categoryId, setCategoryId] = useState<string>("");
   const [works, setWorks] = useState<Work[]>([]);
-  const [selectedWork, setSelectedWork] = useState<Work | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [loading, setLoading] = useState(true);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const selectedWork = works.find((w) => w.id === selectedId) ?? null;
 
   useEffect(() => {
     categoriesRepository.list().then((cats) => {
@@ -46,22 +48,26 @@ export default function WorksByCategory() {
 
   if (loading) return <LoadingGuard />;
   return (
-    <div>
-      <FilterBar
-        categories={categories}
-        categoryId={categoryId}
-        setCategoryId={setCategoryId}
-      />
+    <>
+      <HeaderPortal>
+        <FilterBar
+          categories={categories}
+          categoryId={categoryId}
+          setCategoryId={(id) => {
+            setSelectedId(null);
+            setCategoryId(id);
+          }}
+        />
+      </HeaderPortal>
       <WorkList
         works={works}
         setWorks={setWorks}
-        setSelectedWork={setSelectedWork}
+        setSelectedWork={(w) => setSelectedId(w?.id ?? null)}
         username={user?.username}
       />
-      {error ? <p role="alert">{String(error)}</p> : null}{" "}
       <Dialog
         open={!!selectedWork}
-        onOpenChange={(open) => !open && setSelectedWork(null)}
+        onOpenChange={(open) => !open && setSelectedId(null)}
       >
         <DialogContent className="p-0 sm:max-w-lg">
           <WorkItem
@@ -72,6 +78,6 @@ export default function WorksByCategory() {
           </WorkItem>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

@@ -16,13 +16,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
-import {
-  MoreHorizontalIcon,
-  FolderIcon,
-  ArrowRightIcon,
-  Trash2Icon,
-  ChartColumnStacked,
-} from "lucide-react";
+import { MoreHorizontalIcon, FolderIcon, Trash2Icon } from "lucide-react";
+import Link from "next/link";
 
 export function NavProjects({
   projects,
@@ -30,7 +25,6 @@ export function NavProjects({
   projects: {
     name: string;
     url: string;
-    icon: React.ReactNode;
   }[];
 }) {
   const { isMobile } = useSidebar();
@@ -40,8 +34,7 @@ export function NavProjects({
       <SidebarMenu>
         {projects.map((item) => (
           <SidebarMenuItem key={item.name}>
-            <SidebarMenuButton render={<a href={item.url} />}>
-              <ChartColumnStacked />
+            <SidebarMenuButton render={<Link href={item.url} />}>
               <span>{item.name}</span>
             </SidebarMenuButton>
             <DropdownMenu>
@@ -75,7 +68,10 @@ export function NavProjects({
           </SidebarMenuItem>
         ))}
         <SidebarMenuItem>
-          <SidebarMenuButton className="text-sidebar-foreground/70">
+          <SidebarMenuButton
+            render={<Link href="/categories" />}
+            className="text-sidebar-foreground/70"
+          >
             <MoreHorizontalIcon className="text-sidebar-foreground/70" />
             <span>More</span>
           </SidebarMenuButton>

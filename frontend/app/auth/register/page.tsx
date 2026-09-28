@@ -60,7 +60,7 @@ export default function Register() {
   const fe = authError?.fields ?? {};
 
   return (
-    <Card className="w-full max-w-sm">
+    <Card>
       <CardHeader>
         <CardTitle>Create a new account</CardTitle>
         <CardAction>
@@ -123,13 +123,8 @@ export default function Register() {
           </FieldGroup>
         </form>
       </CardContent>
-      <CardFooter className="flex-col gap-2">
-        <Button
-          type="submit"
-          form="register-form"
-          className="w-full"
-          disabled={authBusy}
-        >
+      <CardFooter>
+        <Button type="submit" form="register-form" disabled={authBusy}>
           Create account
         </Button>
       </CardFooter>
