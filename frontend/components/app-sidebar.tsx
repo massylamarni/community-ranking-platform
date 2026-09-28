@@ -23,7 +23,7 @@ import {
   User,
   BriefcaseBusiness,
 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 import { categoriesRepository } from "@/repositories";
 import { Category } from "@/types/api";
 

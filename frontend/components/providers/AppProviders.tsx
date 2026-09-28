@@ -1,8 +1,8 @@
 "use client";
 
 import { MockingGate } from "./MockingGate";
-import { AuthProvider } from "@/context/AuthContext";
-import { NotificationsProvider } from "@/context/NotificationsContext";
+import { AuthProvider } from "@/hooks/use-auth";
+import { NotificationsProvider } from "@/contexts/NotificationsContext";
 
 export function AppProviders({ children }: { children: React.ReactNode }) {
   return (
