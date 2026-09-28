@@ -146,8 +146,13 @@ public class OeuvreService {
         if (!o.getAuthor().getUserId().equals(requester.getUserId()))
             throw new IllegalArgumentException("Vous n'êtes pas l'auteur de cette œuvre");
 
-        if (o.getStatus() != OeuvreStatus.created)
+        if (o.getStatus() != OeuvreStatus.created && o.getStatus() != OeuvreStatus.rejected)
             throw new IllegalArgumentException("Cette œuvre a déjà été soumise");
+
+        if (o.getStatus() == OeuvreStatus.rejected) {
+            o.setStatus(OeuvreStatus.pending);
+            return oeuvres.save(o);
+        }
 
         List<Category> chosen = categories.findAllById(req.getCategoryIds());
         if (chosen.size() != req.getCategoryIds().size())
