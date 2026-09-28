@@ -23,10 +23,7 @@ export function Navbar() {
   if (loading) return <LoadingGuard />;
 
   return (
-    <nav className="flex items-center justify-between h-13 px-6 border-b">
-      <div>
-        <Link href="/">Goodle</Link>
-      </div>
+    <nav className="flex items-center justify-end h-13 px-6 border-b">
       <div>
         {user ? (
           <div className="flex items-center justify-center gap-5">
