@@ -217,6 +217,33 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
 
   /works:
+    get:
+      tags: [works]
+      summary: List all works with optional basic filters
+      security: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [created, pending, approved, rejected]
+        - name: categoryId
+          in: query
+          required: false
+          schema: { type: integer }
+        - name: title
+          in: query
+          required: false
+          schema: { type: string }
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/Work" }
+
     post:
       tags: [works]
       summary: Create a new work draft, authenticated users (OEU-001)
@@ -347,7 +374,10 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
     patch:
       tags: [works]
-      summary: Edit a work, author only; re-enters moderation (OEU-012/013)
+      summary: >
+        Edit a work, author only (OEU-012/013). Only works with status
+        "created" or "rejected" can be modified. A rejected work resets
+        to "created" after modification so it can be resubmitted.
       parameters:
         - $ref: "#/components/parameters/WorkId"
       requestBody:
@@ -358,11 +388,17 @@ paths:
 
       responses:
         "200":
-          description: Updated; status reset to "pending" per OEU-013
+          description: Updated; rejected works reset to "created"
           content:
             application/json:
               schema: { $ref: "#/components/schemas/Work" }
+        "400":
+          description: L'œuvre ne peut pas être modifiée dans son état actuel
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
         "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
         "422": { $ref: "#/components/responses/ValidationError" }
     delete:
       tags: [works]
@@ -371,6 +407,7 @@ paths:
         - $ref: "#/components/parameters/WorkId"
       responses:
         "204": { description: Deleted }
+        "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
@@ -814,9 +851,8 @@ components:
     UpdateWork:
       type: object
       properties:
-        title: { type: string }
+        title: { type: string, maxLength: 150 }
         description: { type: string }
-        categoryIds: { type: array, items: { type: string } }
 
     VoteForWork:
       type: object
