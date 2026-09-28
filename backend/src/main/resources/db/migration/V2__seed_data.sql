@@ -12,10 +12,10 @@ INSERT IGNORE INTO categories (name) VALUES
 -- Users
 -- password_hash below is BCrypt of "Password123!"
 INSERT IGNORE INTO users (username, email, password_hash, is_admin) VALUES
-    ('admin',   'admin@numero1.fr',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', TRUE),
-    ('alice',   'alice@numero1.fr',   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', FALSE),
-    ('bob',     'bob@numero1.fr',     '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', FALSE),
-    ('charlie', 'charlie@numero1.fr', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', FALSE);
+    ('admin',   'admin@numero1.fr',   '$2a$10$zN3y35eJbF5/KVuOJEV1hukT/RYoQi/mci6altllMnjuhoPvSwa2q', TRUE),
+    ('alice',   'alice@numero1.fr',   '$2a$10$zN3y35eJbF5/KVuOJEV1hukT/RYoQi/mci6altllMnjuhoPvSwa2q', FALSE),
+    ('bob',     'bob@numero1.fr',     '$2a$10$zN3y35eJbF5/KVuOJEV1hukT/RYoQi/mci6altllMnjuhoPvSwa2q', FALSE),
+    ('charlie', 'charlie@numero1.fr', '$2a$10$zN3y35eJbF5/KVuOJEV1hukT/RYoQi/mci6altllMnjuhoPvSwa2q', FALSE);
 
 
 INSERT IGNORE INTO oeuvres (title, description, image_url, author_id, status) VALUES
