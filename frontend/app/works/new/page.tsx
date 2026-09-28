@@ -2,25 +2,27 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { categoriesRepository, worksRepository } from "@/repositories";
-import type { ApiErrorBody, Category } from "@/types/api";
+import type { ApiErrorBody } from "@/types/api";
 import { WorkEdit, WorkFormData } from "../_components/workEdit";
+import { useCategories } from "@/hooks/use-category";
+import { useWorks } from "@/hooks/use-work";
 
 export default function NewWork() {
   const router = useRouter();
 
-  const [categories, setCategories] = useState<Category[]>([]);
+  const { categories, list } = useCategories();
+  const { submit } = useWorks();
   const [errors, setErrors] = useState<ApiErrorBody | null>(null);
 
   useEffect(() => {
-    categoriesRepository.list().then(setCategories);
-  }, []);
+    list();
+  }, [list]);
 
   async function handleCreate(data: WorkFormData) {
     setErrors(null);
     try {
-      await worksRepository.submit(data);
-      router.push(`/works`);
+      await submit(data);
+      // router.push(`/works`);
     } catch (err) {
       setErrors(err as ApiErrorBody);
     }

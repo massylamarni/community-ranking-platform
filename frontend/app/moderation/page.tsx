@@ -1,30 +1,23 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useAuth, isAdmin } from "@/context/AuthContext";
-import { moderationRepository } from "@/repositories";
+import { useAuth, isAdmin } from "@/hooks/use-auth";
 import type { Work } from "@/types/api";
 import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import {
-  Empty,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-  EmptyDescription,
-} from "@/components/ui/empty";
-import { TriangleAlert } from "lucide-react";
 import LoadingGuard from "@/components/guards/loadingGuard";
 import { WorkItem } from "../works/_components/workItem";
 import { ModerationWorkCard } from "./_components/moderationWorkCard";
+import { useModeration } from "@/hooks/use-moderation";
 
 const PAGE_SIZE = 20;
 
 export default function ModerationPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, userLoading } = useAuth();
   const admin = isAdmin(user);
 
-  const [works, setWorks] = useState<Work[]>([]);
+  const { pending, pendingWorks, accept, refuse } = useModeration();
+  const works = pending?.items ?? [];
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<unknown>(null);
 
@@ -36,27 +29,26 @@ export default function ModerationPage() {
     setLoading(true);
     setError(null);
     try {
-      const result = await moderationRepository.pendingWorks(1, PAGE_SIZE);
-      setWorks(result.items);
+      await pendingWorks(1, PAGE_SIZE);
     } catch (err) {
       setError(err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [pendingWorks]);
 
   useEffect(() => {
-    if (!authLoading && admin) {
+    if (!userLoading && admin) {
+      // eslint-disable-next-line
       load();
     }
-  }, [authLoading, admin, load]);
+  }, [userLoading, admin, load]);
 
   async function handleAccept(work: Work) {
     setAcceptingId(work.id);
     setError(null);
     try {
-      await moderationRepository.accept(work.id);
-      setWorks((prev) => prev.filter((w) => w.id !== work.id));
+      await accept(work.id);
     } catch (err) {
       setError(err);
     } finally {
@@ -68,32 +60,14 @@ export default function ModerationPage() {
     setRefusingId(work.id);
     setError(null);
     try {
-      await moderationRepository.refuse(work.id, {
+      await refuse(work.id, {
         reason: reason.trim() || undefined,
       });
-      setWorks((prev) => prev.filter((w) => w.id !== work.id));
     } catch (err) {
       setError(err);
     } finally {
       setRefusingId(null);
     }
-  }
-
-  if (!authLoading && !admin) {
-    return (
-      <Empty className="w-full">
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <TriangleAlert />
-          </EmptyMedia>
-          <EmptyTitle>Accès réservé</EmptyTitle>
-          <EmptyDescription>
-            Vous n&apos;avez pas les droits nécessaires pour accéder à la
-            modération.
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    );
   }
 
   if (loading) return <LoadingGuard />;

@@ -2,36 +2,35 @@
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "@/context/AuthContext";
-import { categoriesRepository, worksRepository } from "@/repositories";
-import type { ApiErrorBody, Category, Work } from "@/types/api";
+import { useAuth } from "@/hooks/use-auth";
+import type { ApiErrorBody } from "@/types/api";
 import { WorkEdit, WorkFormData } from "../../_components/workEdit";
 import LoadingGuard from "@/components/guards/loadingGuard";
 import WorkNotFoundGuard from "../../_components/guards/workNotFoundGuard";
 import AuthorGuard from "../../_components/guards/authorGuard";
+import { useWorks } from "@/hooks/use-work";
+import { useCategories } from "@/hooks/use-category";
 
 export default function EditWork() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const { user } = useAuth();
 
-  const [work, setWork] = useState<Work | null>(null);
-  const [categories, setCategories] = useState<Category[]>([]);
+  const { work, get, update, remove } = useWorks();
+  const { categories, list } = useCategories();
   const [errors, setErrors] = useState<ApiErrorBody | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    categoriesRepository.list().then(setCategories);
-  }, []);
+    list();
+  }, [list]);
 
   useEffect(() => {
     let isCurrent = true;
 
-    worksRepository
-      .get(id)
-      .then((w) => {
+    get(id)
+      .then(() => {
         if (!isCurrent) return;
-        setWork(w);
         setErrors(null);
       })
       .catch((err) => {
@@ -46,14 +45,13 @@ export default function EditWork() {
     return () => {
       isCurrent = false;
     };
-  }, [id]);
+  }, [id, get]);
 
   async function handleSave(data: WorkFormData) {
     if (!work) return;
     setErrors(null);
     try {
-      const updated = await worksRepository.update(work.id, data);
-      setWork(updated);
+      await update(work.id, data);
     } catch (err) {
       setErrors(err as ApiErrorBody);
     }
@@ -63,13 +61,12 @@ export default function EditWork() {
     if (!work) return;
     setErrors(null);
     try {
-      await worksRepository.remove(work.id);
+      await remove(work.id);
       router.push("/works");
     } catch (err) {
       setErrors(err as ApiErrorBody);
     }
   }
-
   const isAuthor = !!user && !!work && user.username === work.author.username;
   if (loading) return <LoadingGuard />;
   if (!work) return <WorkNotFoundGuard />;

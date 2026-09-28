@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth, isAdmin } from "@/context/AuthContext";
-import { categoriesRepository } from "@/repositories";
+import { useAuth, isAdmin } from "@/hooks/use-auth";
 import type { Category } from "@/types/api";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -24,10 +23,16 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { ConfirmDialog } from "@/components/confirmDialog";
 import { HeaderPortal } from "@/components/header-portal";
+import { useCategories } from "@/hooks/use-category";
 
 export default function EditCategories() {
   const { user } = useAuth();
-  const [categories, setCategories] = useState<Category[]>([]);
+  const {
+    categories,
+    list,
+    create: createCategory,
+    remove: removeCategory,
+  } = useCategories();
   const [error, setError] = useState<unknown>(null);
   const [newName, setNewName] = useState("");
   const [open, setOpen] = useState(false);
@@ -35,27 +40,17 @@ export default function EditCategories() {
   const [pendingDelete, setPendingDelete] = useState<Category | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  async function load() {
-    try {
-      setCategories(await categoriesRepository.list());
-    } catch (err) {
-      setError(err);
-    }
-  }
-
   useEffect(() => {
-    // eslint-disable-next-line
-    load();
-  }, []);
+    list().catch(setError);
+  }, [list]);
 
   async function create(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     try {
-      await categoriesRepository.create({ name: newName });
+      await createCategory({ name: newName });
       setNewName("");
       setOpen(false);
-      await load();
     } catch (err) {
       setError(err);
     }
@@ -66,16 +61,14 @@ export default function EditCategories() {
     setError(null);
     setDeleting(true);
     try {
-      await categoriesRepository.remove(pendingDelete.id);
+      await removeCategory(pendingDelete.id);
       setPendingDelete(null);
-      await load();
     } catch (err) {
       setError(err);
     } finally {
       setDeleting(false);
     }
   }
-
   return (
     <>
       <HeaderPortal>

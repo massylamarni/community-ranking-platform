@@ -10,8 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { isAdmin, useAuth } from "@/context/AuthContext";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { isAdmin, useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 

@@ -1,19 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { categoriesRepository } from "@/repositories";
-import type { Category, Work } from "@/types/api";
+import { useAuth } from "@/hooks/use-auth";
+import type { Work } from "@/types/api";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import LoadingGuard from "@/components/guards/loadingGuard";
 import { WorkList } from "../works/_components/workList";
 import { WorkItem } from "../works/_components/workItem";
 import FilterBar from "./_components/filterBar";
 import { HeaderPortal } from "@/components/header-portal";
+import { useCategories } from "@/hooks/use-category";
 
 export default function WorksByCategory() {
   const { user } = useAuth();
-  const [categories, setCategories] = useState<Category[]>([]);
+  const { categories, list, worksOf } = useCategories();
   const [categoryId, setCategoryId] = useState<string>("");
   const [works, setWorks] = useState<Work[]>([]);
   const [error, setError] = useState<unknown>(null);
@@ -22,22 +22,21 @@ export default function WorksByCategory() {
   const selectedWork = works.find((w) => w.id === selectedId) ?? null;
 
   useEffect(() => {
-    categoriesRepository.list().then((cats) => {
-      setCategories(cats);
+    list().then((cats) => {
       if (cats[0]) setCategoryId(cats[0].id);
+      else setLoading(false);
     });
-  }, []);
+  }, [list]);
 
   useEffect(() => {
     if (!categoryId) return;
-    categoriesRepository
-      .worksOf(categoryId)
+    worksOf(categoryId)
       .then((page) => setWorks(page.items))
       .catch(setError)
       .finally(() => {
         setLoading(false);
       });
-  }, [categoryId]);
+  }, [categoryId, worksOf]);
 
   function handleSetWork(work: Work) {
     setWorks((prev) => prev.map((w) => (w.id === work.id ? work : w)));
