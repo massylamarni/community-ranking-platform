@@ -36,6 +36,7 @@ services:
       - "127.0.0.1:8180:80"
     networks:
       - data-net
+      - frontend-net
 
   app:
     build:
@@ -103,10 +104,10 @@ networks:
     driver: bridge
     ipam:
       config:
-        - subnet: 172.20.20.0/24
+        - subnet: 192.168.208.0/24
   data-net:
     driver: bridge
     internal: true
     ipam:
       config:
-        - subnet: 172.20.21.0/24
+        - subnet: 192.168.209.0/24
