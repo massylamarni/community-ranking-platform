@@ -25,9 +25,9 @@ export const moderationHandlers = [
       await delay(150);
       const admin = requireAdmin(request);
       if (!admin) return forbidden("Vous n'avez pas les droits nécessaires.");
-      const work = db.works.find((w) => w.id === params.workId);
+      const work = db.findWorkByApiId(params.workId);
       if (!work) return notFound("Œuvre introuvable.");
-      work.status = "accepted";
+      work.status = "approved";
       db.notify(
         work.authorId,
         "work_accepted",
@@ -44,7 +44,7 @@ export const moderationHandlers = [
       await delay(150);
       const admin = requireAdmin(request);
       if (!admin) return forbidden("Vous n'avez pas les droits nécessaires.");
-      const work = db.works.find((w) => w.id === params.workId);
+      const work = db.findWorkByApiId(params.workId);
       if (!work) return notFound("Œuvre introuvable.");
       let reason = "";
       try {
@@ -53,7 +53,7 @@ export const moderationHandlers = [
       } catch {
         // no body sent
       }
-      work.status = "refused";
+      work.status = "rejected";
       const suffix = reason ? ` (${reason})` : "";
       db.notify(
         work.authorId,

@@ -22,8 +22,8 @@ export default function ModerationPage() {
   const [error, setError] = useState<unknown>(null);
 
   const [selectedWork, setSelectedWork] = useState<Work | null>(null);
-  const [acceptingId, setAcceptingId] = useState<string | null>(null);
-  const [refusingId, setRefusingId] = useState<string | null>(null);
+  const [acceptingId, setAcceptingId] = useState<number | null>(null);
+  const [refusingId, setRefusingId] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);

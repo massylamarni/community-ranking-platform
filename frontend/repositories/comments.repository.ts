@@ -16,13 +16,13 @@ function toFormData(payload: CreateCommentPayload): FormData {
 }
 
 export const commentsRepository = {
-  list(workId: string, page = 1, pageSize = 20) {
+  list(workId: number, page = 1, pageSize = 20) {
     return request<CommentPage>(`/works/${workId}/comments`, {
       query: { page, pageSize },
     });
   },
 
-  create(workId: string, payload: CreateCommentPayload) {
+  create(workId: number, payload: CreateCommentPayload) {
     return request<Comment>(`/works/${workId}/comments`, {
       method: "POST",
       body: toFormData(payload),

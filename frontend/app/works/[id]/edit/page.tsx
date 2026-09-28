@@ -16,7 +16,7 @@ export default function EditWork() {
   const router = useRouter();
   const { user } = useAuth();
 
-  const { work, get, update, remove } = useWorks();
+  const { work, get, submit, update, uploadImage, remove } = useWorks();
   const { categories, list } = useCategories();
   const [errors, setErrors] = useState<ApiErrorBody | null>(null);
   const [loading, setLoading] = useState(true);
@@ -28,7 +28,7 @@ export default function EditWork() {
   useEffect(() => {
     let isCurrent = true;
 
-    get(id)
+    get(Number(id))
       .then(() => {
         if (!isCurrent) return;
         setErrors(null);
@@ -51,7 +51,22 @@ export default function EditWork() {
     if (!work) return;
     setErrors(null);
     try {
-      await update(work.id, data);
+      const updated = await update(work.id, {
+        title: data.title,
+        description: data.description,
+      });
+      return data.image ? uploadImage(work.id, data.image) : updated;
+    } catch (err) {
+      setErrors(err as ApiErrorBody);
+      return undefined;
+    }
+  }
+
+  async function handlePublish(categoryIds: number[]) {
+    if (!work) return;
+    setErrors(null);
+    try {
+      await submit(work.id, { categoryIds });
     } catch (err) {
       setErrors(err as ApiErrorBody);
     }
@@ -77,6 +92,7 @@ export default function EditWork() {
       categories={categories}
       errors={errors}
       handleSave={handleSave}
+      handlePublish={handlePublish}
       handleRemove={handleRemove}
     />
   );

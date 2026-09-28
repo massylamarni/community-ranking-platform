@@ -12,7 +12,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Plus, X } from "lucide-react";
+import { Check, Pencil, Plus, X } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -31,14 +31,25 @@ export default function EditCategories() {
     categories,
     list,
     create: createCategory,
+    update: updateCategory,
     remove: removeCategory,
   } = useCategories();
   const [error, setError] = useState<unknown>(null);
   const [newName, setNewName] = useState("");
   const [open, setOpen] = useState(false);
+  const [editingCategoryId, setEditingCategoryId] = useState<number | null>(
+    null,
+  );
+  const [editingName, setEditingName] = useState("");
 
   const [pendingDelete, setPendingDelete] = useState<Category | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const errorMessage =
+    error instanceof Error
+      ? error.message
+      : error == null
+        ? null
+        : String(error);
 
   useEffect(() => {
     list().catch(setError);
@@ -69,6 +80,18 @@ export default function EditCategories() {
       setDeleting(false);
     }
   }
+
+  async function saveCategoryName(categoryId: number) {
+    setError(null);
+    try {
+      await updateCategory(categoryId, { name: editingName });
+      setEditingCategoryId(null);
+      setEditingName("");
+    } catch (err) {
+      setError(err);
+    }
+  }
+
   return (
     <>
       <HeaderPortal>
@@ -89,6 +112,8 @@ export default function EditCategories() {
                     id="new-category-name"
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
+                    maxLength={50}
+                    required
                     autoFocus
                   />
                   <Button type="submit" size="sm">
@@ -104,10 +129,15 @@ export default function EditCategories() {
         <CardHeader>
           <CardTitle>Manage categories</CardTitle>
           <CardDescription>
-            Add or remove the categories that works can be filed under.
+            Add, rename, or remove work categories.
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {errorMessage && (
+            <p role="alert" className="mb-3 text-sm text-destructive">
+              {errorMessage}
+            </p>
+          )}
           <ScrollArea className="max-h-72 rounded-md border overflow-scroll">
             <div className="px-2 py-2">
               {categories.map((c, index) => (
@@ -116,15 +146,66 @@ export default function EditCategories() {
                   className="flex flex-col justify-center items-center"
                 >
                   <div className="flex items-center justify-between w-full">
-                    <Label className="text-sm pl-1">{c.name}</Label>
+                    {editingCategoryId === c.id ? (
+                      <Input
+                        aria-label={`Name for ${c.name}`}
+                        value={editingName}
+                        onChange={(event) => setEditingName(event.target.value)}
+                        maxLength={50}
+                        required
+                      />
+                    ) : (
+                      <Label className="text-sm pl-1">{c.name}</Label>
+                    )}
                     {isAdmin(user) ? (
-                      <button
-                        onClick={() => setPendingDelete(c)}
-                        aria-label={`Delete ${c.name} (CAT-002)`}
-                        className="rounded-sm p-1 hover:bg-muted-foreground/20"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
+                      <div className="flex items-center gap-1">
+                        {editingCategoryId === c.id ? (
+                          <>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Save ${c.name}`}
+                              onClick={() => saveCategoryName(c.id)}
+                            >
+                              <Check className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              aria-label="Cancel category rename"
+                              onClick={() => setEditingCategoryId(null)}
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Rename ${c.name}`}
+                              onClick={() => {
+                                setEditingCategoryId(c.id);
+                                setEditingName(c.name);
+                              }}
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              aria-label={`Delete ${c.name} (CAT-002)`}
+                              onClick={() => setPendingDelete(c)}
+                            >
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     ) : null}
                   </div>
                   {index < categories.length - 1 ? (

@@ -26,6 +26,7 @@ export default function Profile() {
   const { profile, refreshProfile, updateProfile } = useAuth();
   const [profileError, setProfileError] = useState<ApiErrorBody | null>(null);
   const [usernameEdit, setUsernameEdit] = useState("");
+  const [emailEdit, setEmailEdit] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -42,6 +43,7 @@ export default function Profile() {
       try {
         const p = await promise;
         setUsernameEdit(p.username);
+        setEmailEdit(p.email);
       } catch (err) {
         setProfileError(err as ApiErrorBody);
       }
@@ -56,6 +58,7 @@ export default function Profile() {
 
     const promise = updateProfile({
       username: usernameEdit,
+      email: emailEdit,
     });
 
     toast.promise(promise, {
@@ -99,7 +102,14 @@ export default function Profile() {
               </Field>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input id="email" value={profile.email} disabled />
+                <Input
+                  id="email"
+                  type="email"
+                  value={emailEdit}
+                  onChange={(e) => setEmailEdit(e.target.value)}
+                  required
+                />
+                {fe.email && <FieldError>{fe.email}</FieldError>}
               </Field>
             </FieldGroup>
           </form>

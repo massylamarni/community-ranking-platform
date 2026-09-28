@@ -2,14 +2,27 @@
 
 import { useCallback, useState } from "react";
 import { worksRepository } from "@/repositories";
-import type { SubmitWorkPayload, UpdateWorkPayload, Work } from "@/types/api";
+import type {
+  CreateWorkPayload,
+  SubmitWorkPayload,
+  UpdateWorkPayload,
+  Work,
+} from "@/types/api";
+import type { ListWorksQuery } from "@/repositories/works.repository";
 
 export function useWorks() {
   const [work, setWork] = useState<Work | null>(null);
+  const [works, setWorks] = useState<Work[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  const get = useCallback(async (workId: string) => {
+  const list = useCallback(async (query: ListWorksQuery = {}) => {
+    const data = await worksRepository.list(query);
+    setWorks(data);
+    return data;
+  }, []);
+
+  const get = useCallback(async (workId: number) => {
     setLoading(true);
     setError(null);
     try {
@@ -24,14 +37,23 @@ export function useWorks() {
     }
   }, []);
 
-  const submit = useCallback(async (payload: SubmitWorkPayload) => {
-    const created = await worksRepository.submit(payload);
+  const create = useCallback(async (payload: CreateWorkPayload) => {
+    const created = await worksRepository.create(payload);
     setWork(created);
     return created;
   }, []);
 
+  const submit = useCallback(
+    async (workId: number, payload: SubmitWorkPayload) => {
+      const submitted = await worksRepository.submit(workId, payload);
+      setWork(submitted);
+      return submitted;
+    },
+    [],
+  );
+
   const update = useCallback(
-    async (workId: string, payload: UpdateWorkPayload) => {
+    async (workId: number, payload: UpdateWorkPayload) => {
       const updated = await worksRepository.update(workId, payload);
       setWork(updated);
       return updated;
@@ -39,10 +61,28 @@ export function useWorks() {
     [],
   );
 
-  const remove = useCallback(async (workId: string) => {
+  const uploadImage = useCallback(async (workId: number, image: File) => {
+    const updated = await worksRepository.uploadImage(workId, image);
+    setWork(updated);
+    return updated;
+  }, []);
+
+  const remove = useCallback(async (workId: number) => {
     await worksRepository.remove(workId);
     setWork((prev) => (prev?.id === workId ? null : prev));
   }, []);
 
-  return { work, loading, error, get, submit, update, remove };
+  return {
+    work,
+    works,
+    loading,
+    error,
+    list,
+    get,
+    create,
+    submit,
+    update,
+    uploadImage,
+    remove,
+  };
 }

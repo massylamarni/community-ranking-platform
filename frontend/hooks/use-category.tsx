@@ -31,13 +31,34 @@ export function useCategories() {
     return category;
   }, []);
 
-  const remove = useCallback(async (categoryId: string) => {
+  const getById = useCallback((categoryId: number) => {
+    return categoriesRepository.getById(categoryId);
+  }, []);
+
+  const getByName = useCallback((name: string) => {
+    return categoriesRepository.getByName(name);
+  }, []);
+
+  const update = useCallback(
+    async (categoryId: number, payload: CreateCategoryPayload) => {
+      const category = await categoriesRepository.update(categoryId, payload);
+      setCategories((prev) =>
+        prev.map((current) =>
+          current.id === category.id ? category : current,
+        ),
+      );
+      return category;
+    },
+    [],
+  );
+
+  const remove = useCallback(async (categoryId: number) => {
     await categoriesRepository.remove(categoryId);
     setCategories((prev) => prev.filter((c) => c.id !== categoryId));
   }, []);
 
   const worksOf = useCallback(
-    async (categoryId: string, page = 1, pageSize = 20) => {
+    async (categoryId: number, page = 1, pageSize = 20) => {
       setLoading(true);
       setError(null);
       try {
@@ -58,5 +79,17 @@ export function useCategories() {
     [],
   );
 
-  return { categories, works, loading, error, list, create, remove, worksOf };
+  return {
+    categories,
+    works,
+    loading,
+    error,
+    list,
+    create,
+    getById,
+    getByName,
+    update,
+    remove,
+    worksOf,
+  };
 }

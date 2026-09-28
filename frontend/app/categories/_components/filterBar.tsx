@@ -32,7 +32,7 @@ export default function FilterBar({
           <Select
             items={categories.map((category) => ({
               label: category.name,
-              value: category.id,
+              value: String(category.id),
             }))}
             value={categoryId}
             onValueChange={(cat) => setCategoryId(cat ?? categoryId)}
@@ -43,7 +43,7 @@ export default function FilterBar({
             <SelectContent alignItemWithTrigger={true}>
               <SelectGroup>
                 {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
+                  <SelectItem key={category.id} value={String(category.id)}>
                     {category.name}
                   </SelectItem>
                 ))}

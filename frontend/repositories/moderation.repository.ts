@@ -8,13 +8,13 @@ export const moderationRepository = {
     });
   },
 
-  accept(workId: string) {
+  accept(workId: number) {
     return request<Work>(`/moderation/works/${workId}/accept`, {
       method: "POST",
     });
   },
 
-  refuse(workId: string, payload: RefuseWorkPayload = {}) {
+  refuse(workId: number, payload: RefuseWorkPayload = {}) {
     return request<Work>(`/moderation/works/${workId}/refuse`, {
       method: "POST",
       body: payload,

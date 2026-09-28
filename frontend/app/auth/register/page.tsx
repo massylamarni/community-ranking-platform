@@ -80,6 +80,9 @@ export default function Register() {
                 onChange={(e) =>
                   setRegisterForm((f) => ({ ...f, username: e.target.value }))
                 }
+                minLength={3}
+                maxLength={50}
+                pattern="[a-zA-Z0-9_]+"
                 required
               />
               {fe.username && <FieldError>{fe.username}</FieldError>}

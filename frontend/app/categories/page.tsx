@@ -18,19 +18,19 @@ export default function WorksByCategory() {
   const [works, setWorks] = useState<Work[]>([]);
   const [error, setError] = useState<unknown>(null);
   const [loading, setLoading] = useState(true);
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<number | null>(null);
   const selectedWork = works.find((w) => w.id === selectedId) ?? null;
 
   useEffect(() => {
     list().then((cats) => {
-      if (cats[0]) setCategoryId(cats[0].id);
+      if (cats[0]) setCategoryId(String(cats[0].id));
       else setLoading(false);
     });
   }, [list]);
 
   useEffect(() => {
     if (!categoryId) return;
-    worksOf(categoryId)
+    worksOf(Number(categoryId))
       .then((page) => setWorks(page.items))
       .catch(setError)
       .finally(() => {

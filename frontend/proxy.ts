@@ -90,12 +90,14 @@ function withUserHeaders(
 ): NextRequest {
   const headers = new Headers(request.headers);
   if (user) {
-    headers.set("x-user-id", user.id);
+    headers.set("x-user-id", String(user.id));
     headers.set("x-user-username", user.username);
+    headers.set("x-user-email", user.email);
     headers.set("x-user-role", user.role);
   } else {
     headers.delete("x-user-id");
     headers.delete("x-user-username");
+    headers.delete("x-user-email");
     headers.delete("x-user-role");
   }
   return new NextRequest(request, { headers });
@@ -134,13 +136,20 @@ export const config = {
 export function getRequestUser(requestHeaders: Headers): CurrentUser | null {
   const id = requestHeaders.get("x-user-id");
   const username = requestHeaders.get("x-user-username");
+  const email = requestHeaders.get("x-user-email");
   const role = requestHeaders.get("x-user-role");
+  const numericId = id === null ? NaN : Number(id);
 
-  if (!id || !username || (role !== "user" && role !== "admin")) {
+  if (
+    !Number.isInteger(numericId) ||
+    !username ||
+    !email ||
+    (role !== "user" && role !== "admin")
+  ) {
     return null;
   }
 
-  return { id, username, role };
+  return { id: numericId, username, email, role };
 }
 
 export function isAuthenticated(user: CurrentUser | null): boolean {
@@ -153,14 +162,14 @@ export function isAdmin(user: CurrentUser | null): boolean {
 
 export function isOwner(
   user: CurrentUser | null,
-  ownerId: string | undefined | null,
+  ownerId: number | string | undefined | null,
 ): boolean {
-  return !!user && !!ownerId && user.id === ownerId;
+  return !!user && ownerId != null && String(user.id) === String(ownerId);
 }
 
 export function canManage(
   user: CurrentUser | null,
-  ownerId: string | undefined | null,
+  ownerId: number | string | undefined | null,
 ): boolean {
   return isAdmin(user) || isOwner(user, ownerId);
 }

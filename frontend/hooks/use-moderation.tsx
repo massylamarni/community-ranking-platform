@@ -24,7 +24,7 @@ export function useModeration() {
     }
   }, []);
 
-  const removeFromPending = useCallback((workId: string) => {
+  const removeFromPending = useCallback((workId: number) => {
     setPending((prev) =>
       prev
         ? { ...prev, items: prev.items.filter((w) => w.id !== workId) }
@@ -33,7 +33,7 @@ export function useModeration() {
   }, []);
 
   const accept = useCallback(
-    async (workId: string) => {
+    async (workId: number) => {
       const work = await moderationRepository.accept(workId);
       removeFromPending(workId);
       return work;
@@ -42,7 +42,7 @@ export function useModeration() {
   );
 
   const refuse = useCallback(
-    async (workId: string, payload: RefuseWorkPayload = {}) => {
+    async (workId: number, payload: RefuseWorkPayload = {}) => {
       const work = await moderationRepository.refuse(workId, payload);
       removeFromPending(workId);
       return work;

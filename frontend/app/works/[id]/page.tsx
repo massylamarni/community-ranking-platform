@@ -19,7 +19,7 @@ export default function DisplayWork() {
   useEffect(() => {
     let isCurrent = true;
 
-    get(id)
+    get(Number(id))
       .then(() => {
         if (!isCurrent) return;
         setError(null);

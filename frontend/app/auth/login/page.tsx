@@ -78,12 +78,12 @@ export default function Login() {
             <Field>
               <div className="flex items-center">
                 <FieldLabel htmlFor="password">Password</FieldLabel>
-                <a
-                  href="/auth/changepassword"
+                <Link
+                  href="/auth/forgotpassword"
                   className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                 >
                   Forgot your password?
-                </a>
+                </Link>
               </div>
               <ButtonGroup className="w-full">
                 <Input
