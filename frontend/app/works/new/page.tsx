@@ -27,13 +27,11 @@ export default function NewWork() {
   }
 
   return (
-    <div>
-      <WorkEdit
-        work={null}
-        categories={categories}
-        errors={errors}
-        handleSave={handleCreate}
-      />
-    </div>
+    <WorkEdit
+      work={null}
+      categories={categories}
+      errors={errors}
+      handleSave={handleCreate}
+    />
   );
 }

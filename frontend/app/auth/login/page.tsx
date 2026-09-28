@@ -52,7 +52,7 @@ export default function Login() {
   }
 
   return (
-    <Card className="w-full max-w-sm">
+    <Card>
       <CardHeader>
         <CardTitle>Login to your account</CardTitle>
         <CardAction>
@@ -79,7 +79,7 @@ export default function Login() {
               <div className="flex items-center">
                 <FieldLabel htmlFor="password">Password</FieldLabel>
                 <a
-                  href="#"
+                  href="/auth/changepassword"
                   className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                 >
                   Forgot your password?
@@ -108,13 +108,8 @@ export default function Login() {
           </FieldGroup>
         </form>
       </CardContent>
-      <CardFooter className="flex-col gap-2">
-        <Button
-          type="submit"
-          form="login-form"
-          className="w-full"
-          disabled={authBusy}
-        >
+      <CardFooter>
+        <Button type="submit" form="login-form" disabled={authBusy}>
           Login
         </Button>
       </CardFooter>
