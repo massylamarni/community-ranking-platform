@@ -75,14 +75,12 @@ export default function EditWork() {
   if (!work) return <WorkNotFoundGuard />;
   if (!isAuthor) return <AuthorGuard />;
   return (
-    <div>
-      <WorkEdit
-        work={work}
-        categories={categories}
-        errors={errors}
-        handleSave={handleSave}
-        handleRemove={handleRemove}
-      />
-    </div>
+    <WorkEdit
+      work={work}
+      categories={categories}
+      errors={errors}
+      handleSave={handleSave}
+      handleRemove={handleRemove}
+    />
   );
 }

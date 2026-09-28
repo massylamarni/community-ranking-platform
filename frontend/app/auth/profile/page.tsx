@@ -82,7 +82,7 @@ export default function Profile() {
   const fe = profileError?.fields ?? {};
 
   return (
-    <Card className="w-full max-w-sm">
+    <Card>
       <CardHeader>
         <CardTitle>Profile</CardTitle>
         <CardDescription>Manage your profile information.</CardDescription>
@@ -111,13 +111,8 @@ export default function Profile() {
           "Failed to fetch profile"
         )}
       </CardContent>
-      <CardFooter className="flex-col gap-2">
-        <Button
-          type="submit"
-          form="profile-form"
-          className="w-full"
-          disabled={isLoading}
-        >
+      <CardFooter>
+        <Button type="submit" form="profile-form" disabled={isLoading}>
           Save
         </Button>
       </CardFooter>
