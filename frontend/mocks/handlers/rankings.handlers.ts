@@ -17,9 +17,9 @@ export const rankingsHandlers = [
     const pageSize = Number(url.searchParams.get("pageSize") ?? 20);
     const viewer = currentUserFrom(request);
 
-    let works = db.works.filter((w) => w.status === "accepted");
+    let works = db.works.filter((w) => w.status === "approved");
     if (categoryId)
-      works = works.filter((w) => w.categoryIds.includes(categoryId));
+      works = works.filter((w) => w.categoryIds.includes(Number(categoryId)));
 
     const sorted = [...works].sort(
       (a, b) => db.scoreInPeriod(b, period) - db.scoreInPeriod(a, period),

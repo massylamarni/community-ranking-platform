@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Eye, EyeClosed } from "lucide-react";
@@ -23,7 +23,7 @@ export default function Login() {
   const { login } = useAuth();
   const [loginForm, setLoginForm] = useState({
     username: "alice",
-    password: "alice1234",
+    password: "Password123!",
   });
   const [authError, setAuthError] = useState<ApiErrorBody | null>(null);
   const [authBusy, setAuthBusy] = useState(false);
@@ -78,12 +78,12 @@ export default function Login() {
             <Field>
               <div className="flex items-center">
                 <FieldLabel htmlFor="password">Password</FieldLabel>
-                <a
-                  href="/auth/changepassword"
+                <Link
+                  href="/auth/forgotpassword"
                   className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                 >
                   Forgot your password?
-                </a>
+                </Link>
               </div>
               <ButtonGroup className="w-full">
                 <Input

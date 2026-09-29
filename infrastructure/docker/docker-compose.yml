@@ -46,15 +46,13 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    env_file:
+      - ../../backend/.env
     environment:
       DB_URL: jdbc:mysql://db:3306/numero_number_one?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC
       DB_USERNAME: root
       DB_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root}
       UPLOAD_DIR: /uploads
-      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
-      MAIL_PORT: ${MAIL_PORT:-587}
-      MAIL_USERNAME: ${MAIL_USERNAME:-}
-      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
     ports:
       - "8181:8080"
     volumes:

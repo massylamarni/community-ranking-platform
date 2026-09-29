@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Eye, EyeClosed } from "lucide-react";
@@ -80,6 +80,9 @@ export default function Register() {
                 onChange={(e) =>
                   setRegisterForm((f) => ({ ...f, username: e.target.value }))
                 }
+                minLength={3}
+                maxLength={50}
+                pattern="[a-zA-Z0-9_]+"
                 required
               />
               {fe.username && <FieldError>{fe.username}</FieldError>}

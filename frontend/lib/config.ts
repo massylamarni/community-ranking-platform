@@ -2,7 +2,7 @@ export const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "/backend-api";
 export const SESSION_COOKIE_NAME = "JSESSIONID";
 
-export const MOCKING_ENABLED = false; // process.env.NEXT_PUBLIC_MOCKING_ENABLED === "true";
+export const MOCKING_ENABLED = false;
 
 /**
  * localStorage key used to remember which mock session is "logged in" across page reloads.

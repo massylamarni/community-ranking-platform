@@ -11,9 +11,7 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
-import { useAuth } from "@/context/AuthContext";
-import { authRepository } from "@/repositories";
-import type { ApiErrorBody, OwnProfile } from "@/types/api";
+import type { ApiErrorBody } from "@/types/api";
 import { toast } from "sonner";
 import {
   Field,
@@ -21,19 +19,21 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import LoadingGuard from "@/components/guards/loadingGuard";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Profile() {
-  const { user, loading } = useAuth();
-  const [profile, setProfile] = useState<OwnProfile | null>(null);
+  const { profile, refreshProfile, updateProfile } = useAuth();
   const [profileError, setProfileError] = useState<ApiErrorBody | null>(null);
   const [usernameEdit, setUsernameEdit] = useState("");
+  const [emailEdit, setEmailEdit] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     async function loadProfile() {
       setProfileError(null);
 
-      const promise = authRepository.getOwnProfile();
+      const promise = refreshProfile();
 
       toast.promise(promise, {
         loading: "Fetching profile...",
@@ -42,22 +42,23 @@ export default function Profile() {
 
       try {
         const p = await promise;
-        setProfile(p);
         setUsernameEdit(p.username);
+        setEmailEdit(p.email);
       } catch (err) {
         setProfileError(err as ApiErrorBody);
       }
     }
     loadProfile();
-  }, []);
+  }, [refreshProfile]);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
     setProfileError(null);
     setIsLoading(true);
 
-    const promise = authRepository.updateOwnProfile({
+    const promise = updateProfile({
       username: usernameEdit,
+      email: emailEdit,
     });
 
     toast.promise(promise, {
@@ -67,8 +68,7 @@ export default function Profile() {
     });
 
     try {
-      const p = await promise;
-      setProfile(p);
+      await promise;
     } catch (err) {
       setProfileError(err as ApiErrorBody);
     } finally {
@@ -76,8 +76,7 @@ export default function Profile() {
     }
   }
 
-  if (!user) return "Not logged in.";
-  if (loading) return "Loading...";
+  if (isLoading) return <LoadingGuard />;
 
   const fe = profileError?.fields ?? {};
 
@@ -103,7 +102,14 @@ export default function Profile() {
               </Field>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
-                <Input id="email" value={profile.email} disabled />
+                <Input
+                  id="email"
+                  type="email"
+                  value={emailEdit}
+                  onChange={(e) => setEmailEdit(e.target.value)}
+                  required
+                />
+                {fe.email && <FieldError>{fe.email}</FieldError>}
               </Field>
             </FieldGroup>
           </form>

@@ -19,7 +19,7 @@ export const profilesHandlers = [
     const viewer = currentUserFrom(request);
 
     const works = db.works
-      .filter((w) => w.authorId === user.id && w.status === "accepted")
+      .filter((w) => w.authorId === user.id && w.status === "approved")
       .map((w) => db.serializeWork(w, viewer));
 
     const comments = db.comments
@@ -29,7 +29,7 @@ export const profilesHandlers = [
     const favorites = db.works
       .filter(
         (w) =>
-          w.status === "accepted" &&
+          w.status === "approved" &&
           w.votes.some((v) => v.userId === user.id && v.value === 1),
       )
       .map((w) => db.serializeWork(w, viewer));
