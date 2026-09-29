@@ -102,7 +102,7 @@ public class OeuvreService {
         }
 
         OeuvreStatus st = o.getStatus();
-        if (st != OeuvreStatus.created && st != OeuvreStatus.rejected) {
+        if (st != OeuvreStatus.created && st != OeuvreStatus.rejected && st != OeuvreStatus.approved) {
             throw new IllegalArgumentException("Cette œuvre ne peut pas être modifiée dans son état actuel");
         }
 
@@ -117,8 +117,7 @@ public class OeuvreService {
             o.setDescription(req.getDescription());
         }
 
-        // une proposition refusée redevient "created" apres modification
-        if (st == OeuvreStatus.rejected) {
+        if (st != OeuvreStatus.created) {
             o.setStatus(OeuvreStatus.created);
         }
 
