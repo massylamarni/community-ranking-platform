@@ -63,9 +63,7 @@ export function Navbar() {
             </DropdownMenu>
           </div>
         ) : (
-          <Button>
-            <Link href="/auth/login">log in</Link>
-          </Button>
+          <Button render={<Link href="/auth/login" />}>log in</Button>
         )}
       </div>
     </nav>
