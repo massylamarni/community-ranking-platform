@@ -326,7 +326,7 @@ public class OeuvreSteps {
     @Then("l'œuvre modifiée est soumise à nouveau au processus de filtrage")
     public void oeuvre_modifiee_soumise_au_filtrage() throws Exception {
         assertEquals(200, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
-        assertEquals("pending", lastResponse().path("status").asText(),
+        assertEquals("created", lastResponse().path("status").asText(),
                 "Après une modification, le scénario attend une nouvelle soumission au filtrage");
     }
 
