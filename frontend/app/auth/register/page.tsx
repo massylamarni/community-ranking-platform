@@ -43,9 +43,9 @@ export default function Register() {
     const promise = register(registerForm);
 
     toast.promise(promise, {
-      loading: "Creating your account...",
-      success: () => "Account created successfully",
-      error: (err) => err?.message ?? "Registration failed",
+      loading: "Création de votre compte...",
+      success: () => "Compte créé avec succès",
+      error: (err) => err?.message ?? "Échec de l&apos;inscription",
     });
 
     try {
@@ -62,10 +62,10 @@ export default function Register() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Create a new account</CardTitle>
+        <CardTitle>Créer un compte</CardTitle>
         <CardAction>
           <Button variant="link">
-            <Link href="/auth/login">Login</Link>
+            <Link href="/auth/login">Se connecter</Link>
           </Button>
         </CardAction>
       </CardHeader>
@@ -73,7 +73,7 @@ export default function Register() {
         <form id="register-form" onSubmit={handleRegister}>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="username">Username</FieldLabel>
+              <FieldLabel htmlFor="username">Nom d&apos;utilisateur</FieldLabel>
               <Input
                 id="username"
                 value={registerForm.username}
@@ -88,7 +88,7 @@ export default function Register() {
               {fe.username && <FieldError>{fe.username}</FieldError>}
             </Field>
             <Field>
-              <FieldLabel htmlFor="email">Email</FieldLabel>
+              <FieldLabel htmlFor="email">Adresse e-mail</FieldLabel>
               <Input
                 id="email"
                 type="email"
@@ -101,7 +101,7 @@ export default function Register() {
               {fe.email && <FieldError>{fe.email}</FieldError>}
             </Field>
             <Field>
-              <FieldLabel htmlFor="password">Password</FieldLabel>
+              <FieldLabel htmlFor="password">Mot de passe</FieldLabel>
               <ButtonGroup className="w-full">
                 <Input
                   id="password"
@@ -128,7 +128,7 @@ export default function Register() {
       </CardContent>
       <CardFooter>
         <Button type="submit" form="register-form" disabled={authBusy}>
-          Create account
+          Créer le compte
         </Button>
       </CardFooter>
     </Card>

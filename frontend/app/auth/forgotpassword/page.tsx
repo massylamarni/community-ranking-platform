@@ -38,9 +38,10 @@ export default function ForgotPassword() {
     setLoading(true);
     const promise = forgotPassword({ email });
     toast.promise(promise, {
-      loading: "Requesting password reset...",
-      success: "If the address is registered, a reset email will be sent.",
-      error: (err) => err?.message ?? "Password reset request failed",
+      loading: "Demande de réinitialisation du mot de passe...",
+      success:
+        "Si cette adresse est enregistrée, un e-mail de réinitialisation sera envoyé.",
+      error: (err) => err?.message ?? "Échec de la demande de réinitialisation",
     });
     try {
       await promise;
@@ -62,9 +63,10 @@ export default function ForgotPassword() {
       confirmPassword,
     });
     toast.promise(promise, {
-      loading: "Verifying code and resetting password...",
-      success: "Password reset successfully.",
-      error: (err) => err?.message ?? "Password reset failed",
+      loading: "Vérification du code et réinitialisation du mot de passe...",
+      success: "Mot de passe réinitialisé avec succès.",
+      error: (err) =>
+        err?.message ?? "Échec de la réinitialisation du mot de passe",
     });
     try {
       await promise;
@@ -81,10 +83,10 @@ export default function ForgotPassword() {
       <CardHeader>
         <CardTitle>
           {resetComplete
-            ? "Password reset"
+            ? "Réinitialisation du mot de passe"
             : codeSent
-              ? "Enter your reset code"
-              : "Forgot your password?"}
+              ? "Saisissez votre code de réinitialisation"
+              : "Mot de passe oublié ?"}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -94,7 +96,9 @@ export default function ForgotPassword() {
           <form id="reset-password-form" onSubmit={handleReset}>
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="reset-token">Reset code</FieldLabel>
+                <FieldLabel htmlFor="reset-token">
+                  Code de réinitialisation
+                </FieldLabel>
                 <Input
                   id="reset-token"
                   autoComplete="one-time-code"
@@ -107,7 +111,9 @@ export default function ForgotPassword() {
                 )}
               </Field>
               <Field>
-                <FieldLabel htmlFor="new-password">New password</FieldLabel>
+                <FieldLabel htmlFor="new-password">
+                  Nouveau mot de passe
+                </FieldLabel>
                 <Input
                   id="new-password"
                   type="password"
@@ -123,7 +129,7 @@ export default function ForgotPassword() {
               </Field>
               <Field>
                 <FieldLabel htmlFor="confirm-password">
-                  Confirm new password
+                  Confirmer le nouveau mot de passe
                 </FieldLabel>
                 <Input
                   id="confirm-password"
@@ -162,15 +168,15 @@ export default function ForgotPassword() {
       <CardFooter>
         {resetComplete ? (
           <Button nativeButton={false} render={<Link href="/auth/login" />}>
-            Back to login
+            Retour à la connexion
           </Button>
         ) : codeSent ? (
           <Button type="submit" form="reset-password-form" disabled={loading}>
-            Reset password
+            Réinitialiser le mot de passe
           </Button>
         ) : (
           <Button type="submit" form="forgot-password-form" disabled={loading}>
-            Send reset code
+            Envoyer le code
           </Button>
         )}
       </CardFooter>

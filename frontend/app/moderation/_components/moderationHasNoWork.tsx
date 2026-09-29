@@ -14,9 +14,9 @@ export default function ModerationHasNoWork() {
         <EmptyMedia variant="icon">
           <Info />
         </EmptyMedia>
-        <EmptyTitle>Nothing here yet</EmptyTitle>
+        <EmptyTitle>Rien ici pour le moment</EmptyTitle>
         <EmptyDescription>
-          No work is submitted for review yet.
+          Aucune œuvre n&apos;a encore été soumise pour examen.
         </EmptyDescription>
       </EmptyHeader>
     </Empty>

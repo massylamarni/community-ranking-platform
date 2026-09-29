@@ -92,7 +92,7 @@ export default function EditCategories() {
               ></PopoverTrigger>
               <PopoverContent className="w-64" align="end">
                 <form onSubmit={create} className="flex flex-col gap-2">
-                  <Label htmlFor="new-category-name">Name</Label>
+                  <Label htmlFor="new-category-name">Nom</Label>
                   <Input
                     id="new-category-name"
                     value={newName}
@@ -102,7 +102,7 @@ export default function EditCategories() {
                     autoFocus
                   />
                   <Button type="submit" size="sm">
-                    Create
+                    Créer
                   </Button>
                 </form>
               </PopoverContent>
@@ -112,9 +112,9 @@ export default function EditCategories() {
       </HeaderPortal>
       <Card>
         <CardHeader>
-          <CardTitle>Manage categories</CardTitle>
+          <CardTitle>Gérer les catégories</CardTitle>
           <CardDescription>
-            Add, rename, or remove work categories.
+            Ajoutez, renommez ou supprimez des catégories d&apos;œuvres.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -130,7 +130,7 @@ export default function EditCategories() {
                           type="button"
                           variant="ghost"
                           size="icon"
-                          aria-label={`Delete ${c.name} (CAT-002)`}
+                          aria-label={`Supprimer ${c.name} (CAT-002)`}
                           onClick={() => setPendingDelete(c)}
                         >
                           <X className="h-3.5 w-3.5" />

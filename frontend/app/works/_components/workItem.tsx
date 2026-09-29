@@ -73,7 +73,7 @@ export function WorkItem({
       <CardFooter className="flex justify-between">
         <div className="flex gap-3">
           {work.score === undefined ? (
-            <span>{work.totalVotes} votes</span>
+            <span>{work.totalVotes} vote(s)</span>
           ) : (
             <ButtonGroup>
               <Button

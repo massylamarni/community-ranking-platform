@@ -14,9 +14,10 @@ export default function LoadingGuard() {
         <EmptyMedia variant="icon">
           <Spinner />
         </EmptyMedia>
-        <EmptyTitle>Processing your request</EmptyTitle>
+        <EmptyTitle>Traitement de votre demande</EmptyTitle>
         <EmptyDescription>
-          Please wait while we process your request. Do not refresh the page.
+          Veuillez patienter pendant le traitement de votre demande. Ne
+          rechargez pas la page.
         </EmptyDescription>
       </EmptyHeader>
     </Empty>

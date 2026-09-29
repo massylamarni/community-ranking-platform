@@ -44,14 +44,15 @@ export default function ChangePassword() {
     const promise = changePassword(pwForm);
 
     toast.promise(promise, {
-      loading: "Saving...",
+      loading: "Enregistrement...",
       success: () => pwResult,
-      error: (err) => err?.message ?? "Failed to change password",
+      error: (err) =>
+        err?.message ?? "Échec de la modification du mot de passe",
     });
 
     try {
       await promise;
-      setPwResult("Password updated.");
+      setPwResult("Mot de passe mis à jour.");
     } catch (err) {
       setPwError(err as ApiErrorBody);
     } finally {
@@ -64,13 +65,13 @@ export default function ChangePassword() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Change password</CardTitle>
+        <CardTitle>Modifier le mot de passe</CardTitle>
       </CardHeader>
       <CardContent>
         <form id="changepass-form" onSubmit={handleChangePassword}>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="oldpassword">Old password</FieldLabel>
+              <FieldLabel htmlFor="oldpassword">Ancien mot de passe</FieldLabel>
               <ButtonGroup className="w-full">
                 <Input
                   id="oldpassword"
@@ -93,7 +94,9 @@ export default function ChangePassword() {
               {fe.oldPassword && <FieldError>{fe.oldPassword}</FieldError>}
             </Field>
             <Field>
-              <FieldLabel htmlFor="newpassword">New password</FieldLabel>
+              <FieldLabel htmlFor="newpassword">
+                Nouveau mot de passe
+              </FieldLabel>
               <ButtonGroup className="w-full">
                 <Input
                   id="newpassword"
@@ -117,7 +120,7 @@ export default function ChangePassword() {
             </Field>
             <Field>
               <FieldLabel htmlFor="confirmpassword">
-                Confirm new password
+                Confirmer le nouveau mot de passe
               </FieldLabel>
               <Input
                 id="confirmpassword"
@@ -138,7 +141,7 @@ export default function ChangePassword() {
       </CardContent>
       <CardFooter>
         <Button type="submit" form="changepass-form" disabled={isLoading}>
-          Save
+          Enregistrer
         </Button>
       </CardFooter>
     </Card>

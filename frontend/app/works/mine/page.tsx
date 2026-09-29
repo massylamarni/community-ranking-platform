@@ -20,16 +20,18 @@ import LoadingGuard from "@/components/guards/loadingGuard";
 
 const PAGE_SIZE = 10;
 const FILTERS: { status: "all" | WorkStatus; label: string }[] = [
-  { status: "all", label: "All" },
-  { status: "created", label: "Created" },
-  { status: "rejected", label: "Rejected" },
-  { status: "pending", label: "In review" },
-  { status: "approved", label: "Approved" },
+  { status: "all", label: "Toutes" },
+  { status: "created", label: "Créées" },
+  { status: "rejected", label: "Refusées" },
+  { status: "pending", label: "En examen" },
+  { status: "approved", label: "Approuvées" },
 ];
 
 function statusLabel(status: WorkStatus) {
-  if (status === "pending") return "In review";
-  return status[0].toUpperCase() + status.slice(1);
+  if (status === "pending") return "En examen";
+  if (status === "created") return "Créée";
+  if (status === "rejected") return "Refusée";
+  return "Approuvée";
 }
 
 export default function MyWorks() {
@@ -80,10 +82,10 @@ export default function MyWorks() {
     <main className="mx-auto flex w-full max-w-6xl flex-col gap-6 px-4 py-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold">My works</h1>
+          <h1 className="text-2xl font-semibold">Mes œuvres</h1>
         </div>
         <Button nativeButton={false} render={<Link href="/works/new" />}>
-          Create work
+          Créer une œuvre
         </Button>
       </header>
       {error && (
@@ -95,8 +97,8 @@ export default function MyWorks() {
         <div className="relative w-full max-w-md">
           <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
           <Input
-            aria-label="Search your works"
-            placeholder="Search title, description, or category"
+            aria-label="Rechercher dans vos œuvres"
+            placeholder="Rechercher un titre, une description ou une catégorie"
             value={search}
             onChange={(event) => {
               setSearch(event.target.value);
@@ -107,7 +109,7 @@ export default function MyWorks() {
         </div>
         <div
           className="flex gap-2 overflow-x-auto pb-1"
-          aria-label="Filter works by status"
+          aria-label="Filtrer les œuvres par statut"
         >
           {FILTERS.map((filter) => {
             const count =
@@ -135,12 +137,12 @@ export default function MyWorks() {
         </div>
       </div>
 
-      <section aria-label="Your works">
+      <section aria-label="Vos œuvres">
         {visibleWorks.length === 0 ? (
           <p className="py-10 text-center text-sm text-muted-foreground">
             {ownedWorks.length === 0
-              ? "You haven't created any works yet."
-              : "No works match these filters."}
+              ? "Vous n&apos;avez encore créé aucune œuvre."
+              : "Aucune œuvre ne correspond à ces filtres."}
           </p>
         ) : (
           <ul className="divide-y">
@@ -166,12 +168,12 @@ export default function MyWorks() {
                   <p className="mt-1 text-xs text-muted-foreground">
                     {work.categories.length
                       ? work.categories.join(" · ")
-                      : "No categories"}
+                      : "Aucune catégorie"}
                     {` · ${work.totalVotes} votes`}
                   </p>
                   {work.status === "rejected" && (
                     <p className="mt-2 border-l-2 border-destructive/50 pl-2 text-sm text-muted-foreground">
-                      Rejection reason unavailable.
+                      Motif du refus indisponible.
                     </p>
                   )}
                 </div>
@@ -182,8 +184,8 @@ export default function MyWorks() {
                       <Link href={`/works/${work.id}/edit`}>
                         <Pencil />
                         {work.status === "rejected"
-                          ? "Revise work"
-                          : "Continue draft"}
+                          ? "Modifier l&apos;œuvre"
+                          : "Continuer le brouillon"}
                       </Link>
                     }
                   />
@@ -194,7 +196,7 @@ export default function MyWorks() {
                     render={
                       <Link href={`/works/${work.id}`}>
                         <ArrowUpRight />
-                        View work
+                        Voir l&apos;œuvre
                       </Link>
                     }
                   />
@@ -215,20 +217,20 @@ export default function MyWorks() {
               type="button"
               variant="outline"
               size="icon"
-              aria-label="Previous page"
+              aria-label="Page précédente"
               disabled={page <= 1}
               onClick={() => setPage((current) => Math.max(1, current - 1))}
             >
               <ChevronLeft />
             </Button>
             <span className="min-w-20 text-center text-sm">
-              Page {page} of {pageCount}
+              Page {page} sur {pageCount}
             </span>
             <Button
               type="button"
               variant="outline"
               size="icon"
-              aria-label="Next page"
+              aria-label="Page suivante"
               disabled={page >= pageCount}
               onClick={() =>
                 setPage((current) => Math.min(pageCount, current + 1))
