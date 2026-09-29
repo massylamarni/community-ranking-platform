@@ -23,8 +23,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { ConfirmDialog } from "@/components/confirmDialog";
 import { HeaderPortal } from "@/components/header-portal";
-import { useCategories } from "@/hooks/use-category";
 import NoCategory from "../_components/noCategory";
+import { useCategory } from "@/contexts/categoryContext";
 
 export default function EditCategories() {
   const { user } = useAuth();
@@ -33,7 +33,7 @@ export default function EditCategories() {
     list,
     create: createCategory,
     remove: removeCategory,
-  } = useCategories();
+  } = useCategory();
   const [error, setError] = useState<unknown>(null);
   const [newName, setNewName] = useState("");
   const [open, setOpen] = useState(false);

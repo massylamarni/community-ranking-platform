@@ -9,7 +9,7 @@ import LoadingGuard from "@/components/guards/loadingGuard";
 import WorkNotFoundGuard from "../../_components/guards/workNotFoundGuard";
 import AuthorGuard from "../../_components/guards/authorGuard";
 import { useWorks } from "@/hooks/use-work";
-import { useCategories } from "@/hooks/use-category";
+import { useCategory } from "@/contexts/categoryContext";
 
 export default function EditWork() {
   const { id } = useParams<{ id: string }>();
@@ -17,7 +17,7 @@ export default function EditWork() {
   const { user } = useAuth();
 
   const { work, get, submit, update, uploadImage, remove } = useWorks();
-  const { categories, list } = useCategories();
+  const { categories, list } = useCategory();
   const [errors, setErrors] = useState<ApiErrorBody | null>(null);
   const [loading, setLoading] = useState(true);
 

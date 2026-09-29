@@ -9,7 +9,7 @@ import { WorkList } from "../works/_components/workList";
 import { WorkItem } from "../works/_components/workItem";
 import FilterBar from "./_components/filterBar";
 import { HeaderPortal } from "@/components/header-portal";
-import { useCategories } from "@/hooks/use-category";
+import { useCategory } from "@/contexts/categoryContext";
 import CategoryNotFoundGuard from "./_components/guards/categoryNotFoundGuard";
 import NoCategory from "./_components/noCategory";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,7 @@ import Link from "next/link";
 
 export default function WorksByCategory() {
   const { user } = useAuth();
-  const { categories, list, worksOf } = useCategories();
+  const { categories, list, worksOf } = useCategory();
   const [categoryId, setCategoryId] = useState<string>("");
   const [works, setWorks] = useState<Work[]>([]);
   const [error, setError] = useState<unknown>(null);

@@ -6,7 +6,6 @@ import type { Work } from "@/types/api";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import LoadingGuard from "@/components/guards/loadingGuard";
 import { HeaderPortal } from "@/components/header-portal";
-import { useCategories } from "@/hooks/use-category";
 import FilterBar from "../_components/filterBar";
 import { WorkList } from "@/app/works/_components/workList";
 import { WorkItem } from "@/app/works/_components/workItem";
@@ -14,6 +13,7 @@ import { useParams, useRouter } from "next/navigation";
 import CategoryNotFoundGuard from "../_components/guards/categoryNotFoundGuard";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useCategory } from "@/contexts/categoryContext";
 
 export default function WorksByCategory() {
   const { id } = useParams<{ id: string }>();
@@ -21,7 +21,7 @@ export default function WorksByCategory() {
   const router = useRouter();
 
   const { user } = useAuth();
-  const { categories, getById, worksOf } = useCategories();
+  const { categories, getById, worksOf } = useCategory();
   const [works, setWorks] = useState<Work[]>([]);
   const [error, setError] = useState<unknown>(null);
   const [loading, setLoading] = useState(true);
