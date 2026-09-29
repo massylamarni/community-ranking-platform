@@ -35,7 +35,7 @@ test:
   script:
     - echo "Executing tests and BDD scenarios with Maven"
     - cd backend
-    - mvn $MAVEN_CLI_OPTS verify
+    - mvn $MAVEN_CLI_OPTS verify 
   artifacts:
     when: always
     name: "Cucumber-Report-$CI_COMMIT_REF_SLUG"

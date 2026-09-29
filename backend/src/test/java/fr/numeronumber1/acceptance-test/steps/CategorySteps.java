@@ -3,8 +3,22 @@ package fr.numeronumber1.steps;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import fr.numeronumber1.steps.AuthSteps;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Autowired;
+import fr.numeronumber1.model.Category;
+import fr.numeronumber1.repository.CategoryRepository;
 
 public class CategorySteps {
+
+    @Autowired
+    private CategoryRepository categories;
+
+    @Autowired
+    private AcceptanceScenarioContext scenarioContext;
+
+    @Autowired
+    private AuthSteps authSteps;
 
     @Given("la catégorie {string} n'existe pas")
     public void categorie_n_existe_pas(String categoryName) {
@@ -47,8 +61,10 @@ public class CategorySteps {
     }
 
     @When("il valide la création")
-    public void valide_creation_categorie() {
-        // TODO: implémenter la validation de création
+    public void valide_creation_categorie() throws Exception {
+        if (scenarioContext.getWorkTitle() != null || scenarioContext.getWorkDescription() != null) {
+            authSteps.elle_valide_creation_oeuvre();
+        }
     }
 
     @Then("elle apparaît dans la liste des catégories")
@@ -143,6 +159,13 @@ public class CategorySteps {
 
     @Given("une catégorie existante")
     public void categorie_existante() {
-        // TODO: préparer une catégorie existante
+        Category category = categories.findByName("Cucumber proposal category")
+                .orElseGet(() -> {
+                    Category created = new Category();
+                    created.setName("Cucumber proposal category");
+                    return categories.save(created);
+                });
+        scenarioContext.setCategoryId(category.getCategoryId());
+        scenarioContext.setCategoryName(category.getName());
     }
 }
