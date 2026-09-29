@@ -1,7 +1,7 @@
-import { Dispatch, SetStateAction, useEffect } from "react";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dispatch, SetStateAction } from "react";
 import { Work } from "@/types/api";
 import { WorkItem } from "./workItem";
+import CategoryHasNoWork from "./categoryHasNoWork";
 
 export function WorkList({
   works,
@@ -11,26 +11,18 @@ export function WorkList({
 }: {
   works: Work[];
   setWorks: Dispatch<SetStateAction<Work[]>>;
-  setSelectedWork: Dispatch<SetStateAction<Work | null>>;
+  setSelectedWork: (w: Work | null) => void;
   username: string | undefined;
 }) {
-  useEffect(() => {
-    setSelectedWork(null);
-  }, [works, setSelectedWork]);
-
   function handleSetWork(work: Work) {
     if (!setWorks) return;
     setWorks((prev) => prev.map((w) => (w.id === work.id ? work : w)));
   }
 
   return works.length === 0 ? (
-    <Card className="relative w-full max-w-sm">
-      <CardHeader className="flex justify-center items-center">
-        <CardTitle>No work is available in this category yet.</CardTitle>
-      </CardHeader>
-    </Card>
+    <CategoryHasNoWork />
   ) : (
-    <div>
+    <div className="flex flex-col w-full h-full justify-start items-center gap-4">
       {works.map((w) => (
         <WorkItem
           key={w.id}

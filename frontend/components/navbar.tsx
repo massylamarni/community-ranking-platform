@@ -23,14 +23,11 @@ export function Navbar() {
   if (loading) return <LoadingGuard />;
 
   return (
-    <nav className="flex items-center justify-between h-13 px-6 border-b">
-      <div>
-        <Link href="/">Goodle</Link>
-      </div>
+    <nav className="flex items-center justify-end h-13 px-6 border-b sticky top-0 bg-background z-10">
       <div>
         {user ? (
           <div className="flex items-center justify-center gap-5">
-            <Button variant="ghost" size="icon" className="relative mt-1">
+            {/*<Button variant="ghost" size="icon" className="relative mt-1">
               <Bell />
               {unreadCount > 0 && (
                 <span className="absolute top-0 right-0 flex items-center justify-center rounded-full bg-accent-foreground h-4 w-4 text-[8px] text-accent">
@@ -39,7 +36,7 @@ export function Navbar() {
                 </span>
               )}
             </Button>
-            <Separator orientation="vertical" className="my-2" />
+            <Separator orientation="vertical" className="my-2" />*/}
             <DropdownMenu>
               <DropdownMenuTrigger
                 className="cursor-pointer"

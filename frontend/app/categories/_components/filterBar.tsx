@@ -13,7 +13,7 @@ import {
 import { isAdmin, useAuth } from "@/context/AuthContext";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import CategoriesManager from "./categoriesManager";
+import Link from "next/link";
 
 export default function FilterBar({
   categories,
@@ -27,7 +27,7 @@ export default function FilterBar({
   const { user } = useAuth();
 
   return (
-    <div className="flex">
+    <div className="flex w-full justify-between">
       <FieldGroup className="w-full max-w-xs">
         <Field>
           <Select
@@ -54,12 +54,13 @@ export default function FilterBar({
         </Field>
       </FieldGroup>
       {isAdmin(user) && (
-        <Dialog>
-          <DialogTrigger render={<Button variant="outline">Edit</Button>} />
-          <DialogContent showCloseButton={false} className="p-0 w-xs">
-            <CategoriesManager />
-          </DialogContent>
-        </Dialog>
+        <Button
+          variant="outline"
+          nativeButton={false}
+          render={<Link href="/categories/edit" />}
+        >
+          Edit
+        </Button>
       )}
     </div>
   );
