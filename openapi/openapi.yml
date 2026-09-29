@@ -354,6 +354,7 @@ paths:
       operationId: updateWork
       tags: [works]
       summary: Update a work using JSON
+      description: Authors may edit works in created, rejected, or approved status. Editing a rejected or approved work resets its status to created; pending works cannot be edited.
       requestBody:
         required: true
         content:
