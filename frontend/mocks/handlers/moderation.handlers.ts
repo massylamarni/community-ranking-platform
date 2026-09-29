@@ -1,6 +1,6 @@
 import { delay, http, HttpResponse } from "msw";
 import { requireAdmin, forbidden, notFound } from "../utils";
-import { db, paginate } from "../db";
+import { db } from "../db";
 import { RefuseWorkPayload } from "@/types/api";
 
 export const moderationHandlers = [
@@ -10,12 +10,26 @@ export const moderationHandlers = [
     const admin = requireAdmin(request);
     if (!admin) return forbidden("Vous n'avez pas les droits nécessaires.");
     const url = new URL(request.url);
-    const page = Number(url.searchParams.get("page") ?? 1);
-    const pageSize = Number(url.searchParams.get("pageSize") ?? 20);
+    const page = Math.max(0, Number(url.searchParams.get("page") ?? 0));
+    const size = Math.max(1, Number(url.searchParams.get("size") ?? 20));
     const pending = db.works
       .filter((w) => w.status === "pending")
-      .map((w) => db.serializeWork(w, admin));
-    return HttpResponse.json(paginate(pending, page, pageSize));
+      .map((w) => db.serializeWorkResponse(w));
+    const start = page * size;
+    const content = pending.slice(start, start + size);
+    return HttpResponse.json({
+      content,
+      pageable: { pageNumber: page, pageSize: size },
+      totalPages: Math.ceil(pending.length / size),
+      totalElements: pending.length,
+      last: start + size >= pending.length,
+      size,
+      number: page,
+      sort: { sorted: false, unsorted: true, empty: true },
+      numberOfElements: content.length,
+      first: page === 0,
+      empty: content.length === 0,
+    });
   }),
 
   // POST /moderation/works/:workId/accept (MOD-004/NOTIF-001) - admin
@@ -25,15 +39,15 @@ export const moderationHandlers = [
       await delay(150);
       const admin = requireAdmin(request);
       if (!admin) return forbidden("Vous n'avez pas les droits nécessaires.");
-      const work = db.works.find((w) => w.id === params.workId);
+      const work = db.findWorkByApiId(params.workId);
       if (!work) return notFound("Œuvre introuvable.");
-      work.status = "accepted";
+      work.status = "approved";
       db.notify(
         work.authorId,
         "work_accepted",
         `Votre œuvre "${work.title}" a été acceptée.`,
       );
-      return HttpResponse.json(db.serializeWork(work, admin));
+      return HttpResponse.json(db.serializeWorkResponse(work));
     },
   ),
 
@@ -44,7 +58,7 @@ export const moderationHandlers = [
       await delay(150);
       const admin = requireAdmin(request);
       if (!admin) return forbidden("Vous n'avez pas les droits nécessaires.");
-      const work = db.works.find((w) => w.id === params.workId);
+      const work = db.findWorkByApiId(params.workId);
       if (!work) return notFound("Œuvre introuvable.");
       let reason = "";
       try {
@@ -53,14 +67,14 @@ export const moderationHandlers = [
       } catch {
         // no body sent
       }
-      work.status = "refused";
+      work.status = "rejected";
       const suffix = reason ? ` (${reason})` : "";
       db.notify(
         work.authorId,
         "work_refused",
         `Votre œuvre "${work.title}" a été refusée.${suffix}`,
       );
-      return HttpResponse.json(db.serializeWork(work, admin));
+      return HttpResponse.json(db.serializeWorkResponse(work));
     },
   ),
 ];

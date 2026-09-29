@@ -17,6 +17,7 @@ import {
   createSession,
   destroySession,
   findUserByUsername,
+  numericUserId,
   registerUser,
   toCurrentUser,
   usernameOrEmailTaken,
@@ -29,8 +30,13 @@ export const authHandlers = [
     await delay(150);
     const body = (await request.json()) as RegisterUserPayload;
     const fields: Record<string, string> = {};
-    if (!body.username || body.username.trim().length < 2) {
-      fields.username = "Le nom d'utilisateur est requis.";
+    const username = body.username?.trim() ?? "";
+    if (
+      username.length < 3 ||
+      username.length > 50 ||
+      !/^[a-zA-Z0-9_]+$/.test(username)
+    ) {
+      fields.username = "Utilisez 3 à 50 lettres, chiffres ou tirets bas.";
     }
     if (!body.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) {
       fields.email = "L'adresse e-mail est invalide.";
@@ -41,17 +47,17 @@ export const authHandlers = [
     if (Object.keys(fields).length > 0) {
       return errorResponse(400, "Échec de la validation", fields);
     }
-    if (usernameOrEmailTaken(body.username, body.email)) {
+    if (usernameOrEmailTaken(username, body.email)) {
       return errorResponse(
         409,
         "Nom d'utilisateur ou adresse e-mail déjà utilisé",
       );
     }
-    const user = registerUser(body);
+    const user = registerUser({ ...body, username });
     const token = createSession(user.id);
     const response = HttpResponse.json(
       {
-        userId: Number(user.id.replace(/\D/g, "")) || 1,
+        userId: numericUserId(user),
         username: user.username,
       },
       { status: 201 },
@@ -69,7 +75,7 @@ export const authHandlers = [
     }
     const token = createSession(user.id);
     const response = HttpResponse.json({
-      userId: Number(user.id.replace(/\D/g, "")) || 1,
+      userId: numericUserId(user),
       username: user.username,
     });
     return withSessionHeader(response, token);
@@ -109,6 +115,11 @@ export const authHandlers = [
         newPassword: "8 caractères minimum.",
       });
     }
+    if (body.confirmPassword !== body.newPassword) {
+      return errorResponse(400, "Échec de la validation", {
+        confirmPassword: "Les mots de passe ne correspondent pas.",
+      });
+    }
     user.password = body.newPassword;
     return new HttpResponse(null, { status: 204 });
   }),
@@ -116,7 +127,12 @@ export const authHandlers = [
   // POST /auth/password/forgot (AUTH-005)
   http.post("*/auth/password/forgot", async ({ request }) => {
     await delay(150);
-    void ((await request.json()) as ForgotPasswordPayload);
+    const body = (await request.json()) as ForgotPasswordPayload;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email ?? "")) {
+      return errorResponse(422, "Échec de la validation", {
+        email: "L'adresse e-mail est invalide.",
+      });
+    }
     // Always 202, whether or not the address exists (no account enumeration).
     return new HttpResponse(null, { status: 202 });
   }),
@@ -135,6 +151,11 @@ export const authHandlers = [
         newPassword: "8 caractères minimum.",
       });
     }
+    if (body.confirmPassword !== body.newPassword) {
+      return errorResponse(422, "Échec de la validation", {
+        confirmPassword: "Les mots de passe ne correspondent pas.",
+      });
+    }
     return new HttpResponse(null, { status: 204 });
   }),
 
@@ -144,7 +165,7 @@ export const authHandlers = [
     const user = currentUserFrom(request);
     if (!user) return unauthorized();
     return HttpResponse.json({
-      id: user.id,
+      id: numericUserId(user),
       username: user.username,
       role: user.role,
       email: user.email,
@@ -157,16 +178,38 @@ export const authHandlers = [
     const user = currentUserFrom(request);
     if (!user) return unauthorized();
     const body = (await request.json()) as UpdateProfilePayload;
-    if (body.username !== undefined) {
-      if (body.username.trim().length < 2) {
-        return errorResponse(422, "Échec de la validation", {
-          username: "2 caractères minimum.",
-        });
+    const fields: Record<string, string> = {};
+    if (body.username != null) {
+      const username = body.username.trim();
+      if (username.length < 2 || username.length > 30) {
+        fields.username =
+          "Le nom d'utilisateur doit contenir de 2 à 30 caractères.";
+      } else if (
+        usernameOrEmailTaken(username, "", user.id) &&
+        username.toLowerCase() !== user.username.toLowerCase()
+      ) {
+        return errorResponse(409, "Nom d'utilisateur déjà utilisé");
+      } else {
+        user.username = username;
       }
-      user.username = body.username;
+    }
+    if (body.email != null) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(body.email)) {
+        fields.email = "L'adresse e-mail est invalide.";
+      } else if (
+        usernameOrEmailTaken("", body.email, user.id) &&
+        body.email.toLowerCase() !== user.email.toLowerCase()
+      ) {
+        return errorResponse(409, "Adresse e-mail déjà utilisée");
+      } else {
+        user.email = body.email;
+      }
+    }
+    if (Object.keys(fields).length > 0) {
+      return errorResponse(422, "Échec de la validation", fields);
     }
     return HttpResponse.json({
-      id: user.id,
+      id: numericUserId(user),
       username: user.username,
       role: user.role,
       email: user.email,

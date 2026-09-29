@@ -1,62 +1,55 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { useAuth, isAdmin } from "@/context/AuthContext";
-import { moderationRepository } from "@/repositories";
+import { useAuth, isAdmin } from "@/hooks/use-auth";
 import type { Work } from "@/types/api";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import {
-  Empty,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-  EmptyDescription,
-} from "@/components/ui/empty";
-import { TriangleAlert } from "lucide-react";
 import LoadingGuard from "@/components/guards/loadingGuard";
 import { WorkItem } from "../works/_components/workItem";
-import { ModerationWorkCard } from "./_components/moderationWorkCard";
+import { useModeration } from "@/hooks/use-moderation";
+import ModerationHasNoWork from "./_components/moderationHasNoWork";
+
+import { WorksContainer } from "../works/_components/worksContainer";
+import ReviewActions from "./_components/reviewActions";
 
 const PAGE_SIZE = 20;
 
 export default function ModerationPage() {
-  const { user, loading: authLoading } = useAuth();
+  const { user, userLoading } = useAuth();
   const admin = isAdmin(user);
 
-  const [works, setWorks] = useState<Work[]>([]);
+  const { pending, pendingWorks, accept, refuse } = useModeration();
+  const works = pending?.items ?? [];
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<unknown>(null);
 
   const [selectedWork, setSelectedWork] = useState<Work | null>(null);
-  const [acceptingId, setAcceptingId] = useState<string | null>(null);
-  const [refusingId, setRefusingId] = useState<string | null>(null);
+  const [acceptingId, setAcceptingId] = useState<number | null>(null);
+  const [refusingId, setRefusingId] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const result = await moderationRepository.pendingWorks(1, PAGE_SIZE);
-      setWorks(result.items);
+      await pendingWorks(1, PAGE_SIZE);
     } catch (err) {
       setError(err);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [pendingWorks]);
 
   useEffect(() => {
-    if (!authLoading && admin) {
-      load();
-    }
-  }, [authLoading, admin, load]);
+    if (userLoading || !admin) return;
+    // eslint-disable-next-line
+    load();
+  }, [userLoading, admin, load]);
 
   async function handleAccept(work: Work) {
     setAcceptingId(work.id);
     setError(null);
     try {
-      await moderationRepository.accept(work.id);
-      setWorks((prev) => prev.filter((w) => w.id !== work.id));
+      await accept(work.id);
     } catch (err) {
       setError(err);
     } finally {
@@ -68,10 +61,9 @@ export default function ModerationPage() {
     setRefusingId(work.id);
     setError(null);
     try {
-      await moderationRepository.refuse(work.id, {
+      await refuse(work.id, {
         reason: reason.trim() || undefined,
       });
-      setWorks((prev) => prev.filter((w) => w.id !== work.id));
     } catch (err) {
       setError(err);
     } finally {
@@ -79,50 +71,30 @@ export default function ModerationPage() {
     }
   }
 
-  if (!authLoading && !admin) {
-    return (
-      <Empty className="w-full">
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <TriangleAlert />
-          </EmptyMedia>
-          <EmptyTitle>Accès réservé</EmptyTitle>
-          <EmptyDescription>
-            Vous n&apos;avez pas les droits nécessaires pour accéder à la
-            modération.
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    );
-  }
-
   if (loading) return <LoadingGuard />;
-
+  if (works.length === 0) return <ModerationHasNoWork />;
   return (
-    <div>
-      {error ? <p role="alert">{String(error)}</p> : null}
-
-      {works.length === 0 ? (
-        <Card className="relative w-full max-w-sm">
-          <CardHeader className="flex justify-center items-center">
-            <CardTitle>Aucune œuvre en attente de modération.</CardTitle>
-          </CardHeader>
-        </Card>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {works.map((work) => (
-            <ModerationWorkCard
+    <>
+      <WorksContainer>
+        {works.map((work) => {
+          return (
+            <WorkItem
               key={work.id}
               work={work}
-              onSelect={setSelectedWork}
-              onAccept={handleAccept}
-              onRefuse={handleRefuse}
-              accepting={acceptingId === work.id}
-              refusing={refusingId === work.id}
+              setSelectedWork={setSelectedWork}
+              statusChildren={
+                <ReviewActions
+                  work={work}
+                  accepting={acceptingId === work.id}
+                  refusing={refusingId === work.id}
+                  onAccept={handleAccept}
+                  onRefuse={handleRefuse}
+                />
+              }
             />
-          ))}
-        </div>
-      )}
+          );
+        })}
+      </WorksContainer>
 
       <Dialog
         open={!!selectedWork}
@@ -132,6 +104,6 @@ export default function ModerationPage() {
           <WorkItem work={selectedWork} />
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

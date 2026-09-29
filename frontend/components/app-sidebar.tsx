@@ -3,7 +3,6 @@
 import * as React from "react";
 
 import { NavMain } from "@/components/nav-main";
-import { NavProjects } from "@/components/nav-projects";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
 import {
@@ -15,17 +14,12 @@ import {
 } from "@/components/ui/sidebar";
 import {
   GalleryVerticalEndIcon,
-  TerminalSquareIcon,
-  BotIcon,
-  FrameIcon,
-  PieChartIcon,
-  MapIcon,
   User,
   BriefcaseBusiness,
+  Shapes,
 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
-import { categoriesRepository } from "@/repositories";
-import { Category } from "@/types/api";
+import { useAuth } from "@/hooks/use-auth";
+import { useCategory } from "@/contexts/categoryContext";
 
 const data = {
   teams: [
@@ -59,7 +53,7 @@ const data = {
       items: [
         {
           title: "My works",
-          url: "#",
+          url: "/works/mine",
         },
         {
           title: "New",
@@ -72,13 +66,17 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user, logout } = useAuth();
-  const [categories, setCategories] = React.useState<Category[]>([]);
+  const { categories } = useCategory();
 
-  React.useEffect(() => {
-    categoriesRepository.list().then((cats) => {
-      setCategories(cats);
-    });
-  }, []);
+  const navCategories = {
+    title: "Categories",
+    url: "#",
+    icon: <Shapes />,
+    items: categories.map((category) => ({
+      title: category.name,
+      url: `/categories/${category.id}`,
+    })),
+  };
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -86,13 +84,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects
-          projects={categories.slice(0, 3).map((category) => ({
-            name: category.name,
-            url: `/categories/${category.id}`,
-          }))}
-        />
+        <NavMain items={[...data.navMain, navCategories]} />
       </SidebarContent>
       <SidebarFooter>
         {user && (

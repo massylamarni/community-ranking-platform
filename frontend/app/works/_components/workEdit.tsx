@@ -1,3 +1,4 @@
+import NoCategory from "@/app/categories/_components/noCategory";
 import { AttachmentUploader } from "@/components/attachmentUploader";
 import { ConfirmDialog } from "@/components/confirmDialog";
 import { Button } from "@/components/ui/button";
@@ -18,29 +19,29 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { useCategory } from "@/contexts/categoryContext";
+import { isAdmin, useAuth } from "@/hooks/use-auth";
 import { ApiErrorBody, Category, Work } from "@/types/api";
 import { FormEvent, useState } from "react";
 
 const DEFAULT_WORK: Work = {
-  id: "",
+  id: 0,
   title: "",
   description: "",
   imageUrl: "",
   author: { username: "" },
   categories: [],
-  status: "pending",
+  status: "created",
   score: 0,
   totalVotes: 0,
   currentUserVote: null,
 };
 
-const DEFAULT_CATEGORY = "Uncategorized";
-
 export type WorkFormData = {
-  // TODO
   title: string;
   description: string;
-  categoryIds: string[];
   image: File | null;
 };
 
@@ -49,44 +50,44 @@ export function WorkEdit({
   categories,
   errors,
   handleSave,
+  handlePublish,
   handleRemove,
 }: {
   work: Work | null;
   categories: Category[] | null;
   errors: ApiErrorBody | null;
-  handleSave: (data: WorkFormData) => Promise<void>;
+  handleSave: (data: WorkFormData) => Promise<Work | void>;
+  handlePublish?: (categoryIds: number[]) => Promise<void>;
   handleRemove?: () => Promise<void>;
 }) {
+  const { user } = useAuth();
+  const { categories: categoriesForAdmin } = useCategory();
   const isEdit = !!handleRemove;
   const [newWork, setNewWork] = useState<Work>(work ?? DEFAULT_WORK);
-  const [categoryIds, setCategoryIds] = useState<string[]>(
-    work?.categories.map((c) => c.id) ?? [DEFAULT_CATEGORY],
+  const [selectedCategories, setSelectedCategories] = useState<string[]>(
+    work?.categories ?? [],
   );
   const [image, setImage] = useState<File | null>(null);
-
-  const [pendingDelete, setPendingDelete] = useState<boolean>(false);
+  const [pendingDelete, setPendingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [categoryError, setCategoryError] = useState("");
 
-  function toggleSubmitCategory(id: string) {
-    setCategoryIds((prev) => {
-      const withoutUncategorized = prev.filter((c) => c !== DEFAULT_CATEGORY);
-      const next = withoutUncategorized.includes(id)
-        ? withoutUncategorized.filter((c) => c !== id)
-        : [...withoutUncategorized, id];
-
-      return next.length === 0 ? [DEFAULT_CATEGORY] : next;
-    });
+  function toggleSubmitCategory(name: string) {
+    setCategoryError("");
+    setSelectedCategories((prev) =>
+      prev.includes(name)
+        ? prev.filter((categoryName) => categoryName !== name)
+        : [...prev, name],
+    );
   }
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-
     setDeleting(true);
     try {
       await handleSave({
         title: newWork.title,
-        description: newWork?.description,
-        categoryIds,
+        description: newWork.description,
         image,
       });
       setPendingDelete(false);
@@ -95,7 +96,34 @@ export function WorkEdit({
     }
   }
 
+  async function onPublish() {
+    if (!handlePublish) return;
+    const categoryIds = (categories ?? [])
+      .filter((category) => selectedCategories.includes(category.name))
+      .map((category) => category.id);
+    if (categoryIds.length === 0) {
+      setCategoryError("Select at least one category to publish.");
+      return;
+    }
+    setDeleting(true);
+    try {
+      const saved = await handleSave({
+        title: newWork.title,
+        description: newWork.description,
+        image,
+      });
+      if (!saved) return;
+      await handlePublish(categoryIds);
+    } finally {
+      setDeleting(false);
+    }
+  }
+
   const fe = errors?.fields ?? {};
+  const canEdit =
+    !work || work.status === "created" || work.status === "rejected";
+  const canPublish =
+    work && (work.status === "created" || work.status === "rejected");
 
   return (
     <form onSubmit={onSubmit} className="w-full flex flex-col gap-4">
@@ -126,18 +154,68 @@ export function WorkEdit({
               />
               {fe.description && <FieldError>{fe.description}</FieldError>}
             </Field>
-            {categories?.map((cat) => (
-              <Field key={cat.id} orientation="horizontal">
-                <Checkbox
-                  id={cat.id}
-                  name={cat.id}
-                  checked={categoryIds.includes(cat.id)}
-                  onCheckedChange={() => toggleSubmitCategory(cat.id)}
-                />
-                <Label htmlFor={cat.id}>{cat.name}</Label>
-                {fe.username && <FieldError>{fe.username}</FieldError>}
+            {work && !isAdmin(user) && (
+              <Field>
+                <FieldLabel>Select categories</FieldLabel>
+                <ScrollArea className="rounded-md border [&>[data-slot=scroll-area-viewport]]:max-h-72">
+                  <div className="flex flex-col gap-2 p-2">
+                    {categories?.length ? (
+                      categories.map((cat) => (
+                        <Field key={cat.id} orientation="horizontal">
+                          <Checkbox
+                            id={`category-${cat.id}`}
+                            name={String(cat.id)}
+                            checked={selectedCategories.includes(cat.name)}
+                            onCheckedChange={() =>
+                              toggleSubmitCategory(cat.name)
+                            }
+                          />
+                          <Label htmlFor={`category-${cat.id}`}>
+                            {cat.name}
+                          </Label>
+                        </Field>
+                      ))
+                    ) : (
+                      <NoCategory />
+                    )}
+                  </div>
+                </ScrollArea>
+                {(fe.categoryIds || categoryError) && (
+                  <FieldError>{fe.categoryIds ?? categoryError}</FieldError>
+                )}
               </Field>
-            ))}
+            )}
+            {isAdmin(user) && (
+              <Field>
+                <FieldLabel>Select categories</FieldLabel>
+                <ScrollArea className="rounded-md border [&>[data-slot=scroll-area-viewport]]:max-h-72">
+                  <div className="flex flex-col gap-2 p-2">
+                    {categoriesForAdmin.length ? (
+                      categoriesForAdmin.map((cat) => (
+                        <Field key={cat.id} orientation="horizontal">
+                          <Checkbox
+                            id={`category-${cat.id}`}
+                            name={String(cat.id)}
+                            checked={selectedCategories.includes(cat.name)}
+                            onCheckedChange={() =>
+                              toggleSubmitCategory(cat.name)
+                            }
+                          />
+                          <Label htmlFor={`category-${cat.id}`}>
+                            {cat.name}
+                          </Label>
+                        </Field>
+                      ))
+                    ) : (
+                      <NoCategory />
+                    )}
+                  </div>
+                </ScrollArea>
+                {(fe.categoryIds || categoryError) && (
+                  <FieldError>{fe.categoryIds ?? categoryError}</FieldError>
+                )}
+              </Field>
+            )}
             <AttachmentUploader
               onFileSelect={setImage}
               initialAttachment={
@@ -149,7 +227,18 @@ export function WorkEdit({
           </FieldGroup>
         </CardContent>
         <CardFooter>
-          <Button type="submit">{isEdit ? "Save" : "Create"}</Button>
+          <Button
+            type="submit"
+            variant={isEdit ? "secondary" : "default"}
+            disabled={!canEdit || deleting}
+          >
+            {isEdit ? "Save draft" : "Create draft"}
+          </Button>
+          {canPublish && handlePublish && (
+            <Button type="button" onClick={onPublish} disabled={deleting}>
+              Publish
+            </Button>
+          )}
         </CardFooter>
       </Card>
       {isEdit && (
