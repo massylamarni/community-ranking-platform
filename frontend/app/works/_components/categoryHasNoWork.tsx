@@ -14,9 +14,9 @@ export default function CategoryHasNoWork() {
         <EmptyMedia variant="icon">
           <Info />
         </EmptyMedia>
-        <EmptyTitle>Nothing here yet</EmptyTitle>
+        <EmptyTitle>Rien ici pour le moment</EmptyTitle>
         <EmptyDescription>
-          No work is available in this category yet.
+          Aucune œuvre n&apos;est encore disponible dans cette catégorie.
         </EmptyDescription>
       </EmptyHeader>
     </Empty>

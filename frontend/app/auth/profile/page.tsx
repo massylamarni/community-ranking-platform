@@ -36,8 +36,8 @@ export default function Profile() {
       const promise = refreshProfile();
 
       toast.promise(promise, {
-        loading: "Fetching profile...",
-        error: (err) => err?.message ?? "Failed to fetch profile",
+        loading: "Récupération du profil...",
+        error: (err) => err?.message ?? "Échec de la récupération du profil",
       });
 
       try {
@@ -62,9 +62,9 @@ export default function Profile() {
     });
 
     toast.promise(promise, {
-      loading: "Saving profile...",
-      success: () => "Saved successfully",
-      error: (err) => err?.message ?? "Save failed",
+      loading: "Enregistrement du profil...",
+      success: () => "Profil enregistré avec succès",
+      error: (err) => err?.message ?? "Échec de l&apos;enregistrement",
     });
 
     try {
@@ -84,14 +84,18 @@ export default function Profile() {
     <Card>
       <CardHeader>
         <CardTitle>Profile</CardTitle>
-        <CardDescription>Manage your profile information.</CardDescription>
+        <CardDescription>
+          Gérez les informations de votre profil.
+        </CardDescription>
       </CardHeader>
       <CardContent>
         {profile ? (
           <form id="profile-form" onSubmit={handleSave}>
             <FieldGroup>
               <Field>
-                <FieldLabel htmlFor="username">Username</FieldLabel>
+                <FieldLabel htmlFor="username">
+                  Nom d&apos;utilisateur
+                </FieldLabel>
                 <Input
                   id="username"
                   value={usernameEdit}
@@ -101,7 +105,7 @@ export default function Profile() {
                 {fe.username && <FieldError>{fe.username}</FieldError>}
               </Field>
               <Field>
-                <FieldLabel htmlFor="email">Email</FieldLabel>
+                <FieldLabel htmlFor="email">Adresse e-mail</FieldLabel>
                 <Input
                   id="email"
                   type="email"
@@ -114,12 +118,12 @@ export default function Profile() {
             </FieldGroup>
           </form>
         ) : (
-          "Failed to fetch profile"
+          "Échec de la récupération du profil"
         )}
       </CardContent>
       <CardFooter>
         <Button type="submit" form="profile-form" disabled={isLoading}>
-          Save
+          Enregistrer
         </Button>
       </CardFooter>
     </Card>

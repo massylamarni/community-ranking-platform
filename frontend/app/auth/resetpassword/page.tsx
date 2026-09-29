@@ -39,9 +39,10 @@ function ResetPasswordForm() {
       confirmPassword,
     });
     toast.promise(promise, {
-      loading: "Resetting password...",
-      success: "Password reset successfully.",
-      error: (err) => err?.message ?? "Password reset failed",
+      loading: "Réinitialisation du mot de passe...",
+      success: "Mot de passe réinitialisé avec succès.",
+      error: (err) =>
+        err?.message ?? "Échec de la réinitialisation du mot de passe",
     });
     try {
       await promise;
@@ -55,13 +56,15 @@ function ResetPasswordForm() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Set a new password</CardTitle>
+        <CardTitle>Définir un nouveau mot de passe</CardTitle>
       </CardHeader>
       <CardContent>
         <form id="reset-password-form" onSubmit={handleSubmit}>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="new-password">New password</FieldLabel>
+              <FieldLabel htmlFor="new-password">
+                Nouveau mot de passe
+              </FieldLabel>
               <Input
                 id="new-password"
                 type="password"
@@ -76,7 +79,7 @@ function ResetPasswordForm() {
             </Field>
             <Field>
               <FieldLabel htmlFor="confirm-password">
-                Confirm new password
+                Confirmer le nouveau mot de passe
               </FieldLabel>
               <Input
                 id="confirm-password"
@@ -97,7 +100,7 @@ function ResetPasswordForm() {
       </CardContent>
       <CardFooter>
         <Button type="submit" form="reset-password-form" disabled={loading}>
-          Reset password
+          Réinitialiser le mot de passe
         </Button>
       </CardFooter>
     </Card>
@@ -109,7 +112,7 @@ export default function ResetPassword() {
     <Suspense
       fallback={
         <Card>
-          <CardContent>Loading...</CardContent>
+          <CardContent>Chargement...</CardContent>
         </Card>
       }
     >

@@ -83,7 +83,7 @@ export function NavUser({
             <DropdownMenuGroup>
               <DropdownMenuItem render={<Link href="/auth/profile" />}>
                 <User />
-                Profile
+                Profil
               </DropdownMenuItem>
               {/*
               <DropdownMenuItem render={<Link href="/notifications" />}>
@@ -94,7 +94,7 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={logout}>
               <LogOutIcon />
-              Log out
+              Se déconnecter
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

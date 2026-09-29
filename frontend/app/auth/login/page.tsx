@@ -37,9 +37,9 @@ export default function Login() {
     const promise = login(loginForm);
 
     toast.promise(promise, {
-      loading: "Logging to your account...",
-      success: () => "Login success",
-      error: (err) => err?.message ?? "Login failed",
+      loading: "Connexion à votre compte...",
+      success: () => "Connexion réussie",
+      error: (err) => err?.message ?? "Échec de la connexion",
     });
 
     try {
@@ -54,10 +54,10 @@ export default function Login() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Login to your account</CardTitle>
+        <CardTitle>Connectez-vous à votre compte</CardTitle>
         <CardAction>
           <Button variant="link">
-            <Link href="/auth/register">Register</Link>
+            <Link href="/auth/register">Créer un compte</Link>
           </Button>
         </CardAction>
       </CardHeader>
@@ -65,7 +65,7 @@ export default function Login() {
         <form id="login-form" onSubmit={handleLogin}>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="username">Username</FieldLabel>
+              <FieldLabel htmlFor="username">Nom d&apos;utilisateur</FieldLabel>
               <Input
                 id="username"
                 value={loginForm.username}
@@ -77,12 +77,12 @@ export default function Login() {
             </Field>
             <Field>
               <div className="flex items-center">
-                <FieldLabel htmlFor="password">Password</FieldLabel>
+                <FieldLabel htmlFor="password">Mot de passe</FieldLabel>
                 <Link
                   href="/auth/forgotpassword"
                   className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
                 >
-                  Forgot your password?
+                  Mot de passe oublié ?
                 </Link>
               </div>
               <ButtonGroup className="w-full">
@@ -110,7 +110,7 @@ export default function Login() {
       </CardContent>
       <CardFooter>
         <Button type="submit" form="login-form" disabled={authBusy}>
-          Login
+          Se connecter
         </Button>
       </CardFooter>
     </Card>

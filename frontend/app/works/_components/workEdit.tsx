@@ -102,7 +102,9 @@ export function WorkEdit({
       .filter((category) => selectedCategories.includes(category.name))
       .map((category) => category.id);
     if (categoryIds.length === 0) {
-      setCategoryError("Select at least one category to publish.");
+      setCategoryError(
+        "Sélectionnez au moins une catégorie pour publier l&apos;œuvre.",
+      );
       return;
     }
     setDeleting(true);
@@ -134,7 +136,7 @@ export function WorkEdit({
         <CardContent>
           <FieldGroup>
             <Field>
-              <FieldLabel>Work title</FieldLabel>
+              <FieldLabel>Titre de l&apos;œuvre</FieldLabel>
               <Input
                 id="work_title"
                 value={newWork?.title}
@@ -146,7 +148,7 @@ export function WorkEdit({
               {fe.title && <FieldError>{fe.title}</FieldError>}
             </Field>
             <Field>
-              <FieldLabel>Work description</FieldLabel>
+              <FieldLabel>Description de l&apos;œuvre</FieldLabel>
               <Input
                 id="work_description"
                 value={newWork?.description}
@@ -159,7 +161,7 @@ export function WorkEdit({
             </Field>
             {work && !isAdmin(user) && (
               <Field>
-                <FieldLabel>Select categories</FieldLabel>
+                <FieldLabel>Sélectionner des catégories</FieldLabel>
                 <ScrollArea className="rounded-md border [&>[data-slot=scroll-area-viewport]]:max-h-72">
                   <div className="flex flex-col gap-2 p-2">
                     {categories?.length ? (
@@ -190,7 +192,7 @@ export function WorkEdit({
             )}
             {isAdmin(user) && (
               <Field>
-                <FieldLabel>Select categories</FieldLabel>
+                <FieldLabel>Sélectionner des catégories</FieldLabel>
                 <ScrollArea className="rounded-md border [&>[data-slot=scroll-area-viewport]]:max-h-72">
                   <div className="flex flex-col gap-2 p-2">
                     {categoriesForAdmin.length ? (
@@ -235,11 +237,11 @@ export function WorkEdit({
             variant={isEdit ? "secondary" : "default"}
             disabled={!canEdit || deleting}
           >
-            {isEdit ? "Save draft" : "Create draft"}
+            {isEdit ? "Enregistrer le brouillon" : "Créer le brouillon"}
           </Button>
           {canPublish && handlePublish && (
             <Button type="button" onClick={onPublish} disabled={deleting}>
-              Publish
+              Publier
             </Button>
           )}
         </CardFooter>
@@ -248,11 +250,11 @@ export function WorkEdit({
         <>
           <Card>
             <CardHeader>
-              <CardTitle>Delete Work</CardTitle>
+              <CardTitle>Supprimer l&apos;œuvre</CardTitle>
               <CardDescription>
-                Permanently remove your work and all of its contents from the
-                Vercel platform. This action is not reversible, so please
-                continue with caution.
+                Supprimez définitivement votre œuvre et tout son contenu de la
+                plateforme. Cette action est irréversible, procédez avec
+                prudence.
               </CardDescription>
             </CardHeader>
             <CardFooter>
@@ -261,7 +263,7 @@ export function WorkEdit({
                 variant="destructive"
                 onClick={() => setPendingDelete(true)}
               >
-                Delete work
+                Supprimer l&apos;œuvre
               </Button>
             </CardFooter>
           </Card>

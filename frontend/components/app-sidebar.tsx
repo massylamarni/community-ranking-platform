@@ -27,12 +27,12 @@ const data = {
     {
       name: "Number1",
       logo: <GalleryVerticalEndIcon />,
-      plan: "Enterprise",
+      plan: "Entreprise",
     },
   ],
   navMain: [
     {
-      title: "Profile",
+      title: "Profil",
       url: "/auth/profile",
       icon: <User />,
       isActive: true,
@@ -42,22 +42,22 @@ const data = {
           url: "#",
         },*/
         {
-          title: "Edit",
+          title: "Modifier",
           url: "/auth/profile",
         },
       ],
     },
     {
-      title: "Works",
+      title: "Œuvres",
       url: "#",
       icon: <BriefcaseBusiness />,
       items: [
         {
-          title: "My works",
+          title: "Mes œuvres",
           url: "/works/mine",
         },
         {
-          title: "New",
+          title: "Nouvelle œuvre",
           url: "/works/new",
         },
       ],
@@ -70,23 +70,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { categories } = useCategory();
 
   const navModeration = {
-    title: "Moderation",
+    title: "Modération",
     url: "#",
     icon: <ShieldCheck />,
     items: [
       {
-        title: "Manage works",
+        title: "Gérer les œuvres",
         url: "/moderation",
       },
       {
-        title: "Edit categories",
+        title: "Modifier les catégories",
         url: "/categories/edit",
       },
     ],
   };
 
   const navCategories = {
-    title: "Categories",
+    title: "Catégories",
     url: "#",
     icon: <Shapes />,
     items: categories.map((category) => ({

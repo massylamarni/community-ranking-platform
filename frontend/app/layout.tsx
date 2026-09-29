@@ -27,14 +27,14 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Works Platform",
-  description: "Next.js frontend",
+  title: "Plateforme des œuvres",
+  description: "Interface de gestion des œuvres",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
-      lang="en"
+      lang="fr"
       className={cn(
         "h-full",
         "antialiased",
