@@ -27,18 +27,18 @@ cache:
     - .m2/repository/
 
 # ============================================================
-# TEST (BDD / Playwright / JUnit)
+# TEST (JUnit / Cucumber)
 # ============================================================
-test:
+test-unit:
   stage: test
   allow_failure: true
   script:
-    - echo "Executing tests and BDD scenarios with Maven"
+    - echo "Executing unit and regular tests with Maven"
     - cd backend
-    - mvn $MAVEN_CLI_OPTS verify 
+    - mvn $MAVEN_CLI_OPTS '-Dtest=!RunCucumberTest' verify
   artifacts:
     when: always
-    name: "Cucumber-Report-$CI_COMMIT_REF_SLUG"
+    name: "Unit-Test-Report-$CI_COMMIT_REF_SLUG"
     reports:
       junit:
         - backend/target/surefire-reports/*.xml
@@ -47,6 +47,22 @@ test:
       - backend/target/site
       - backend/target/surefire-reports
       - backend/target/failsafe-reports
+
+test-acceptance:
+  stage: test
+  allow_failure: true
+  script:
+    - echo "Executing Cucumber acceptance scenarios with Maven"
+    - cd backend
+    - mvn $MAVEN_CLI_OPTS -Dtest=RunCucumberTest verify
+  artifacts:
+    when: always
+    name: "Acceptance-Test-Report-$CI_COMMIT_REF_SLUG"
+    reports:
+      junit:
+        - backend/target/surefire-reports/*.xml
+    paths:
+      - backend/target/surefire-reports
 
 # ============================================================
 # ANALYSIS (SonarQube)
