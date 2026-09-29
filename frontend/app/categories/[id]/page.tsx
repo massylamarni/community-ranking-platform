@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@/hooks/use-auth";
+import { isAdmin, useAuth } from "@/hooks/use-auth";
 import type { Work } from "@/types/api";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import LoadingGuard from "@/components/guards/loadingGuard";
@@ -12,6 +12,8 @@ import { WorkList } from "@/app/works/_components/workList";
 import { WorkItem } from "@/app/works/_components/workItem";
 import { useParams, useRouter } from "next/navigation";
 import CategoryNotFoundGuard from "../_components/guards/categoryNotFoundGuard";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function WorksByCategory() {
   const { id } = useParams<{ id: string }>();
@@ -70,14 +72,29 @@ export default function WorksByCategory() {
   return (
     <>
       <HeaderPortal>
-        <FilterBar
-          categories={categories}
-          categoryId={id}
-          setCategoryId={(newId) => {
-            setSelectedId(null);
-            router.push(`/categories/${newId}`);
-          }}
-        />
+        <div className="flex w-full justify-between">
+          {categories.length !== 0 ? (
+            <FilterBar
+              categories={categories}
+              categoryId={id}
+              setCategoryId={(newId) => {
+                setSelectedId(null);
+                router.push(`/categories/${newId}`);
+              }}
+            />
+          ) : (
+            <div></div>
+          )}
+          {isAdmin(user) && (
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link href="/categories/edit" />}
+            >
+              Edit
+            </Button>
+          )}
+        </div>
       </HeaderPortal>
       <WorkList
         works={works}

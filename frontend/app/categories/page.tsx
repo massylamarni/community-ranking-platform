@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useAuth } from "@/hooks/use-auth";
+import { isAdmin, useAuth } from "@/hooks/use-auth";
 import type { Work } from "@/types/api";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import LoadingGuard from "@/components/guards/loadingGuard";
@@ -11,6 +11,9 @@ import FilterBar from "./_components/filterBar";
 import { HeaderPortal } from "@/components/header-portal";
 import { useCategories } from "@/hooks/use-category";
 import CategoryNotFoundGuard from "./_components/guards/categoryNotFoundGuard";
+import NoCategory from "./_components/noCategory";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function WorksByCategory() {
   const { user } = useAuth();
@@ -73,39 +76,59 @@ export default function WorksByCategory() {
     !!user && !!selectedWork && user.username === selectedWork.author.username;
 
   if (loading) return <LoadingGuard />;
-  if (!categoryId) return <CategoryNotFoundGuard />;
 
   return (
     <>
       <HeaderPortal>
-        <FilterBar
-          categories={categories}
-          categoryId={categoryId}
-          setCategoryId={(id) => {
-            setSelectedId(null);
-            setCategoryId(id);
-          }}
-        />
+        <div className="flex w-full justify-between">
+          {categories.length !== 0 ? (
+            <FilterBar
+              categories={categories}
+              categoryId={categoryId}
+              setCategoryId={(id) => {
+                setSelectedId(null);
+                setCategoryId(id);
+              }}
+            />
+          ) : (
+            <div></div>
+          )}
+          {isAdmin(user) && (
+            <Button
+              variant="outline"
+              nativeButton={false}
+              render={<Link href="/categories/edit" />}
+            >
+              Edit
+            </Button>
+          )}
+        </div>
       </HeaderPortal>
-      <WorkList
-        works={works}
-        setWorks={setWorks}
-        setSelectedWork={(w) => setSelectedId(w?.id ?? null)}
-        username={user?.username}
-      />
-      <Dialog
-        open={!!selectedWork}
-        onOpenChange={(open) => !open && setSelectedId(null)}
-      >
-        <DialogContent className="p-0 sm:max-w-lg">
-          <WorkItem
-            work={selectedWork}
-            setWork={isAuthor ? undefined : handleSetWork}
+      {categoryId ? (
+        <>
+          <WorkList
+            works={works}
+            setWorks={setWorks}
+            setSelectedWork={(w) => setSelectedId(w?.id ?? null)}
+            username={user?.username}
+          />
+          <Dialog
+            open={!!selectedWork}
+            onOpenChange={(open) => !open && setSelectedId(null)}
           >
-            {isAuthor && <div>Manage this work</div>}
-          </WorkItem>
-        </DialogContent>
-      </Dialog>
+            <DialogContent className="p-0 sm:max-w-lg">
+              <WorkItem
+                work={selectedWork}
+                setWork={isAuthor ? undefined : handleSetWork}
+              >
+                {isAuthor && <div>Manage this work</div>}
+              </WorkItem>
+            </DialogContent>
+          </Dialog>
+        </>
+      ) : (
+        <NoCategory />
+      )}
     </>
   );
 }
