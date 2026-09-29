@@ -2,6 +2,7 @@ package fr.numeronumber1.steps;
 
 import java.util.Map;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -167,6 +168,12 @@ public class CategorySteps {
 
     @Given("l'œuvre {string} appartient à la catégorie {string}")
     public void oeuvre_appartient_a_categorie(String title, String categoryName) {
+        if (scenarioContext.getOeuvreId() != null) {
+            Category category = categories.findByName(categoryName).orElseThrow();
+            assertTrue(oeuvreCategories.existsById(
+                    new OeuvreCategoryId(scenarioContext.getOeuvreId(), category.getCategoryId())));
+            return;
+        }
         Category category = categories.findByName(categoryName).orElseGet(() -> {
             Category created = new Category();
             created.setName(categoryName);
@@ -243,38 +250,78 @@ public class CategorySteps {
     }
 
     @When("elle crée l'œuvre {string}")
-    public void elle_cree_oeuvre(String title) {
-        // TODO: préparer la création de l'œuvre
+    public void elle_cree_oeuvre(String title) throws Exception {
+        scenarioContext.setWorkTitle(title);
+        scenarioContext.setWorkDescription("Description de " + title);
+        MockHttpServletRequestBuilder request = post("/works")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of(
+                        "title", title,
+                        "description", scenarioContext.getWorkDescription())));
+        if (scenarioContext.getSession() != null) {
+            request.session(scenarioContext.getSession());
+        }
+        MvcResult result = mockMvc.perform(request).andReturn();
+        scenarioContext.setResponseStatus(result.getResponse().getStatus());
+        scenarioContext.setResponseBody(result.getResponse().getContentAsString());
+        if (result.getResponse().getStatus() == 201) {
+            scenarioContext.setOeuvreId(objectMapper.readTree(scenarioContext.getResponseBody())
+                    .path("id").asLong());
+        }
     }
 
     @When("elle renseigne {string} comme catégorie")
     public void elle_renseigne_categorie(String categoryName) {
-        // TODO: sélectionner la catégorie de l'œuvre
+        Category category = categories.findByName(categoryName).orElseThrow();
+        scenarioContext.setCategoryId(category.getCategoryId());
+        scenarioContext.setCategoryName(category.getName());
     }
 
     @When("elle publie l'œuvre")
-    public void elle_publie_oeuvre() {
-        // TODO: implémenter la publication de l'œuvre
+    public void elle_publie_oeuvre() throws Exception {
+        envoyer_soumission();
     }
 
     @Then("l'œuvre {string} est publiée")
-    public void oeuvre_est_publiee(String title) {
-        // TODO: vérifier la publication de l'œuvre
+    public void oeuvre_est_publiee(String title) throws Exception {
+        assertEquals(200, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
+        JsonNode response = objectMapper.readTree(scenarioContext.getResponseBody());
+        assertEquals(title, response.path("title").asText());
+        assertEquals("pending", response.path("status").asText());
     }
 
     @When("elle ne sélectionne aucune catégorie")
     public void elle_ne_selectionne_aucune_categorie() {
-        // TODO: représenter l'absence de catégorie sélectionnée
+        scenarioContext.setCategoryId(null);
+        scenarioContext.setCategoryName(null);
     }
 
     @When("elle tente de publier l'œuvre")
-    public void elle_tente_publier_oeuvre() {
-        // TODO: représenter la tentative de publication
+    public void elle_tente_publier_oeuvre() throws Exception {
+        envoyer_soumission();
     }
 
     @Then("un message indique qu'une catégorie est obligatoire")
     public void message_categorie_obligatoire() {
-        // TODO: vérifier le message de catégorie obligatoire
+        assertEquals(422, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
+        assertTrue(scenarioContext.getResponseBody().contains("categoryIds"),
+                scenarioContext.getResponseBody());
+        assertTrue(scenarioContext.getResponseBody().contains("Veuillez choisir au moins une catégorie"),
+                scenarioContext.getResponseBody());
+    }
+
+    private void envoyer_soumission() throws Exception {
+        List<Integer> categoryIds = scenarioContext.getCategoryId() == null
+                ? List.of() : List.of(scenarioContext.getCategoryId());
+        MockHttpServletRequestBuilder request = post("/works/{id}/submit", scenarioContext.getOeuvreId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("categoryIds", categoryIds)));
+        if (scenarioContext.getSession() != null) {
+            request.session(scenarioContext.getSession());
+        }
+        MvcResult result = mockMvc.perform(request).andReturn();
+        scenarioContext.setResponseStatus(result.getResponse().getStatus());
+        scenarioContext.setResponseBody(result.getResponse().getContentAsString());
     }
 
     @Given("une catégorie existante")
