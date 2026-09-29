@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useAuth, isAdmin } from "@/hooks/use-auth";
 import type { Category } from "@/types/api";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -118,36 +118,29 @@ export default function EditCategories() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="max-h-72 rounded-md border overflow-scroll">
-            <div className="px-2 py-2">
+          <ScrollArea className="rounded-md border [&>[data-slot=scroll-area-viewport]]:max-h-72">
+            <div className="flex flex-col p-2">
               {categories.length !== 0 ? (
                 categories.map((c, index) => (
-                  <div
-                    key={c.id}
-                    className="flex flex-col justify-center items-center"
-                  >
-                    <div className="flex items-center justify-between w-full">
-                      <Label className="text-sm pl-1">{c.name}</Label>
+                  <Fragment key={c.id}>
+                    <div className="flex items-center justify-between">
+                      <span className="pl-1 text-sm">{c.name}</span>
                       {isAdmin(user) && (
-                        <div className="flex items-center gap-1">
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="icon"
-                            aria-label={`Delete ${c.name} (CAT-002)`}
-                            onClick={() => setPendingDelete(c)}
-                          >
-                            <X className="h-3.5 w-3.5" />
-                          </Button>
-                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Delete ${c.name} (CAT-002)`}
+                          onClick={() => setPendingDelete(c)}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
                       )}
                     </div>
-                    {index < categories.length - 1 ? (
-                      <div className="w-full my-2 px-1">
-                        <Separator />
-                      </div>
-                    ) : null}
-                  </div>
+                    {index < categories.length - 1 && (
+                      <Separator className="my-2" />
+                    )}
+                  </Fragment>
                 ))
               ) : (
                 <NoCategory />

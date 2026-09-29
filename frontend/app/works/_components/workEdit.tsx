@@ -1,3 +1,4 @@
+import NoCategory from "@/app/categories/_components/noCategory";
 import { AttachmentUploader } from "@/components/attachmentUploader";
 import { ConfirmDialog } from "@/components/confirmDialog";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { useCategory } from "@/contexts/categoryContext";
+import { isAdmin, useAuth } from "@/hooks/use-auth";
 import { ApiErrorBody, Category, Work } from "@/types/api";
 import { FormEvent, useState } from "react";
 
@@ -56,6 +60,8 @@ export function WorkEdit({
   handlePublish?: (categoryIds: number[]) => Promise<void>;
   handleRemove?: () => Promise<void>;
 }) {
+  const { user } = useAuth();
+  const { categories: categoriesForAdmin } = useCategory();
   const isEdit = !!handleRemove;
   const [newWork, setNewWork] = useState<Work>(work ?? DEFAULT_WORK);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
@@ -148,26 +154,68 @@ export function WorkEdit({
               />
               {fe.description && <FieldError>{fe.description}</FieldError>}
             </Field>
-            <Field>
-              <ScrollArea>
-                {work &&
-                  categories?.map((cat) => (
-                    <Field key={cat.id} orientation="horizontal">
-                      <Checkbox
-                        id={`category-${cat.id}`}
-                        name={String(cat.id)}
-                        checked={selectedCategories.includes(cat.name)}
-                        onCheckedChange={() => toggleSubmitCategory(cat.name)}
-                      />
-                      <Label htmlFor={`category-${cat.id}`}>{cat.name}</Label>
-                      {fe.username && <FieldError>{fe.username}</FieldError>}
-                    </Field>
-                  ))}
-              </ScrollArea>
-              {(fe.categoryIds || categoryError) && (
-                <FieldError>{fe.categoryIds ?? categoryError}</FieldError>
-              )}
-            </Field>
+            {work && !isAdmin(user) && (
+              <Field>
+                <FieldLabel>Select categories</FieldLabel>
+                <ScrollArea className="rounded-md border [&>[data-slot=scroll-area-viewport]]:max-h-72">
+                  <div className="flex flex-col gap-2 p-2">
+                    {categories?.length ? (
+                      categories.map((cat) => (
+                        <Field key={cat.id} orientation="horizontal">
+                          <Checkbox
+                            id={`category-${cat.id}`}
+                            name={String(cat.id)}
+                            checked={selectedCategories.includes(cat.name)}
+                            onCheckedChange={() =>
+                              toggleSubmitCategory(cat.name)
+                            }
+                          />
+                          <Label htmlFor={`category-${cat.id}`}>
+                            {cat.name}
+                          </Label>
+                        </Field>
+                      ))
+                    ) : (
+                      <NoCategory />
+                    )}
+                  </div>
+                </ScrollArea>
+                {(fe.categoryIds || categoryError) && (
+                  <FieldError>{fe.categoryIds ?? categoryError}</FieldError>
+                )}
+              </Field>
+            )}
+            {isAdmin(user) && (
+              <Field>
+                <FieldLabel>Select categories</FieldLabel>
+                <ScrollArea className="rounded-md border [&>[data-slot=scroll-area-viewport]]:max-h-72">
+                  <div className="flex flex-col gap-2 p-2">
+                    {categoriesForAdmin.length ? (
+                      categoriesForAdmin.map((cat) => (
+                        <Field key={cat.id} orientation="horizontal">
+                          <Checkbox
+                            id={`category-${cat.id}`}
+                            name={String(cat.id)}
+                            checked={selectedCategories.includes(cat.name)}
+                            onCheckedChange={() =>
+                              toggleSubmitCategory(cat.name)
+                            }
+                          />
+                          <Label htmlFor={`category-${cat.id}`}>
+                            {cat.name}
+                          </Label>
+                        </Field>
+                      ))
+                    ) : (
+                      <NoCategory />
+                    )}
+                  </div>
+                </ScrollArea>
+                {(fe.categoryIds || categoryError) && (
+                  <FieldError>{fe.categoryIds ?? categoryError}</FieldError>
+                )}
+              </Field>
+            )}
             <AttachmentUploader
               onFileSelect={setImage}
               initialAttachment={
@@ -179,7 +227,11 @@ export function WorkEdit({
           </FieldGroup>
         </CardContent>
         <CardFooter>
-          <Button type="submit" disabled={!canEdit || deleting}>
+          <Button
+            type="submit"
+            variant={isEdit ? "secondary" : "default"}
+            disabled={!canEdit || deleting}
+          >
             {isEdit ? "Save draft" : "Create draft"}
           </Button>
           {canPublish && handlePublish && (

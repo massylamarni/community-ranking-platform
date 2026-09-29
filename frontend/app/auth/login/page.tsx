@@ -23,7 +23,7 @@ export default function Login() {
   const { login } = useAuth();
   const [loginForm, setLoginForm] = useState({
     username: "alice",
-    password: "alice1234",
+    password: "Password123!",
   });
   const [authError, setAuthError] = useState<ApiErrorBody | null>(null);
   const [authBusy, setAuthBusy] = useState(false);
