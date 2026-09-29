@@ -58,7 +58,7 @@ export default function ChangePassword() {
   const fe = pwError?.fields ?? {};
 
   return (
-    <Card className="w-full max-w-sm">
+    <Card>
       <CardHeader>
         <CardTitle>Change password</CardTitle>
       </CardHeader>
@@ -114,13 +114,8 @@ export default function ChangePassword() {
           </FieldGroup>
         </form>
       </CardContent>
-      <CardFooter className="flex-col gap-2">
-        <Button
-          type="submit"
-          form="changepass-form"
-          className="w-full"
-          disabled={isLoading}
-        >
+      <CardFooter>
+        <Button type="submit" form="changepass-form" disabled={isLoading}>
           Save
         </Button>
       </CardFooter>

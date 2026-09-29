@@ -36,6 +36,7 @@ services:
       - "127.0.0.1:8180:80"
     networks:
       - data-net
+      - frontend-net
 
   app:
     build:

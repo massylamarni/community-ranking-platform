@@ -43,7 +43,7 @@ export function WorkItem({
 
   if (!work) return;
   return (
-    <Card className="relative w-full max-w-lg">
+    <Card className="max-w-3xl">
       <CardHeader
         onClick={() => (setSelectedWork ? setSelectedWork(work) : null)}
       >
@@ -52,11 +52,17 @@ export function WorkItem({
       </CardHeader>
       {work.imageUrl && (
         <CardContent
-          className="flex flex-col gap-3"
+          className="flex flex-col gap-3 max-w-none"
           onClick={() => (setSelectedWork ? setSelectedWork(work) : null)}
         >
-          <div className="relative aspect-4/3 overflow-hidden rounded-md border">
-            <Image src={work.imageUrl} alt={work.title} fill />
+          <div className="relative aspect-4/3 overflow-hidden rounded-md border bg-black">
+            <Image
+              src={work.imageUrl}
+              alt={work.title}
+              fill
+              sizes="(max-width: 768px) 100vw, 512px"
+              className="object-contain"
+            />
           </div>
           {children}
         </CardContent>
