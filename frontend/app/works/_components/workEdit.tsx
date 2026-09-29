@@ -126,7 +126,10 @@ export function WorkEdit({
     work && (work.status === "created" || work.status === "rejected");
 
   return (
-    <form onSubmit={onSubmit} className="w-full flex flex-col gap-4">
+    <form
+      onSubmit={onSubmit}
+      className="w-full flex justify-center items-center flex-col gap-4"
+    >
       <Card>
         <CardContent>
           <FieldGroup>
