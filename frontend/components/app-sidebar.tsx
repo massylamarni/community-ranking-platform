@@ -3,7 +3,6 @@
 import * as React from "react";
 
 import { NavMain } from "@/components/nav-main";
-import { NavProjects } from "@/components/nav-projects";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
 import {
@@ -20,8 +19,7 @@ import {
   Shapes,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { categoriesRepository } from "@/repositories";
-import { Category } from "@/types/api";
+import { useCategories } from "@/hooks/use-category";
 
 const data = {
   teams: [
@@ -68,19 +66,13 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user, logout } = useAuth();
-  const [categories, setCategories] = React.useState<Category[]>([]);
-
-  React.useEffect(() => {
-    categoriesRepository.list().then((cats) => {
-      setCategories(cats);
-    });
-  }, []);
+  const { categories } = useCategories();
 
   const navCategories = {
     title: "Categories",
     url: "#",
     icon: <Shapes />,
-    items: categories.slice(0, 3).map((category) => ({
+    items: categories.map((category) => ({
       title: category.name,
       url: `/categories/${category.id}`,
     })),

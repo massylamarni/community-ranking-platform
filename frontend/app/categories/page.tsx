@@ -10,6 +10,7 @@ import { WorkItem } from "../works/_components/workItem";
 import FilterBar from "./_components/filterBar";
 import { HeaderPortal } from "@/components/header-portal";
 import { useCategories } from "@/hooks/use-category";
+import CategoryNotFoundGuard from "./_components/guards/categoryNotFoundGuard";
 
 export default function WorksByCategory() {
   const { user } = useAuth();
@@ -72,6 +73,8 @@ export default function WorksByCategory() {
     !!user && !!selectedWork && user.username === selectedWork.author.username;
 
   if (loading) return <LoadingGuard />;
+  if (!categoryId) return <CategoryNotFoundGuard />;
+
   return (
     <>
       <HeaderPortal>

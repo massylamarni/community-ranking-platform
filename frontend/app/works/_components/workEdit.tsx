@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { ApiErrorBody, Category, Work } from "@/types/api";
 import { FormEvent, useState } from "react";
 
@@ -147,22 +148,26 @@ export function WorkEdit({
               />
               {fe.description && <FieldError>{fe.description}</FieldError>}
             </Field>
-            {work &&
-              categories?.map((cat) => (
-                <Field key={cat.id} orientation="horizontal">
-                  <Checkbox
-                    id={`category-${cat.id}`}
-                    name={String(cat.id)}
-                    checked={selectedCategories.includes(cat.name)}
-                    onCheckedChange={() => toggleSubmitCategory(cat.name)}
-                  />
-                  <Label htmlFor={`category-${cat.id}`}>{cat.name}</Label>
-                  {fe.username && <FieldError>{fe.username}</FieldError>}
-                </Field>
-              ))}
-            {(fe.categoryIds || categoryError) && (
-              <FieldError>{fe.categoryIds ?? categoryError}</FieldError>
-            )}
+            <Field>
+              <ScrollArea>
+                {work &&
+                  categories?.map((cat) => (
+                    <Field key={cat.id} orientation="horizontal">
+                      <Checkbox
+                        id={`category-${cat.id}`}
+                        name={String(cat.id)}
+                        checked={selectedCategories.includes(cat.name)}
+                        onCheckedChange={() => toggleSubmitCategory(cat.name)}
+                      />
+                      <Label htmlFor={`category-${cat.id}`}>{cat.name}</Label>
+                      {fe.username && <FieldError>{fe.username}</FieldError>}
+                    </Field>
+                  ))}
+              </ScrollArea>
+              {(fe.categoryIds || categoryError) && (
+                <FieldError>{fe.categoryIds ?? categoryError}</FieldError>
+              )}
+            </Field>
             <AttachmentUploader
               onFileSelect={setImage}
               initialAttachment={

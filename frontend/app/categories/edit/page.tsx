@@ -12,7 +12,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Check, Pencil, Plus, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -31,16 +31,11 @@ export default function EditCategories() {
     categories,
     list,
     create: createCategory,
-    update: updateCategory,
     remove: removeCategory,
   } = useCategories();
   const [error, setError] = useState<unknown>(null);
   const [newName, setNewName] = useState("");
   const [open, setOpen] = useState(false);
-  const [editingCategoryId, setEditingCategoryId] = useState<number | null>(
-    null,
-  );
-  const [editingName, setEditingName] = useState("");
 
   const [pendingDelete, setPendingDelete] = useState<Category | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -78,17 +73,6 @@ export default function EditCategories() {
       setError(err);
     } finally {
       setDeleting(false);
-    }
-  }
-
-  async function saveCategoryName(categoryId: number) {
-    setError(null);
-    try {
-      await updateCategory(categoryId, { name: editingName });
-      setEditingCategoryId(null);
-      setEditingName("");
-    } catch (err) {
-      setError(err);
     }
   }
 
@@ -146,67 +130,20 @@ export default function EditCategories() {
                   className="flex flex-col justify-center items-center"
                 >
                   <div className="flex items-center justify-between w-full">
-                    {editingCategoryId === c.id ? (
-                      <Input
-                        aria-label={`Name for ${c.name}`}
-                        value={editingName}
-                        onChange={(event) => setEditingName(event.target.value)}
-                        maxLength={50}
-                        required
-                      />
-                    ) : (
-                      <Label className="text-sm pl-1">{c.name}</Label>
-                    )}
-                    {isAdmin(user) ? (
+                    <Label className="text-sm pl-1">{c.name}</Label>
+                    {isAdmin(user) && (
                       <div className="flex items-center gap-1">
-                        {editingCategoryId === c.id ? (
-                          <>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              aria-label={`Save ${c.name}`}
-                              onClick={() => saveCategoryName(c.id)}
-                            >
-                              <Check className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              aria-label="Cancel category rename"
-                              onClick={() => setEditingCategoryId(null)}
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              aria-label={`Rename ${c.name}`}
-                              onClick={() => {
-                                setEditingCategoryId(c.id);
-                                setEditingName(c.name);
-                              }}
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              aria-label={`Delete ${c.name} (CAT-002)`}
-                              onClick={() => setPendingDelete(c)}
-                            >
-                              <X className="h-3.5 w-3.5" />
-                            </Button>
-                          </>
-                        )}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Delete ${c.name} (CAT-002)`}
+                          onClick={() => setPendingDelete(c)}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
-                    ) : null}
+                    )}
                   </div>
                   {index < categories.length - 1 ? (
                     <div className="w-full my-2 px-1">

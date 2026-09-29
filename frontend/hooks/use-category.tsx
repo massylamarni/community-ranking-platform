@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { categoriesRepository } from "@/repositories";
 import type { Category, CreateCategoryPayload, WorkPage } from "@/types/api";
 
@@ -24,6 +24,25 @@ export function useCategories() {
       setLoading(false);
     }
   }, []);
+
+  useEffect(() => {
+    let mounted = true;
+
+    (async () => {
+      try {
+        await list();
+      } catch (err) {
+        console.error("Failed to initialize auth", err);
+        if (mounted) setCategories([]);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+
+    return () => {
+      mounted = false;
+    };
+  }, [list]);
 
   const create = useCallback(async (payload: CreateCategoryPayload) => {
     const category = await categoriesRepository.create(payload);
