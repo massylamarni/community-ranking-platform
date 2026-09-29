@@ -4,7 +4,7 @@ info:
   version: "0.2.0"
   description: Contract for the HTTP endpoints currently implemented by the backend.
 servers:
-  - url: http://localhost:8080
+  - url: http://localhost:8181
 
 security:
   - sessionCookie: []
@@ -18,6 +18,8 @@ tags:
     description: Category operations.
   - name: works
     description: Work creation, retrieval, submission, updates, and deletion.
+  - name: moderation
+    description: Administrator review of submitted works.
   - name: uploads
     description: Public access to uploaded work images.
 
@@ -429,6 +431,67 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "422": { $ref: "#/components/responses/ValidationError422" }
 
+  /moderation/works:
+    get:
+      operationId: getPendingWorks
+      tags: [moderation]
+      summary: List works awaiting moderation (admin only)
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+        - $ref: "#/components/parameters/Sort"
+      responses:
+        "200":
+          description: Spring Data page containing OeuvreResponse DTOs
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SpringPageOeuvreResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+
+  /moderation/works/{workId}/accept:
+    post:
+      operationId: acceptWork
+      tags: [moderation]
+      summary: Accept a pending work (admin only)
+      parameters:
+        - $ref: "#/components/parameters/ModerationWorkId"
+      responses:
+        "200":
+          description: Updated OeuvreResponse DTO
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OeuvreResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /moderation/works/{workId}/refuse:
+    post:
+      operationId: refuseWork
+      tags: [moderation]
+      summary: Refuse a pending work (admin only)
+      parameters:
+        - $ref: "#/components/parameters/ModerationWorkId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/RefuseWork" }
+      responses:
+        "200":
+          description: Updated OeuvreResponse DTO
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OeuvreResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationError422" }
+
   /uploads/works/{filename}:
     get:
       operationId: getWorkImage
@@ -470,6 +533,11 @@ components:
       schema: { type: integer, format: int32 }
     WorkId:
       name: id
+      in: path
+      required: true
+      schema: { type: integer, format: int64 }
+    ModerationWorkId:
+      name: workId
       in: path
       required: true
       schema: { type: integer, format: int64 }
@@ -710,9 +778,9 @@ components:
         title: { type: [string, "null"], maxLength: 150 }
         description: { type: [string, "null"] }
 
-    CategoryEntityOeuvre:
+    OeuvreEntity:
       type: object
-      description: Raw Oeuvre entity returned inside Spring Data page content.
+      description: Raw Oeuvre entity returned inside the category works page.
       properties:
         oeuvreId: { type: integer, format: int64 }
         title: { type: string }
@@ -736,13 +804,38 @@ components:
           items: { type: object, additionalProperties: true }
       additionalProperties: true
 
+    RefuseWork:
+      type: object
+      required: [reason]
+      properties:
+        reason: { type: string, minLength: 1 }
+
     SpringPageOeuvre:
       type: object
-      description: Spring Data Page serialization returned directly by the controller.
+      description: Spring Data Page serialization containing raw category work entities.
       properties:
         content:
           type: array
-          items: { $ref: "#/components/schemas/CategoryEntityOeuvre" }
+          items: { $ref: "#/components/schemas/OeuvreEntity" }
+        pageable: { type: object, additionalProperties: true }
+        totalPages: { type: integer }
+        totalElements: { type: integer, format: int64 }
+        last: { type: boolean }
+        size: { type: integer }
+        number: { type: integer }
+        sort: { type: object, additionalProperties: true }
+        numberOfElements: { type: integer }
+        first: { type: boolean }
+        empty: { type: boolean }
+      additionalProperties: true
+
+    SpringPageOeuvreResponse:
+      type: object
+      description: Spring Data Page serialization containing OeuvreResponse DTOs.
+      properties:
+        content:
+          type: array
+          items: { $ref: "#/components/schemas/OeuvreResponse" }
         pageable: { type: object, additionalProperties: true }
         totalPages: { type: integer }
         totalElements: { type: integer, format: int64 }
