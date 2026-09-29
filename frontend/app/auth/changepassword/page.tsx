@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Eye, EyeClosed } from "lucide-react";
 import { toast } from "sonner";
@@ -21,10 +20,15 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { ApiErrorBody } from "@/types/api";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function ChangePassword() {
   const { changePassword } = useAuth();
-  const [pwForm, setPwForm] = useState({ oldPassword: "", newPassword: "" });
+  const [pwForm, setPwForm] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
   const [pwResult, setPwResult] = useState<string | null>(null);
   const [pwError, setPwError] = useState<ApiErrorBody | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -110,6 +114,24 @@ export default function ChangePassword() {
                 </Button>
               </ButtonGroup>{" "}
               {fe.newPassword && <FieldError>{fe.newPassword}</FieldError>}
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="confirmpassword">
+                Confirm new password
+              </FieldLabel>
+              <Input
+                id="confirmpassword"
+                type="password"
+                value={pwForm.confirmPassword}
+                onChange={(e) =>
+                  setPwForm((f) => ({ ...f, confirmPassword: e.target.value }))
+                }
+                minLength={1}
+                required
+              />
+              {fe.confirmPassword && (
+                <FieldError>{fe.confirmPassword}</FieldError>
+              )}
             </Field>
           </FieldGroup>
         </form>

@@ -1,5 +1,7 @@
 import type {
   Category,
+  CategoryEntityResponse,
+  CategoryWorkEntity,
   Comment,
   CurrentUser,
   Notification,
@@ -7,6 +9,7 @@ import type {
   RankingPeriod,
   Role,
   Work,
+  WorkResponse,
   WorkStatus,
 } from "@/types/api";
 
@@ -32,7 +35,7 @@ interface DbWork {
   description: string;
   imageUrl: string | null;
   authorId: string;
-  categoryIds: string[];
+  categoryIds: number[];
   status: WorkStatus;
   votes: DbVote[];
   createdAt: string;
@@ -102,9 +105,9 @@ const users: DbUser[] = [
 ];
 
 const categories: Category[] = [
-  { id: "c1", name: "Photography" },
-  { id: "c2", name: "Literature" },
-  { id: "c3", name: "Music" },
+  { id: 1, name: "Photography" },
+  { id: 2, name: "Literature" },
+  { id: 3, name: "Music" },
 ];
 
 const works: DbWork[] = [
@@ -115,8 +118,8 @@ const works: DbWork[] = [
     imageUrl:
       "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=900&auto=format&fit=crop&q=80",
     authorId: "u2",
-    categoryIds: ["c1"],
-    status: "accepted",
+    categoryIds: [1],
+    status: "approved",
     votes: [
       { userId: "u1", value: 1, createdAt: daysAgo(0) },
       { userId: "u3", value: 1, createdAt: daysAgo(1) },
@@ -130,8 +133,8 @@ const works: DbWork[] = [
     imageUrl:
       "https://images.unsplash.com/photo-1497366754035-f200968a6e72?w=900&auto=format&fit=crop&q=80",
     authorId: "u2",
-    categoryIds: ["c1"],
-    status: "accepted",
+    categoryIds: [1],
+    status: "approved",
     votes: [
       { userId: "u1", value: 1, createdAt: daysAgo(0) },
       { userId: "u3", value: 1, createdAt: daysAgo(1) },
@@ -144,8 +147,8 @@ const works: DbWork[] = [
     description: "A long-exposure shot taken from the old pier.",
     imageUrl: null,
     authorId: "u2",
-    categoryIds: ["c1"],
-    status: "accepted",
+    categoryIds: [1],
+    status: "approved",
     votes: [
       { userId: "u1", value: 1, createdAt: daysAgo(0) },
       { userId: "u3", value: 1, createdAt: daysAgo(1) },
@@ -158,8 +161,8 @@ const works: DbWork[] = [
     description: "Five short stories written over one wet November.",
     imageUrl: null,
     authorId: "u3",
-    categoryIds: ["c2"],
-    status: "accepted",
+    categoryIds: [2],
+    status: "approved",
     votes: [
       { userId: "u2", value: 1, createdAt: daysAgo(40) },
       { userId: "u1", value: -1, createdAt: daysAgo(2) },
@@ -172,7 +175,7 @@ const works: DbWork[] = [
     description: "A four-track demo recorded on a phone.",
     imageUrl: null,
     authorId: "u2",
-    categoryIds: ["c3"],
+    categoryIds: [3],
     status: "pending",
     votes: [],
     createdAt: daysAgo(1),
@@ -183,8 +186,8 @@ const works: DbWork[] = [
     description: "This one did not pass moderation, for demo purposes.",
     imageUrl: null,
     authorId: "u3",
-    categoryIds: ["c1"],
-    status: "refused",
+    categoryIds: [1],
+    status: "rejected",
     votes: [],
     createdAt: daysAgo(3),
   },
@@ -280,7 +283,20 @@ export function userFromSessionToken(token: string | null): DbUser | undefined {
 }
 
 export function toCurrentUser(user: DbUser): CurrentUser {
-  return { id: user.id, username: user.username, role: user.role };
+  return {
+    id: numericUserId(user),
+    username: user.username,
+    email: user.email,
+    role: user.role,
+  };
+}
+
+export function numericUserId(user: DbUser): number {
+  return Number(user.id.replace(/\D/g, "")) || 1;
+}
+
+function numericWorkId(id: string): number {
+  return Number(id.replace(/\D/g, "")) || 1;
 }
 
 export function registerUser(input: {
@@ -299,11 +315,16 @@ export function registerUser(input: {
   return user;
 }
 
-export function usernameOrEmailTaken(username: string, email: string): boolean {
+export function usernameOrEmailTaken(
+  username: string,
+  email: string,
+  excludeUserId?: string,
+): boolean {
   return users.some(
     (u) =>
-      u.username.toLowerCase() === username.toLowerCase() ||
-      u.email.toLowerCase() === email.toLowerCase(),
+      (u.id !== excludeUserId &&
+        u.username.toLowerCase() === username.toLowerCase()) ||
+      (u.id !== excludeUserId && u.email.toLowerCase() === email.toLowerCase()),
   );
 }
 
@@ -336,22 +357,82 @@ export function scoreInPeriod(work: DbWork, period: RankingPeriod): number {
   return votesInWindow.reduce((total, v) => total + v.value, 0);
 }
 
+export function findWorkByApiId(
+  id?: string | number | readonly string[],
+): DbWork | undefined {
+  const numericId = Number(Array.isArray(id) ? id[0] : id);
+  if (!Number.isInteger(numericId)) return undefined;
+  return works.find((work) => numericWorkId(work.id) === numericId);
+}
+
 export function serializeWork(work: DbWork, viewer: DbUser | undefined): Work {
   const author = findUserById(work.authorId);
   const myVote = viewer
     ? (work.votes.find((v) => v.userId === viewer.id)?.value ?? null)
     : null;
   return {
-    id: work.id,
+    id: numericWorkId(work.id),
     title: work.title,
     description: work.description,
     imageUrl: work.imageUrl,
     author: { username: author?.username ?? "unknown" },
-    categories: categories.filter((c) => work.categoryIds.includes(c.id)),
+    categories: categories
+      .filter((category) => work.categoryIds.includes(category.id))
+      .map((category) => category.name),
     status: work.status,
     score: scoreOf(work),
     totalVotes: work.votes.length,
     currentUserVote: myVote,
+  };
+}
+
+export function serializeWorkResponse(work: DbWork): WorkResponse {
+  const author = findUserById(work.authorId);
+  return {
+    id: numericWorkId(work.id),
+    title: work.title,
+    description: work.description,
+    status: work.status,
+    author: author?.username ?? "unknown",
+    imageUrl: work.imageUrl,
+    categories: categories
+      .filter((category) => work.categoryIds.includes(category.id))
+      .map((category) => category.name),
+    totalVotes: work.votes.length,
+  };
+}
+
+function serializeCategoryEntity(category: Category): CategoryEntityResponse {
+  return {
+    categoryId: category.id,
+    name: category.name,
+    oeuvreCategories: works
+      .filter((work) => work.categoryIds.includes(category.id))
+      .map((work) => ({ oeuvreId: numericWorkId(work.id) })),
+  };
+}
+
+function serializeCategoryWorkEntity(work: DbWork): CategoryWorkEntity {
+  const author = findUserById(work.authorId);
+  return {
+    oeuvreId: numericWorkId(work.id),
+    title: work.title,
+    description: work.description,
+    imageUrl: work.imageUrl,
+    author: { username: author?.username ?? "unknown" },
+    status: work.status,
+    createdAt: work.createdAt,
+    updatedAt: null,
+    oeuvreCategories: categories
+      .filter((category) => work.categoryIds.includes(category.id))
+      .map((category) => ({
+        category: { categoryId: category.id, name: category.name },
+      })),
+    comments: comments
+      .filter((comment) => comment.workId === work.id)
+      .map((comment) => ({ commentId: comment.id })),
+    votes: work.votes.map((vote) => ({ value: vote.value })),
+    rankings: [],
   };
 }
 
@@ -394,13 +475,13 @@ export const db = {
   rankingSnapshots,
 
   isWorkVisibleTo(work: DbWork, viewer: DbUser | undefined): boolean {
-    if (work.status === "accepted") return true;
+    if (work.status === "approved") return true;
     return !!viewer && (viewer.id === work.authorId || viewer.role === "admin");
   },
 
-  publicWorksOfCategory(categoryId: string): DbWork[] {
+  publicWorksOfCategory(categoryId: number): DbWork[] {
     return works.filter(
-      (w) => w.status === "accepted" && w.categoryIds.includes(categoryId),
+      (w) => w.status === "approved" && w.categoryIds.includes(categoryId),
     );
   },
 
@@ -411,6 +492,10 @@ export const db = {
   },
 
   serializeWork,
+  serializeWorkResponse,
+  serializeCategoryEntity,
+  serializeCategoryWorkEntity,
+  findWorkByApiId,
   serializeComment: serializeCommentRecursive,
   scoreOf,
   scoreInPeriod,
@@ -427,6 +512,9 @@ export const db = {
   },
 
   generateId,
+  generateNumericId(prefix: string) {
+    return Number(generateId(prefix).replace(/\D/g, "")) || 1;
+  },
 };
 
 export type { DbUser, DbWork, DbComment, DbNotification };

@@ -219,6 +219,21 @@ class OeuvreServiceTest {
     }
 
     @Test
+    void update_oeuvre_approuvee_remet_status_created() {
+        oeuvre.setStatus(OeuvreStatus.approved);
+        UpdateOeuvreRequest req = new UpdateOeuvreRequest();
+        req.setDescription("Description corrigée");
+
+        when(oeuvreRepository.findById(10L)).thenReturn(Optional.of(oeuvre));
+        when(oeuvreRepository.save(any(Oeuvre.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Oeuvre result = oeuvreService.update(10L, req, author);
+
+        assertEquals(OeuvreStatus.created, result.getStatus());
+        assertEquals("Description corrigée", result.getDescription());
+    }
+
+    @Test
     void update_echoue_si_introuvable() {
         UpdateOeuvreRequest req = new UpdateOeuvreRequest();
         when(oeuvreRepository.findById(99L)).thenReturn(Optional.empty());

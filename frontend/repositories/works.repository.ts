@@ -1,36 +1,100 @@
 import { request } from "@/lib/http";
-import type { SubmitWorkPayload, UpdateWorkPayload, Work } from "@/types/api";
+import type {
+  CreateWorkPayload,
+  SubmitWorkPayload,
+  UpdateWorkPayload,
+  Work,
+  WorkResponse,
+  WorkStatus,
+} from "@/types/api";
 
-function toFormData(payload: SubmitWorkPayload | UpdateWorkPayload): FormData {
+export interface ListWorksQuery {
+  status?: WorkStatus;
+  categoryId?: number;
+  title?: string;
+}
+
+export function normalizeWorkResponse(response: WorkResponse): Work {
+  return {
+    id: response.id,
+    title: response.title,
+    description: response.description,
+    status: response.status,
+    author: { username: response.author },
+    imageUrl: response.imageUrl,
+    categories: response.categories,
+    totalVotes: response.totalVotes,
+  };
+}
+
+function createFormData(payload: CreateWorkPayload): FormData {
   const form = new FormData();
-  if (payload.title !== undefined) form.set("title", payload.title);
-  if (payload.description !== undefined)
-    form.set("description", payload.description);
-  payload.categoryIds?.forEach((id) => form.append("categoryIds", id));
+  form.set("title", payload.title);
+  form.set("description", payload.description);
+  if (payload.imageUrl != null) form.set("imageUrl", payload.imageUrl);
   if (payload.image) form.set("image", payload.image);
   return form;
 }
 
 export const worksRepository = {
-  submit(payload: SubmitWorkPayload) {
-    return request<Work>("/works", {
+  async list(query: ListWorksQuery = {}) {
+    const response = await request<WorkResponse[]>("/works", {
+      query: {
+        status: query.status,
+        categoryId: query.categoryId,
+        title: query.title,
+      },
+    });
+    return response.map(normalizeWorkResponse);
+  },
+
+  async create(payload: CreateWorkPayload) {
+    const body = payload.image
+      ? createFormData(payload)
+      : {
+          title: payload.title,
+          description: payload.description,
+          imageUrl: payload.imageUrl,
+        };
+    const response = await request<WorkResponse>("/works", {
       method: "POST",
-      body: toFormData(payload),
+      body,
     });
+    return normalizeWorkResponse(response);
   },
 
-  get(workId: string) {
-    return request<Work>(`/works/${workId}`);
+  async get(workId: number) {
+    const response = await request<WorkResponse>(`/works/${workId}`);
+    return normalizeWorkResponse(response);
   },
 
-  update(workId: string, payload: UpdateWorkPayload) {
-    return request<Work>(`/works/${workId}`, {
+  async submit(workId: number, payload: SubmitWorkPayload) {
+    const response = await request<WorkResponse>(`/works/${workId}/submit`, {
+      method: "POST",
+      body: payload,
+    });
+    return normalizeWorkResponse(response);
+  },
+
+  async update(workId: number, payload: UpdateWorkPayload) {
+    const response = await request<WorkResponse>(`/works/${workId}`, {
       method: "PATCH",
-      body: toFormData(payload),
+      body: payload,
     });
+    return normalizeWorkResponse(response);
   },
 
-  remove(workId: string) {
+  async uploadImage(workId: number, image: File) {
+    const form = new FormData();
+    form.set("image", image);
+    const response = await request<WorkResponse>(`/works/${workId}/image`, {
+      method: "POST",
+      body: form,
+    });
+    return normalizeWorkResponse(response);
+  },
+
+  remove(workId: number) {
     return request<void>(`/works/${workId}`, { method: "DELETE" });
   },
 };
