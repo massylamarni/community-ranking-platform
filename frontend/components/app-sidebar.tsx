@@ -19,7 +19,7 @@ import {
   Shapes,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useCategories } from "@/hooks/use-category";
+import { useCategory } from "@/contexts/categoryContext";
 
 const data = {
   teams: [
@@ -66,7 +66,7 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user, logout } = useAuth();
-  const { categories } = useCategories();
+  const { categories } = useCategory();
 
   const navCategories = {
     title: "Categories",

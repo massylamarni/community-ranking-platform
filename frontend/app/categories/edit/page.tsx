@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useAuth, isAdmin } from "@/hooks/use-auth";
 import type { Category } from "@/types/api";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -23,7 +23,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { ConfirmDialog } from "@/components/confirmDialog";
 import { HeaderPortal } from "@/components/header-portal";
-import { useCategories } from "@/hooks/use-category";
+import NoCategory from "../_components/noCategory";
+import { useCategory } from "@/contexts/categoryContext";
 
 export default function EditCategories() {
   const { user } = useAuth();
@@ -32,7 +33,7 @@ export default function EditCategories() {
     list,
     create: createCategory,
     remove: removeCategory,
-  } = useCategories();
+  } = useCategory();
   const [error, setError] = useState<unknown>(null);
   const [newName, setNewName] = useState("");
   const [open, setOpen] = useState(false);
@@ -117,22 +118,14 @@ export default function EditCategories() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {errorMessage && (
-            <p role="alert" className="mb-3 text-sm text-destructive">
-              {errorMessage}
-            </p>
-          )}
-          <ScrollArea className="max-h-72 rounded-md border overflow-scroll">
-            <div className="px-2 py-2">
-              {categories.map((c, index) => (
-                <div
-                  key={c.id}
-                  className="flex flex-col justify-center items-center"
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <Label className="text-sm pl-1">{c.name}</Label>
-                    {isAdmin(user) && (
-                      <div className="flex items-center gap-1">
+          <ScrollArea className="rounded-md border [&>[data-slot=scroll-area-viewport]]:max-h-72">
+            <div className="flex flex-col p-2">
+              {categories.length !== 0 ? (
+                categories.map((c, index) => (
+                  <Fragment key={c.id}>
+                    <div className="flex items-center justify-between">
+                      <span className="pl-1 text-sm">{c.name}</span>
+                      {isAdmin(user) && (
                         <Button
                           type="button"
                           variant="ghost"
@@ -142,16 +135,16 @@ export default function EditCategories() {
                         >
                           <X className="h-3.5 w-3.5" />
                         </Button>
-                      </div>
-                    )}
-                  </div>
-                  {index < categories.length - 1 ? (
-                    <div className="w-full my-2 px-1">
-                      <Separator />
+                      )}
                     </div>
-                  ) : null}
-                </div>
-              ))}
+                    {index < categories.length - 1 && (
+                      <Separator className="my-2" />
+                    )}
+                  </Fragment>
+                ))
+              ) : (
+                <NoCategory />
+              )}
             </div>
           </ScrollArea>
         </CardContent>
