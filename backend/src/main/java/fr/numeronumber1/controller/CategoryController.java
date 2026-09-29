@@ -16,9 +16,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import fr.numeronumber1.dto.request.CategoryRequest;
+import fr.numeronumber1.dto.response.CategoryDetailsResponse;
 import fr.numeronumber1.dto.response.CategoryResponse;
+import fr.numeronumber1.dto.response.OeuvreResponse;
 import fr.numeronumber1.model.Category;
-import fr.numeronumber1.model.Oeuvre;
 import fr.numeronumber1.security.RequireAdmin;
 import fr.numeronumber1.service.CategoryService;
 import jakarta.validation.Valid;
@@ -52,20 +53,20 @@ public class CategoryController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Category> getCategoryById(
+        public ResponseEntity<CategoryDetailsResponse> getCategoryById(
             @PathVariable Integer id) {
 
         return ResponseEntity.ok(
-                categoryService.getCategoryById(id)
+            toCategoryDetailsResponse(categoryService.getCategoryById(id))
         );
     }
 
     @GetMapping("/name/{name}")
-    public ResponseEntity<Category> getCategoryByName(
+        public ResponseEntity<CategoryDetailsResponse> getCategoryByName(
             @PathVariable String name) {
 
         return ResponseEntity.ok(
-                categoryService.getCategoryByName(name)
+            toCategoryDetailsResponse(categoryService.getCategoryByName(name))
         );
     }
 
@@ -78,22 +79,37 @@ public class CategoryController {
 
     @PutMapping("/{id}")
     @RequireAdmin
-    public ResponseEntity<Category> updateCategory(
+    public ResponseEntity<CategoryResponse> updateCategory(
             @PathVariable Integer id,
             @Valid @RequestBody CategoryRequest request) {
 
         Category category = categoryService.updateCategory(id, request);
 
-        return ResponseEntity.ok(category);
+        return ResponseEntity.ok(new CategoryResponse(category));
     }
 
     @GetMapping("/{id}/works")
-    public ResponseEntity<Page<Oeuvre>> getPublishedWorksByCategory(
+    public ResponseEntity<Page<OeuvreResponse>> getPublishedWorksByCategory(
             @PathVariable Integer id,
             Pageable pageable) {
 
         return ResponseEntity.ok(
                 categoryService.getPublishedWorksByCategoryId(id, pageable)
+                        .map(OeuvreResponse::new)
+        );
+    }
+
+    private CategoryDetailsResponse toCategoryDetailsResponse(Category category) {
+        List<OeuvreResponse> works = categoryService
+                .getPublishedWorksByCategoryId(category.getCategoryId(), Pageable.unpaged())
+                .getContent().stream()
+                .map(OeuvreResponse::new)
+                .toList();
+
+        return new CategoryDetailsResponse(
+                category.getCategoryId().toString(),
+                category.getName(),
+                works
         );
     }
 }
