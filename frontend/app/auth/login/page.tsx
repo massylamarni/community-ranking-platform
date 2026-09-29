@@ -18,8 +18,10 @@ import { Eye, EyeClosed } from "lucide-react";
 import { toast } from "sonner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { ApiErrorBody } from "@/types/api";
+import { useRouter } from "next/navigation";
 
 export default function Login() {
+  const router = useRouter();
   const { login } = useAuth();
   const [loginForm, setLoginForm] = useState({
     username: "alice",
@@ -48,6 +50,7 @@ export default function Login() {
       setAuthError(err as ApiErrorBody);
     } finally {
       setAuthBusy(false);
+      router.push(`/works/mine`);
     }
   }
 
