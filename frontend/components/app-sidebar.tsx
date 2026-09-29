@@ -17,8 +17,9 @@ import {
   User,
   BriefcaseBusiness,
   Shapes,
+  ShieldCheck,
 } from "lucide-react";
-import { useAuth } from "@/hooks/use-auth";
+import { isAdmin, useAuth } from "@/hooks/use-auth";
 import { useCategory } from "@/contexts/categoryContext";
 
 const data = {
@@ -68,6 +69,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user, logout } = useAuth();
   const { categories } = useCategory();
 
+  const navModeration = {
+    title: "Moderation",
+    url: "#",
+    icon: <ShieldCheck />,
+    items: [
+      {
+        title: "Manage works",
+        url: "/moderation",
+      },
+      {
+        title: "Edit categories",
+        url: "/categories/edit",
+      },
+    ],
+  };
+
   const navCategories = {
     title: "Categories",
     url: "#",
@@ -84,7 +101,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={[...data.navMain, navCategories]} />
+        <NavMain
+          items={[
+            ...data.navMain,
+            ...(isAdmin(user) ? [navModeration] : []),
+            navCategories,
+          ]}
+        />
       </SidebarContent>
       <SidebarFooter>
         {user && (
