@@ -2,6 +2,7 @@ import { Dispatch, SetStateAction } from "react";
 import { Work } from "@/types/api";
 import { WorkItem } from "./workItem";
 import CategoryHasNoWork from "./categoryHasNoWork";
+import { WorksContainer } from "./worksContainer";
 
 export function WorkList({
   works,
@@ -19,10 +20,10 @@ export function WorkList({
     setWorks((prev) => prev.map((w) => (w.id === work.id ? work : w)));
   }
 
-  return works.length === 0 ? (
-    <CategoryHasNoWork />
-  ) : (
-    <div className="flex flex-col w-full h-full justify-start items-center gap-4">
+  if (works.length === 0) return <CategoryHasNoWork />;
+
+  return (
+    <WorksContainer>
       {works.map((w) => (
         <WorkItem
           key={w.id}
@@ -31,6 +32,6 @@ export function WorkList({
           setSelectedWork={setSelectedWork}
         />
       ))}
-    </div>
+    </WorksContainer>
   );
 }

@@ -3,12 +3,14 @@
 import { useCallback, useEffect, useState } from "react";
 import { useAuth, isAdmin } from "@/hooks/use-auth";
 import type { Work } from "@/types/api";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import LoadingGuard from "@/components/guards/loadingGuard";
 import { WorkItem } from "../works/_components/workItem";
-import { ModerationWorkCard } from "./_components/moderationWorkCard";
 import { useModeration } from "@/hooks/use-moderation";
+import ModerationHasNoWork from "./_components/moderationHasNoWork";
+
+import { WorksContainer } from "../works/_components/worksContainer";
+import ReviewActions from "./_components/reviewActions";
 
 const PAGE_SIZE = 20;
 
@@ -70,32 +72,29 @@ export default function ModerationPage() {
   }
 
   if (loading) return <LoadingGuard />;
-
+  if (works.length === 0) return <ModerationHasNoWork />;
   return (
-    <div>
-      {error ? <p role="alert">{String(error)}</p> : null}
-
-      {works.length === 0 ? (
-        <Card className="relative w-full max-w-sm">
-          <CardHeader className="flex justify-center items-center">
-            <CardTitle>Aucune œuvre en attente de modération.</CardTitle>
-          </CardHeader>
-        </Card>
-      ) : (
-        <div className="flex flex-col gap-3">
-          {works.map((work) => (
-            <ModerationWorkCard
+    <>
+      <WorksContainer>
+        {works.map((work) => {
+          return (
+            <WorkItem
               key={work.id}
               work={work}
-              onSelect={setSelectedWork}
-              onAccept={handleAccept}
-              onRefuse={handleRefuse}
-              accepting={acceptingId === work.id}
-              refusing={refusingId === work.id}
+              setSelectedWork={setSelectedWork}
+              statusChildren={
+                <ReviewActions
+                  work={work}
+                  accepting={acceptingId === work.id}
+                  refusing={refusingId === work.id}
+                  onAccept={handleAccept}
+                  onRefuse={handleRefuse}
+                />
+              }
             />
-          ))}
-        </div>
-      )}
+          );
+        })}
+      </WorksContainer>
 
       <Dialog
         open={!!selectedWork}
@@ -105,6 +104,6 @@ export default function ModerationPage() {
           <WorkItem work={selectedWork} />
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

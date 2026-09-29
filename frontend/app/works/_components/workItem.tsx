@@ -20,11 +20,13 @@ export function WorkItem({
   setWork,
   setSelectedWork,
   children,
+  statusChildren,
 }: {
   work: Work | null;
   setWork?: (work: Work) => void | undefined;
   setSelectedWork?: (w: Work | null) => void;
   children?: ReactNode;
+  statusChildren?: ReactNode;
 }) {
   const [errors, setErrors] = useState<ApiErrorBody | null>(null);
   /*
@@ -101,6 +103,7 @@ export function WorkItem({
           </Avatar>
           <div>{work.author.username}</div>
         </div>
+        {statusChildren}
       </CardFooter>
     </Card>
   );
