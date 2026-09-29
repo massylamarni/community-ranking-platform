@@ -1,43 +1,47 @@
 package fr.numeronumber1.steps;
 
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.json.JsonMapper;
+import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.verify;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mock.web.MockHttpSession;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.ResultActions;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.DefaultTransactionDefinition;
+
 import fr.numeronumber1.model.Category;
 import fr.numeronumber1.model.Oeuvre;
 import fr.numeronumber1.model.User;
 import fr.numeronumber1.repository.CategoryRepository;
 import fr.numeronumber1.repository.OeuvreRepository;
 import fr.numeronumber1.repository.UserRepository;
-import io.cucumber.java.Before;
 import io.cucumber.java.After;
+import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
-import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.mail.javamail.JavaMailSender;
-import org.springframework.mock.web.MockHttpSession;
-import org.springframework.security.core.context.SecurityContext;
-import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.DefaultTransactionDefinition;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
-import org.springframework.test.web.servlet.ResultActions;
-
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.clearInvocations;
-import static org.mockito.Mockito.verify;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.junit.jupiter.api.Assertions.*;
+import io.cucumber.java.en.When;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 public class AuthSteps {
 
@@ -495,6 +499,12 @@ public class AuthSteps {
         assertEquals(401, responseStatus, responseBody);
     }
 
+    @Then("une ressource publique reste accessible après la déconnexion")
+    public void ressource_publique_reste_accessible_apres_deconnexion() throws Exception {
+        capture(mockMvc.perform(get("/categories")));
+        assertEquals(200, responseStatus, responseBody);
+    }
+
     @Then("il est redirigé vers son espace utilisateur")
     public void redirige_vers_espace_utilisateur() throws Exception {
         var request = get("/auth/me");
@@ -595,13 +605,9 @@ public class AuthSteps {
     }
 
     @Given("l'administrateur est connecté")
-    public void administrateur_est_connecte() {
-        // TODO: préparer une session administrateur
-    }
-
     @Given("un administrateur est connecté")
-    public void un_administrateur_est_connecte() {
-        // TODO: préparer une session administrateur
+    public void administrateur_est_connecte() throws Exception {
+        authenticateAs("cucumber-admin", true);
     }
 
     @Given("un administrateur est authentifié")

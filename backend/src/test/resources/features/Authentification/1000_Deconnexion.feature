@@ -5,7 +5,7 @@ Scenario: Se déconnecter d'un compte authentifié
   Given l'utilisateur "bob" est authentifié
   When il demande à se déconnecter
   Then l'utilisateur n'est plus authentifié
-  #And il est redirigé vers une page accessible aux visiteurs
+  And une ressource publique reste accessible après la déconnexion
 
 Scenario: Empêcher l'accès aux fonctionnalités authentifiées après déconnexion
   Given l'utilisateur "bob" est authentifié
