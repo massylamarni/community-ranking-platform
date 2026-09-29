@@ -363,4 +363,42 @@ class CategoryServiceTest {
                 pageable
         );
     }
+
+    @Test
+    void shouldRequestOnlyApprovedWorks() {
+        Integer categoryId = 1;
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Category category = new Category();
+        category.setCategoryId(categoryId);
+        category.setName("Musique");
+
+        Page<Oeuvre> page = Page.empty(pageable);
+
+        when(categoryRepository.findById(categoryId))
+                .thenReturn(Optional.of(category));
+
+        when(oeuvreCategoryRepository.findPublishedWorksByCategory(
+                categoryId,
+                OeuvreStatus.approved,
+                pageable
+        )).thenReturn(page);
+
+        categoryService.getPublishedWorksByCategoryId(categoryId, pageable);
+
+        verify(oeuvreCategoryRepository).findPublishedWorksByCategory(
+                categoryId,
+                OeuvreStatus.approved,
+                pageable
+        );
+
+        verify(
+                oeuvreCategoryRepository,
+                never()
+        ).findPublishedWorksByCategory(
+                eq(categoryId),
+                eq(OeuvreStatus.rejected),
+                eq(pageable)
+        );
+    }
 }

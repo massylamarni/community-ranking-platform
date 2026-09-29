@@ -343,6 +343,44 @@ class OeuvreServiceTest {
         assertEquals("Une ou plusieurs catégories sont introuvables", ex.getMessage());
     }
 
+    @Test
+    void submit_succes_si_oeuvre_rejetee() {
+        oeuvre.setStatus(OeuvreStatus.rejected);
+
+        SubmitOeuvreRequest req = new SubmitOeuvreRequest();
+        req.setCategoryIds(List.of(1, 2));
+
+        when(oeuvreRepository.findById(10L)).thenReturn(Optional.of(oeuvre));
+        when(oeuvreRepository.save(any(Oeuvre.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Oeuvre result = oeuvreService.submit(10L, req, author);
+
+        assertEquals(OeuvreStatus.pending, result.getStatus());
+
+        verify(oeuvreRepository).save(oeuvre);
+        verify(oeuvreCategoryRepository, never()).save(any(OeuvreCategory.class));
+    }
+
+    @Test
+    void submit_echoue_si_oeuvre_rejetee_et_pas_auteur() {
+        oeuvre.setStatus(OeuvreStatus.rejected);
+
+        SubmitOeuvreRequest req = new SubmitOeuvreRequest();
+        req.setCategoryIds(List.of(1, 2));
+
+        when(oeuvreRepository.findById(10L)).thenReturn(Optional.of(oeuvre));
+
+        IllegalArgumentException ex = assertThrows(
+                IllegalArgumentException.class,
+                () -> oeuvreService.submit(10L, req, otherUser)
+        );
+
+        assertEquals("Vous n'êtes pas l'auteur de cette œuvre", ex.getMessage());
+
+        verify(oeuvreRepository, never()).save(any(Oeuvre.class));
+        verify(oeuvreCategoryRepository, never()).save(any(OeuvreCategory.class));
+    }
+
     // --- resoumettre proposition refusee ---
 
     @Test
@@ -372,8 +410,6 @@ class OeuvreServiceTest {
         Oeuvre resubmitted = oeuvreService.submit(10L, submitReq, author);
         assertEquals(OeuvreStatus.pending, resubmitted.getStatus());
     }
-
-    // --- delete ---
 
     @Test
     void delete_succes_auteur_supprime_sa_propre_oeuvre() {
@@ -414,7 +450,6 @@ class OeuvreServiceTest {
         verify(oeuvreRepository, never()).delete(any(Oeuvre.class));
     }
 
-    // --- admin create ---
 
     @Test
     void create_succes_par_administrateur_statut_approved() {
@@ -433,8 +468,6 @@ class OeuvreServiceTest {
         assertEquals(OeuvreStatus.approved, result.getStatus());
         verify(oeuvreRepository).save(any(Oeuvre.class));
     }
-
-    // --- getAll ---
 
     @Test
     void getAll_succes_avec_filtres() {
