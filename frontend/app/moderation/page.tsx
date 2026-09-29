@@ -38,10 +38,9 @@ export default function ModerationPage() {
   }, [pendingWorks]);
 
   useEffect(() => {
-    if (!userLoading && admin) {
-      // eslint-disable-next-line
-      load();
-    }
+    if (userLoading || !admin) return;
+    // eslint-disable-next-line
+    load();
   }, [userLoading, admin, load]);
 
   async function handleAccept(work: Work) {

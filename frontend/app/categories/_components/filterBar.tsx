@@ -27,31 +27,35 @@ export default function FilterBar({
 
   return (
     <div className="flex w-full justify-between">
-      <FieldGroup className="w-full max-w-xs">
-        <Field>
-          <Select
-            items={categories.map((category) => ({
-              label: category.name,
-              value: String(category.id),
-            }))}
-            value={categoryId}
-            onValueChange={(cat) => setCategoryId(cat ?? categoryId)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent alignItemWithTrigger={true}>
-              <SelectGroup>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={String(category.id)}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </Field>
-      </FieldGroup>
+      {categories ? (
+        <FieldGroup className="w-full max-w-xs">
+          <Field>
+            <Select
+              items={categories.map((category) => ({
+                label: category.name,
+                value: String(category.id),
+              }))}
+              value={categoryId}
+              onValueChange={(cat) => setCategoryId(cat ?? categoryId)}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent alignItemWithTrigger={true}>
+                <SelectGroup>
+                  {categories.map((category) => (
+                    <SelectItem key={category.id} value={String(category.id)}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </Field>
+        </FieldGroup>
+      ) : (
+        <div></div>
+      )}
       {isAdmin(user) && (
         <Button
           variant="outline"

@@ -22,20 +22,46 @@ export default function WorksByCategory() {
   const selectedWork = works.find((w) => w.id === selectedId) ?? null;
 
   useEffect(() => {
-    list().then((cats) => {
-      if (cats[0]) setCategoryId(String(cats[0].id));
-      else setLoading(false);
-    });
+    let isCurrent = true;
+
+    list()
+      .then((cats) => {
+        if (!isCurrent) return;
+        if (cats?.[0]) setCategoryId(String(cats[0].id));
+        else setLoading(false);
+      })
+      .catch((err) => {
+        if (!isCurrent) return;
+        setError(err);
+        setLoading(false);
+      });
+
+    return () => {
+      isCurrent = false;
+    };
   }, [list]);
 
   useEffect(() => {
     if (!categoryId) return;
+    let isCurrent = true;
+    // eslint-disable-next-line
+    setLoading(true);
+    setError(null);
+
     worksOf(Number(categoryId))
-      .then((page) => setWorks(page.items))
-      .catch(setError)
+      .then((page) => {
+        if (isCurrent) setWorks(page.items);
+      })
+      .catch((err) => {
+        if (isCurrent) setError(err);
+      })
       .finally(() => {
-        setLoading(false);
+        if (isCurrent) setLoading(false);
       });
+
+    return () => {
+      isCurrent = false;
+    };
   }, [categoryId, worksOf]);
 
   function handleSetWork(work: Work) {

@@ -15,13 +15,9 @@ import {
 } from "@/components/ui/sidebar";
 import {
   GalleryVerticalEndIcon,
-  TerminalSquareIcon,
-  BotIcon,
-  FrameIcon,
-  PieChartIcon,
-  MapIcon,
   User,
   BriefcaseBusiness,
+  Shapes,
 } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { categoriesRepository } from "@/repositories";
@@ -59,7 +55,7 @@ const data = {
       items: [
         {
           title: "My works",
-          url: "#",
+          url: "/works/mine",
         },
         {
           title: "New",
@@ -80,19 +76,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     });
   }, []);
 
+  const navCategories = {
+    title: "Categories",
+    url: "#",
+    icon: <Shapes />,
+    items: categories.slice(0, 3).map((category) => ({
+      title: category.name,
+      url: `/categories/${category.id}`,
+    })),
+  };
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects
-          projects={categories.slice(0, 3).map((category) => ({
-            name: category.name,
-            url: `/categories/${category.id}`,
-          }))}
-        />
+        <NavMain items={[...data.navMain, navCategories]} />
       </SidebarContent>
       <SidebarFooter>
         {user && (

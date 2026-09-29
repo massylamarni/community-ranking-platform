@@ -7,7 +7,7 @@ import { CurrentUser } from "./types/api";
 // Config
 // ---------------------------------------------------------------------------
 
-const LOGIN_PATH = "/login";
+const LOGIN_PATH = "/auth/login";
 const FORBIDDEN_PATH = "/403";
 
 type AccessLevel = "public" | "authenticated" | "admin";
@@ -25,6 +25,7 @@ const ROUTE_RULES: RouteRule[] = [
   { matcher: /^\/profile(\/.*)?$/, level: "authenticated" }, // profile (AUTH-007)
   { matcher: /^\/account(\/.*)?$/, level: "authenticated" }, // password change (AUTH-005)
   { matcher: /^\/works\/new$/, level: "authenticated" }, // works (OEU-001..006)
+  { matcher: /^\/works\/mine$/, level: "authenticated" },
   { matcher: /^\/works\/[^/]+\/edit$/, level: "authenticated" }, // PATCH /works/{id}
   { matcher: /^\/notifications(\/.*)?$/, level: "authenticated" }, // (NOTIF-*)
 

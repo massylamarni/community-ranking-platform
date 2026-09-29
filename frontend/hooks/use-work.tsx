@@ -17,9 +17,18 @@ export function useWorks() {
   const [error, setError] = useState<Error | null>(null);
 
   const list = useCallback(async (query: ListWorksQuery = {}) => {
-    const data = await worksRepository.list(query);
-    setWorks(data);
-    return data;
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await worksRepository.list(query);
+      setWorks(data);
+      return data;
+    } catch (err) {
+      setError(err instanceof Error ? err : new Error(String(err)));
+      throw err;
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   const get = useCallback(async (workId: number) => {
