@@ -9,8 +9,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { votesRepository } from "@/repositories";
-import { ApiErrorBody, VoteForWorkPayload, Work } from "@/types/api";
+// import { votesRepository } from "@/repositories";
+import { ApiErrorBody, Work } from "@/types/api";
 import { ArrowBigDown, ArrowBigUp } from "lucide-react";
 import Image from "next/image";
 import { ReactNode, useState } from "react";
@@ -20,15 +20,17 @@ export function WorkItem({
   setWork,
   setSelectedWork,
   children,
+  statusChildren,
 }: {
   work: Work | null;
   setWork?: (work: Work) => void | undefined;
   setSelectedWork?: (w: Work | null) => void;
   children?: ReactNode;
+  statusChildren?: ReactNode;
 }) {
   const [errors, setErrors] = useState<ApiErrorBody | null>(null);
-
-  async function handleVote(vt: VoteForWorkPayload) {
+  /*
+  async function handleVote(vt: { value: 1 | -1 | null }) {
     if (!work || !setWork) return;
     setErrors(null);
 
@@ -39,7 +41,8 @@ export function WorkItem({
       setErrors(err as ApiErrorBody);
     }
   }
-  const disableVote = !setWork;
+    */
+  const disableVote = true; //!setWork;
 
   if (!work) return;
   return (
@@ -69,24 +72,28 @@ export function WorkItem({
       )}
       <CardFooter className="flex justify-between">
         <div className="flex gap-3">
-          <ButtonGroup>
-            <Button
-              variant={work.currentUserVote === 1 ? "default" : "outline"}
-              onClick={() => handleVote({ value: 1 })}
-              disabled={disableVote}
-            >
-              <ArrowBigUp />
-              {work.totalVotes - (work.totalVotes - work.score) / 2}
-            </Button>
-            <Button
-              variant={work.currentUserVote === -1 ? "default" : "outline"}
-              onClick={() => handleVote({ value: -1 })}
-              disabled={disableVote}
-            >
-              <ArrowBigDown />
-              {(work.totalVotes - work.score) / 2}
-            </Button>
-          </ButtonGroup>
+          {work.score === undefined ? (
+            <span>{work.totalVotes} vote(s)</span>
+          ) : (
+            <ButtonGroup>
+              <Button
+                variant={work.currentUserVote === 1 ? "default" : "outline"}
+                // onClick={() => handleVote({ value: 1 })}
+                disabled={disableVote}
+              >
+                <ArrowBigUp />
+                {work.totalVotes - (work.totalVotes - work.score) / 2}
+              </Button>
+              <Button
+                variant={work.currentUserVote === -1 ? "default" : "outline"}
+                // onClick={() => handleVote({ value: -1 })}
+                disabled={disableVote}
+              >
+                <ArrowBigDown />
+                {(work.totalVotes - work.score) / 2}
+              </Button>
+            </ButtonGroup>
+          )}
         </div>
         <div className="flex justify-center items-center gap-2 w-fit">
           <Avatar>
@@ -96,6 +103,7 @@ export function WorkItem({
           </Avatar>
           <div>{work.author.username}</div>
         </div>
+        {statusChildren}
       </CardFooter>
     </Card>
   );

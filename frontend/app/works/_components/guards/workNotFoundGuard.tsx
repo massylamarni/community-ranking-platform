@@ -14,9 +14,9 @@ export default function WorkNotFoundGuard() {
         <EmptyMedia variant="icon">
           <TriangleAlert />
         </EmptyMedia>
-        <EmptyTitle>Work not found</EmptyTitle>
+        <EmptyTitle>Œuvre introuvable</EmptyTitle>
         <EmptyDescription>
-          This work doesn&apos;t exist or has been removed.
+          Cette œuvre n&apos;existe pas ou a été supprimée.
         </EmptyDescription>
       </EmptyHeader>
     </Empty>

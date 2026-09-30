@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useAuth, isAdmin } from "@/context/AuthContext";
-import { categoriesRepository } from "@/repositories";
+import { Fragment, useEffect, useState } from "react";
+import { useAuth, isAdmin } from "@/hooks/use-auth";
 import type { Category } from "@/types/api";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
@@ -24,38 +23,41 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { ConfirmDialog } from "@/components/confirmDialog";
 import { HeaderPortal } from "@/components/header-portal";
+import NoCategory from "../_components/noCategory";
+import { useCategory } from "@/contexts/categoryContext";
 
 export default function EditCategories() {
   const { user } = useAuth();
-  const [categories, setCategories] = useState<Category[]>([]);
+  const {
+    categories,
+    list,
+    create: createCategory,
+    remove: removeCategory,
+  } = useCategory();
   const [error, setError] = useState<unknown>(null);
   const [newName, setNewName] = useState("");
   const [open, setOpen] = useState(false);
 
   const [pendingDelete, setPendingDelete] = useState<Category | null>(null);
   const [deleting, setDeleting] = useState(false);
-
-  async function load() {
-    try {
-      setCategories(await categoriesRepository.list());
-    } catch (err) {
-      setError(err);
-    }
-  }
+  const errorMessage =
+    error instanceof Error
+      ? error.message
+      : error == null
+        ? null
+        : String(error);
 
   useEffect(() => {
-    // eslint-disable-next-line
-    load();
-  }, []);
+    list().catch(setError);
+  }, [list]);
 
   async function create(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     try {
-      await categoriesRepository.create({ name: newName });
+      await createCategory({ name: newName });
       setNewName("");
       setOpen(false);
-      await load();
     } catch (err) {
       setError(err);
     }
@@ -66,9 +68,8 @@ export default function EditCategories() {
     setError(null);
     setDeleting(true);
     try {
-      await categoriesRepository.remove(pendingDelete.id);
+      await removeCategory(pendingDelete.id);
       setPendingDelete(null);
-      await load();
     } catch (err) {
       setError(err);
     } finally {
@@ -91,15 +92,17 @@ export default function EditCategories() {
               ></PopoverTrigger>
               <PopoverContent className="w-64" align="end">
                 <form onSubmit={create} className="flex flex-col gap-2">
-                  <Label htmlFor="new-category-name">Name</Label>
+                  <Label htmlFor="new-category-name">Nom</Label>
                   <Input
                     id="new-category-name"
                     value={newName}
                     onChange={(e) => setNewName(e.target.value)}
+                    maxLength={50}
+                    required
                     autoFocus
                   />
                   <Button type="submit" size="sm">
-                    Create
+                    Créer
                   </Button>
                 </form>
               </PopoverContent>
@@ -109,38 +112,39 @@ export default function EditCategories() {
       </HeaderPortal>
       <Card>
         <CardHeader>
-          <CardTitle>Manage categories</CardTitle>
+          <CardTitle>Gérer les catégories</CardTitle>
           <CardDescription>
-            Add or remove the categories that works can be filed under.
+            Ajoutez, renommez ou supprimez des catégories d&apos;œuvres.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ScrollArea className="max-h-72 rounded-md border overflow-scroll">
-            <div className="px-2 py-2">
-              {categories.map((c, index) => (
-                <div
-                  key={c.id}
-                  className="flex flex-col justify-center items-center"
-                >
-                  <div className="flex items-center justify-between w-full">
-                    <Label className="text-sm pl-1">{c.name}</Label>
-                    {isAdmin(user) ? (
-                      <button
-                        onClick={() => setPendingDelete(c)}
-                        aria-label={`Delete ${c.name} (CAT-002)`}
-                        className="rounded-sm p-1 hover:bg-muted-foreground/20"
-                      >
-                        <X className="h-3.5 w-3.5" />
-                      </button>
-                    ) : null}
-                  </div>
-                  {index < categories.length - 1 ? (
-                    <div className="w-full my-2 px-1">
-                      <Separator />
+          <ScrollArea className="rounded-md border [&>[data-slot=scroll-area-viewport]]:max-h-72">
+            <div className="flex flex-col p-2">
+              {categories.length !== 0 ? (
+                categories.map((c, index) => (
+                  <Fragment key={c.id}>
+                    <div className="flex items-center justify-between">
+                      <span className="pl-1 text-sm">{c.name}</span>
+                      {isAdmin(user) && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          aria-label={`Supprimer ${c.name} (CAT-002)`}
+                          onClick={() => setPendingDelete(c)}
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </Button>
+                      )}
                     </div>
-                  ) : null}
-                </div>
-              ))}
+                    {index < categories.length - 1 && (
+                      <Separator className="my-2" />
+                    )}
+                  </Fragment>
+                ))
+              ) : (
+                <NoCategory />
+              )}
             </div>
           </ScrollArea>
         </CardContent>

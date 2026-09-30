@@ -3,7 +3,6 @@
 import * as React from "react";
 
 import { NavMain } from "@/components/nav-main";
-import { NavProjects } from "@/components/nav-projects";
 import { NavUser } from "@/components/nav-user";
 import { TeamSwitcher } from "@/components/team-switcher";
 import {
@@ -15,29 +14,25 @@ import {
 } from "@/components/ui/sidebar";
 import {
   GalleryVerticalEndIcon,
-  TerminalSquareIcon,
-  BotIcon,
-  FrameIcon,
-  PieChartIcon,
-  MapIcon,
   User,
   BriefcaseBusiness,
+  Shapes,
+  ShieldCheck,
 } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
-import { categoriesRepository } from "@/repositories";
-import { Category } from "@/types/api";
+import { isAdmin, useAuth } from "@/hooks/use-auth";
+import { useCategory } from "@/contexts/categoryContext";
 
 const data = {
   teams: [
     {
       name: "Number1",
       logo: <GalleryVerticalEndIcon />,
-      plan: "Enterprise",
+      plan: "Entreprise",
     },
   ],
   navMain: [
     {
-      title: "Profile",
+      title: "Profil",
       url: "/auth/profile",
       icon: <User />,
       isActive: true,
@@ -47,22 +42,22 @@ const data = {
           url: "#",
         },*/
         {
-          title: "Edit",
+          title: "Modifier",
           url: "/auth/profile",
         },
       ],
     },
     {
-      title: "Works",
+      title: "Œuvres",
       url: "#",
       icon: <BriefcaseBusiness />,
       items: [
         {
-          title: "My works",
-          url: "#",
+          title: "Mes œuvres",
+          url: "/works/mine",
         },
         {
-          title: "New",
+          title: "Nouvelle œuvre",
           url: "/works/new",
         },
       ],
@@ -72,13 +67,33 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { user, logout } = useAuth();
-  const [categories, setCategories] = React.useState<Category[]>([]);
+  const { categories } = useCategory();
 
-  React.useEffect(() => {
-    categoriesRepository.list().then((cats) => {
-      setCategories(cats);
-    });
-  }, []);
+  const navModeration = {
+    title: "Modération",
+    url: "#",
+    icon: <ShieldCheck />,
+    items: [
+      {
+        title: "Gérer les œuvres",
+        url: "/moderation",
+      },
+      {
+        title: "Modifier les catégories",
+        url: "/categories/edit",
+      },
+    ],
+  };
+
+  const navCategories = {
+    title: "Catégories",
+    url: "#",
+    icon: <Shapes />,
+    items: categories.map((category) => ({
+      title: category.name,
+      url: `/categories/${category.id}`,
+    })),
+  };
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -86,12 +101,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <TeamSwitcher teams={data.teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects
-          projects={categories.slice(0, 3).map((category) => ({
-            name: category.name,
-            url: `/categories/${category.id}`,
-          }))}
+        <NavMain
+          items={[
+            ...data.navMain,
+            ...(isAdmin(user) ? [navModeration] : []),
+            navCategories,
+          ]}
         />
       </SidebarContent>
       <SidebarFooter>

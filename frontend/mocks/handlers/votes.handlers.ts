@@ -17,7 +17,7 @@ export const votesHandlers = [
     const user = currentUserFrom(request);
     if (!user) return unauthorized();
 
-    const work = db.works.find((w) => w.id === params.workId);
+    const work = db.findWorkByApiId(params.workId);
     if (!work) return notFound("Œuvre introuvable.");
 
     if (work.authorId === user.id)

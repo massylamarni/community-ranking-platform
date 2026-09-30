@@ -10,11 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { isAdmin, useAuth } from "@/context/AuthContext";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-
 export default function FilterBar({
   categories,
   categoryId,
@@ -24,44 +19,31 @@ export default function FilterBar({
   categoryId: string;
   setCategoryId: Dispatch<SetStateAction<string>>;
 }) {
-  const { user } = useAuth();
-
   return (
-    <div className="flex w-full justify-between">
-      <FieldGroup className="w-full max-w-xs">
-        <Field>
-          <Select
-            items={categories.map((category) => ({
-              label: category.name,
-              value: category.id,
-            }))}
-            value={categoryId}
-            onValueChange={(cat) => setCategoryId(cat ?? categoryId)}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent alignItemWithTrigger={true}>
-              <SelectGroup>
-                {categories.map((category) => (
-                  <SelectItem key={category.id} value={category.id}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
-        </Field>
-      </FieldGroup>
-      {isAdmin(user) && (
-        <Button
-          variant="outline"
-          nativeButton={false}
-          render={<Link href="/categories/edit" />}
+    <FieldGroup className="w-full max-w-xs">
+      <Field>
+        <Select
+          items={categories.map((category) => ({
+            label: category.name,
+            value: String(category.id),
+          }))}
+          value={categoryId}
+          onValueChange={(cat) => setCategoryId(cat ?? categoryId)}
         >
-          Edit
-        </Button>
-      )}
-    </div>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent alignItemWithTrigger={true}>
+            <SelectGroup>
+              {categories.map((category) => (
+                <SelectItem key={category.id} value={String(category.id)}>
+                  {category.name}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+      </Field>
+    </FieldGroup>
   );
 }

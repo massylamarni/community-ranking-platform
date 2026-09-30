@@ -9,8 +9,9 @@ export interface ApiErrorBody {
 export type Role = "user" | "admin";
 
 export interface CurrentUser {
-  id: string;
+  id: number;
   username: string;
+  email: string;
   role: Role;
 }
 
@@ -35,6 +36,7 @@ export interface LoginUserPayload {
 export interface ChangePasswordPayload {
   oldPassword: string;
   newPassword: string;
+  confirmPassword: string;
 }
 
 export interface ForgotPasswordPayload {
@@ -44,17 +46,19 @@ export interface ForgotPasswordPayload {
 export interface ResetPasswordPayload {
   token: string;
   newPassword: string;
+  confirmPassword: string;
 }
 
 export interface OwnProfile {
-  id: string;
+  id: number;
   username: string;
   role: Role;
   email: string;
 }
 
 export interface UpdateProfilePayload {
-  username?: string;
+  username?: string | null;
+  email?: string | null;
 }
 
 export interface PublicProfile {
@@ -64,46 +68,92 @@ export interface PublicProfile {
 // ---- categories -----------------------------------------------------------
 
 export interface Category {
-  id: string;
+  id: number;
   name: string;
+}
+
+export interface CategoryEntityResponse {
+  categoryId: number;
+  name: string;
+  oeuvreCategories?: Array<Record<string, unknown>>;
+  [property: string]: unknown;
 }
 
 export interface CreateCategoryPayload {
   name: string;
 }
 
+export interface CategoryWorkEntity {
+  oeuvreId: number;
+  title: string;
+  description: string;
+  imageUrl: string | null;
+  author?: string | { username?: string; [property: string]: unknown };
+  status: WorkStatus;
+  createdAt?: string;
+  updatedAt?: string | null;
+  oeuvreCategories?: Array<Record<string, unknown>>;
+  comments?: Array<Record<string, unknown>>;
+  votes?: Array<Record<string, unknown>>;
+  rankings?: Array<Record<string, unknown>>;
+}
+
+export interface SpringPage<T> {
+  content: T[];
+  totalElements: number;
+  number: number;
+  size: number;
+  totalPages: number;
+  last: boolean;
+  first: boolean;
+  numberOfElements: number;
+  empty: boolean;
+  pageable?: Record<string, unknown>;
+  sort?: Record<string, unknown>;
+}
+
 // ---- works ------------------------------------------------------------
 
-export type WorkStatus = "pending" | "accepted" | "refused";
+export type WorkStatus = "created" | "pending" | "approved" | "rejected";
+
+export interface WorkResponse {
+  id: number;
+  title: string;
+  description: string;
+  status: WorkStatus;
+  author: string;
+  imageUrl: string | null;
+  categories: string[];
+  totalVotes: number;
+}
 
 export interface Work {
-  id: string;
+  id: number;
   title: string;
   description: string;
   imageUrl: string | null;
   author: { username: string };
-  categories: Category[];
+  categories: string[];
   status: WorkStatus;
-  score: number;
+  score?: number;
   totalVotes: number;
-  currentUserVote: 1 | -1 | null;
+  currentUserVote?: 1 | -1 | null;
+}
+
+export interface CreateWorkPayload {
+  title: string;
+  description: string;
+  image?: File | null;
+  imageUrl?: string | null;
 }
 
 export interface SubmitWorkPayload {
-  title: string;
-  description: string;
-  categoryIds: string[];
-  image?: File | null;
+  categoryIds: number[];
 }
 
 export interface UpdateWorkPayload {
-  title?: string;
-  description?: string;
-  categoryIds?: string[];
-  image?: File | null;
-  score?: number;
-  totalVotes?: number;
-  currentUserVote?: 1 | -1 | null;
+  title?: string | null;
+  description?: string | null;
 }
 
 export interface Page<T> {

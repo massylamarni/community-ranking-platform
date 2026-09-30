@@ -10,7 +10,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { useAuth } from "@/context/AuthContext";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Eye, EyeClosed } from "lucide-react";
 import { toast } from "sonner";
@@ -21,10 +20,15 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { ApiErrorBody } from "@/types/api";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function ChangePassword() {
   const { changePassword } = useAuth();
-  const [pwForm, setPwForm] = useState({ oldPassword: "", newPassword: "" });
+  const [pwForm, setPwForm] = useState({
+    oldPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
   const [pwResult, setPwResult] = useState<string | null>(null);
   const [pwError, setPwError] = useState<ApiErrorBody | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -40,14 +44,15 @@ export default function ChangePassword() {
     const promise = changePassword(pwForm);
 
     toast.promise(promise, {
-      loading: "Saving...",
+      loading: "Enregistrement...",
       success: () => pwResult,
-      error: (err) => err?.message ?? "Failed to change password",
+      error: (err) =>
+        err?.message ?? "Échec de la modification du mot de passe",
     });
 
     try {
       await promise;
-      setPwResult("Password updated.");
+      setPwResult("Mot de passe mis à jour.");
     } catch (err) {
       setPwError(err as ApiErrorBody);
     } finally {
@@ -60,13 +65,13 @@ export default function ChangePassword() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Change password</CardTitle>
+        <CardTitle>Modifier le mot de passe</CardTitle>
       </CardHeader>
       <CardContent>
         <form id="changepass-form" onSubmit={handleChangePassword}>
           <FieldGroup>
             <Field>
-              <FieldLabel htmlFor="oldpassword">Old password</FieldLabel>
+              <FieldLabel htmlFor="oldpassword">Ancien mot de passe</FieldLabel>
               <ButtonGroup className="w-full">
                 <Input
                   id="oldpassword"
@@ -89,7 +94,9 @@ export default function ChangePassword() {
               {fe.oldPassword && <FieldError>{fe.oldPassword}</FieldError>}
             </Field>
             <Field>
-              <FieldLabel htmlFor="newpassword">New password</FieldLabel>
+              <FieldLabel htmlFor="newpassword">
+                Nouveau mot de passe
+              </FieldLabel>
               <ButtonGroup className="w-full">
                 <Input
                   id="newpassword"
@@ -111,12 +118,30 @@ export default function ChangePassword() {
               </ButtonGroup>{" "}
               {fe.newPassword && <FieldError>{fe.newPassword}</FieldError>}
             </Field>
+            <Field>
+              <FieldLabel htmlFor="confirmpassword">
+                Confirmer le nouveau mot de passe
+              </FieldLabel>
+              <Input
+                id="confirmpassword"
+                type="password"
+                value={pwForm.confirmPassword}
+                onChange={(e) =>
+                  setPwForm((f) => ({ ...f, confirmPassword: e.target.value }))
+                }
+                minLength={1}
+                required
+              />
+              {fe.confirmPassword && (
+                <FieldError>{fe.confirmPassword}</FieldError>
+              )}
+            </Field>
           </FieldGroup>
         </form>
       </CardContent>
       <CardFooter>
         <Button type="submit" form="changepass-form" disabled={isLoading}>
-          Save
+          Enregistrer
         </Button>
       </CardFooter>
     </Card>

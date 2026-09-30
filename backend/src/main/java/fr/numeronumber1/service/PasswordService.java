@@ -4,8 +4,6 @@ import java.security.SecureRandom;
 import java.time.LocalDateTime;
 import java.util.Base64;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,7 +18,6 @@ import fr.numeronumber1.repository.UserRepository;
 @Service
 public class PasswordService {
 
-    private static final Logger log = LoggerFactory.getLogger(PasswordService.class);
     private static final int TOKEN_VALIDITY_MINUTES = 30;
 
     private final UserRepository users;
@@ -70,8 +67,6 @@ public class PasswordService {
             prt.setExpiresAt(LocalDateTime.now().plusMinutes(TOKEN_VALIDITY_MINUTES));
             tokens.save(prt);
 
-            // TODO: remplacer par un vrai envoi d'e-mail
-            log.info("Lien de réinitialisation pour {} : /auth/password/reset?token={}", email, rawToken);
             sendResetEmail(email, rawToken);
         });
     }

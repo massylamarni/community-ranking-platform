@@ -611,8 +611,8 @@ public class AuthSteps {
     }
 
     @Given("un administrateur est authentifié")
-    public void administrateur_est_authentifie() {
-        // TODO: préparer un administrateur authentifié
+    public void administrateur_est_authentifie() throws Exception {
+        authenticateAs("cucumber-admin", true);
     }
 
     @Given("un administrateur authentifié")
@@ -631,8 +631,8 @@ public class AuthSteps {
     }
 
     @Given("un utilisateur non administrateur est authentifié")
-    public void utilisateur_non_administrateur_est_authentifie() {
-        // TODO: préparer un utilisateur authentifié sans rôle administrateur
+    public void utilisateur_non_administrateur_est_authentifie() throws Exception {
+        authenticateAs("cucumber-category-user", false);
     }
 
     @Given("un visiteur non authentifié consulte une œuvre")

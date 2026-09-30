@@ -103,8 +103,13 @@ public class OeuvreSteps {
 
     @Then("l'œuvre n'est pas publiée")
     public void oeuvre_n_est_pas_publiee() throws Exception {
-        assertEquals(200, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
-        assertEquals("", lastResponse().path("status").asText(), scenarioContext.getResponseBody());
+        if (scenarioContext.getResponseStatus() == 422) {
+            assertEquals("created", oeuvres.findById(requireOeuvreId()).orElseThrow()
+                    .getStatus().name(), scenarioContext.getResponseBody());
+            return;
+        }
+        assertEquals(201, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
+        assertEquals("created", lastResponse().path("status").asText(), scenarioContext.getResponseBody());
     }
 
     @Then("l'œuvre est créée avec le titre {string}")

@@ -1,10 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useAuth } from "@/context/AuthContext";
-import { useNotifications } from "@/context/NotificationsContext";
+import { useAuth } from "@/hooks/use-auth";
 import { Button } from "./ui/button";
-import { Bell } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,14 +11,14 @@ import {
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "./ui/avatar";
-import { Separator } from "./ui/separator";
+// import { Bell } from "lucide-react";
+// import { Separator } from "./ui/separator";
 import LoadingGuard from "./guards/loadingGuard";
 
 export function Navbar() {
-  const { user, loading, logout } = useAuth();
-  const { unreadCount } = useNotifications();
+  const { user, userLoading, logout } = useAuth();
 
-  if (loading) return <LoadingGuard />;
+  if (userLoading) return <LoadingGuard />;
 
   return (
     <nav className="flex items-center justify-end h-13 px-6 border-b sticky top-0 bg-background z-10">
@@ -57,17 +55,17 @@ export function Navbar() {
               <DropdownMenuContent align="end" className="w-40">
                 <DropdownMenuGroup>
                   <DropdownMenuItem render={<Link href="/auth/profile" />}>
-                    Profile
+                    Profil
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={logout}>Log out</DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout}>
+                    Se déconnecter
+                  </DropdownMenuItem>
                 </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         ) : (
-          <Button>
-            <Link href="/auth/login">log in</Link>
-          </Button>
+          <Button render={<Link href="/auth/login" />}>Se connecter</Button>
         )}
       </div>
     </nav>

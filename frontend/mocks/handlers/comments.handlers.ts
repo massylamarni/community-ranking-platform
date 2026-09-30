@@ -14,7 +14,7 @@ export const commentsHandlers = [
   // GET /works/:workId/comments (COM-010/OEU-017) - public, paginated, replies nested
   http.get("*/works/:workId/comments", async ({ request, params }) => {
     await delay(80);
-    const work = db.works.find((w) => w.id === params.workId);
+    const work = db.findWorkByApiId(params.workId);
     if (!work) return notFound("Œuvre introuvable.");
     const url = new URL(request.url);
     const page = Number(url.searchParams.get("page") ?? 1);
@@ -33,7 +33,7 @@ export const commentsHandlers = [
     await delay(150);
     const user = currentUserFrom(request);
     if (!user) return unauthorized();
-    const work = db.works.find((w) => w.id === params.workId);
+    const work = db.findWorkByApiId(params.workId);
     if (!work) return notFound("Œuvre introuvable.");
 
     const form = await request.formData();
