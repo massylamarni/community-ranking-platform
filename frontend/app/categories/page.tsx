@@ -15,7 +15,7 @@ import NoCategory from "./_components/noCategory";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
-export default function WorksByCategory() {
+export default function CategoryPage() {
   const { user } = useAuth();
   const { categories, list, worksOf } = useCategory();
   const [categoryId, setCategoryId] = useState<string>("");

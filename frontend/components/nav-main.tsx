@@ -36,7 +36,7 @@ export function NavMain({
 }) {
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Platform</SidebarGroupLabel>
+      <SidebarGroupLabel>Plateforme</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => {
           const subItems = item.items ?? [];
@@ -91,7 +91,7 @@ export function NavMain({
                         className="text-sidebar-foreground/70"
                       >
                         <MoreHorizontal className="text-sidebar-foreground/70" />
-                        <span>More</span>
+                        <span>Plus</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
                   )}

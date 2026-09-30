@@ -53,7 +53,7 @@ export function AttachmentUploader({
           {
             id: crypto.randomUUID(),
             name: initialAttachment.name,
-            meta: "Current",
+            meta: "Actuel",
             src: initialAttachment.url,
           },
         ]
@@ -109,7 +109,7 @@ export function AttachmentUploader({
         onClick={() => inputRef.current?.click()}
         className="rounded border px-3 py-1.5 text-sm"
       >
-        Add attachment
+        Ajouter une pièce jointe
       </button>
 
       <AttachmentGroup className="w-full">
@@ -138,7 +138,7 @@ export function AttachmentUploader({
               </AttachmentContent>
               <AttachmentActions>
                 <AttachmentAction
-                  aria-label={`Remove ${item.name}`}
+                  aria-label={`Supprimer ${item.name}`}
                   onClick={() => removeItem(item.id)}
                 >
                   <XIcon />

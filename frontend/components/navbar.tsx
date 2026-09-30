@@ -55,17 +55,17 @@ export function Navbar() {
               <DropdownMenuContent align="end" className="w-40">
                 <DropdownMenuGroup>
                   <DropdownMenuItem render={<Link href="/auth/profile" />}>
-                    Profile
+                    Profil
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={logout}>Log out</DropdownMenuItem>
+                  <DropdownMenuItem onClick={logout}>
+                    Se déconnecter
+                  </DropdownMenuItem>
                 </DropdownMenuGroup>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
         ) : (
-          <Button>
-            <Link href="/auth/login">log in</Link>
-          </Button>
+          <Button render={<Link href="/auth/login" />}>Se connecter</Button>
         )}
       </div>
     </nav>

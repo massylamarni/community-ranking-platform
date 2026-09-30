@@ -14,8 +14,10 @@ export default function NoCategory() {
         <EmptyMedia variant="icon">
           <Info />
         </EmptyMedia>
-        <EmptyTitle>Nothing here yet</EmptyTitle>
-        <EmptyDescription>No category is set yet.</EmptyDescription>
+        <EmptyTitle>Rien ici pour le moment</EmptyTitle>
+        <EmptyDescription>
+          Aucune catégorie n&apos;est encore définie.
+        </EmptyDescription>
       </EmptyHeader>
     </Empty>
   );

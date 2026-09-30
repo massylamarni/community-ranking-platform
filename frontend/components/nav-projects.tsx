@@ -30,7 +30,7 @@ export function NavProjects({
   const { isMobile } = useSidebar();
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>Categories</SidebarGroupLabel>
+      <SidebarGroupLabel>Catégories</SidebarGroupLabel>
       <SidebarMenu>
         {projects.map((item) => (
           <SidebarMenuItem key={item.name}>
@@ -47,7 +47,7 @@ export function NavProjects({
                 }
               >
                 <MoreHorizontalIcon />
-                <span className="sr-only">More</span>
+                <span className="sr-only">Plus</span>
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 className="w-fit"
@@ -56,12 +56,12 @@ export function NavProjects({
               >
                 <DropdownMenuItem>
                   <FolderIcon />
-                  <span>View</span>
+                  <span>Voir</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem variant="destructive">
                   <Trash2Icon />
-                  <span>Delete</span>
+                  <span>Supprimer</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -73,7 +73,7 @@ export function NavProjects({
             className="text-sidebar-foreground/70"
           >
             <MoreHorizontalIcon className="text-sidebar-foreground/70" />
-            <span>More</span>
+            <span>Plus</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>

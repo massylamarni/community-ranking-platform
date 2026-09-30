@@ -14,9 +14,9 @@ export default function CategoryNotFoundGuard() {
         <EmptyMedia variant="icon">
           <TriangleAlert />
         </EmptyMedia>
-        <EmptyTitle>Category not found</EmptyTitle>
+        <EmptyTitle>Catégorie introuvable</EmptyTitle>
         <EmptyDescription>
-          This category doesn&apos;t exist or has been removed.
+          Cette catégorie n&apos;existe pas ou a été supprimée.
         </EmptyDescription>
       </EmptyHeader>
     </Empty>
