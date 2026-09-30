@@ -33,8 +33,6 @@ public class UserService implements UserDetailsService {
                 ? List.of(new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority("ROLE_USER"))
                 : List.of(new SimpleGrantedAuthority("ROLE_USER"));
 
-        // console log the authorities  
-        authorities.forEach(authority -> System.out.println("Authority: " + authority.getAuthority()));
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
                 user.getPasswordHash(),

@@ -62,12 +62,15 @@ public class CategorySteps {
 
     @Given("la catégorie {string} n'existe pas")
     public void categorie_n_existe_pas(String categoryName) {
-        // TODO: préparer une catégorie absente
+        scenarioContext.setCategoryName(categoryName);
+        assertTrue(categories.findByName(categoryName).isEmpty(),
+                "La catégorie existe déjà: " + categoryName);
     }
 
     @When("l'administrateur crée la catégorie {string}")
-    public void administrateur_cree_categorie(String categoryName) {
-        // TODO: implémenter la création de catégorie
+    public void administrateur_cree_categorie(String categoryName) throws Exception {
+        scenarioContext.setCategoryName(categoryName);
+        envoyer_creation_categorie(categoryName);
     }
 
     @Then("la catégorie {string} est créée")
@@ -80,7 +83,8 @@ public class CategorySteps {
 
     @Then("elle peut être utilisée pour déposer une œuvre")
     public void categorie_utilisable_pour_depot() {
-        // TODO: vérifier que la catégorie est utilisable
+        Category category = categories.findByName(scenarioContext.getCategoryName()).orElseThrow();
+        assertTrue(category.getCategoryId() != null);
     }
 
     @When("l'administrateur supprime la catégorie")

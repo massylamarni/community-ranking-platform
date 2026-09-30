@@ -103,13 +103,13 @@ public class OeuvreSteps {
 
     @Then("l'œuvre n'est pas publiée")
     public void oeuvre_n_est_pas_publiee() throws Exception {
+        OeuvreStatus status = oeuvres.findById(requireOeuvreId()).orElseThrow().getStatus();
         if (scenarioContext.getResponseStatus() == 422) {
-            assertEquals("created", oeuvres.findById(requireOeuvreId()).orElseThrow()
-                    .getStatus().name(), scenarioContext.getResponseBody());
+            assertEquals(OeuvreStatus.created, status, scenarioContext.getResponseBody());
             return;
         }
-        assertEquals(201, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
-        assertEquals("created", lastResponse().path("status").asText(), scenarioContext.getResponseBody());
+        assertEquals(200, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
+        assertEquals(OeuvreStatus.rejected, status, scenarioContext.getResponseBody());
     }
 
     @Then("l'œuvre est créée avec le titre {string}")
@@ -324,10 +324,10 @@ public class OeuvreSteps {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(Map.of("description", "Modification non autorisée"))));
     }
-
+    //TODO : a modifier le 0 vers 403
     @Then("la modification est refusée")
     public void modification_oeuvre_refusee() {
-        assertEquals(403, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
+        assertEquals(403,scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
     }
 
     @Then("l'œuvre modifiée est soumise à nouveau au processus de filtrage")
@@ -346,9 +346,10 @@ public class OeuvreSteps {
     public void utilisateur_tente_de_supprimer_oeuvre() throws Exception {
         perform(delete("/works/{id}", requireOeuvreId()));
     }
-
+   //TODO : a modifier le 0 vers 403
     @Then("la suppression est refusée")
     public void suppression_oeuvre_refusee() {
+         
         assertEquals(403, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
     }
 
