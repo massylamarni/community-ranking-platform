@@ -324,7 +324,7 @@ paths:
           multipart/form-data:
             schema: { $ref: "#/components/schemas/CreateWorkMultipart" }
       responses:
-        "201":
+        "200":    
           description: Created work response DTO
           content:
             application/json:
