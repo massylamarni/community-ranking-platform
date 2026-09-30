@@ -190,7 +190,7 @@ paths:
           application/json:
             schema: { $ref: "#/components/schemas/CategoryRequest" }
       responses:
-        "201":
+        "200":
           description: Created category DTO
           content:
             application/json:

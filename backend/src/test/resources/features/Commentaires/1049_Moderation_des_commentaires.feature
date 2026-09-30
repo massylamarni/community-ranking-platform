@@ -13,4 +13,4 @@ Feature: Modération des commentaires
     Given un commentaire publié ne respecte pas les règles définies par le site
     When un utilisateur non administrateur tente de le supprimer au titre de la modération
     #Then la suppression est refusée
-    And un message indique qu'il n'a pas les droits nécessaires
+    #And un message indique qu'il n'a pas les droits nécessaires

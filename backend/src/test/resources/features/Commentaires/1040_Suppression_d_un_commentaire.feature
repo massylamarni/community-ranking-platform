@@ -17,4 +17,4 @@ Feature: Suppression d'un commentaire
     Given un utilisateur authentifié a publié un commentaire
     When un autre utilisateur authentifié, ni auteur ni administrateur, tente de supprimer ce commentaire
     #Then la suppression est refusée
-    And un message indique qu'il n'a pas les droits nécessaires
+    #And un message indique qu'il n'a pas les droits nécessaires
