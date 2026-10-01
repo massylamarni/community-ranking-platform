@@ -21,7 +21,7 @@ When("il le supprime dans le cadre de la modération", async ({}) => {
   // TODO: implement
 });
 
-Then("le commentaire n{string}œuvre concernée", async ({}, str: string) => {
+Then("le commentaire n'est plus affiché sous l'œuvre concernée", async ({}) => {
   // TODO: implement
 });
 
@@ -36,9 +36,6 @@ Then("la suppression est refusée", async ({}) => {
   // TODO: implement
 });
 
-Then(
-  "un message indique qu{string}a pas les droits nécessaires",
-  async ({}, str: string) => {
-    // TODO: implement
-  },
-);
+Then("un message indique qu'il n'a pas les droits nécessaires", async ({}) => {
+  // TODO: implement
+});

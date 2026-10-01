@@ -10,7 +10,7 @@ Given("l'utilisateur a attribué un vote positif à une œuvre", async ({}) => {
   // TODO: implement
 });
 
-When("l{string}œuvre", async ({}, str: string) => {
+When("l'utilisateur consulte l'œuvre", async ({}) => {
   // TODO: implement
 });
 
@@ -32,7 +32,7 @@ Then(
   },
 );
 
-Given("l{string}a pas voté pour une œuvre", async ({}, str: string) => {
+Given("l'utilisateur n'a pas voté pour une œuvre", async ({}) => {
   // TODO: implement
 });
 

@@ -2,9 +2,12 @@ import { createBdd } from "playwright-bdd";
 
 const { Given, When, Then } = createBdd();
 
-Given("l{string}hui", async ({}, str: string) => {
-  // TODO: implement
-});
+Given(
+  "l'œuvre {string} a reçu un vote positif aujourd'hui",
+  async ({}, str: string) => {
+    // TODO: implement
+  },
+);
 
 Given(
   "l'œuvre {string} a reçu un vote positif hier, hors de la période du jour en cours",
@@ -21,14 +24,14 @@ When(
 );
 
 Then(
-  "le vote d{string}hui sur {string} est comptabilisé dans ce classement",
-  async ({}, str1: string, str2: string) => {
+  "le vote d'aujourd'hui sur {string} est comptabilisé dans ce classement",
+  async ({}, str: string) => {
     // TODO: implement
   },
 );
 
 Then(
-  "le vote d{string}est pas comptabilisé dans ce classement",
+  "le vote d'hier sur {string} n'est pas comptabilisé dans ce classement",
   async ({}, str: string) => {
     // TODO: implement
   },

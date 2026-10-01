@@ -6,7 +6,7 @@ Given("une œuvre existante", async ({}) => {
   // TODO: implement
 });
 
-Given("l{string}œuvre", async ({}, str: string) => {
+Given("l'auteur modifie l'œuvre", async ({}) => {
   // TODO: implement
 });
 

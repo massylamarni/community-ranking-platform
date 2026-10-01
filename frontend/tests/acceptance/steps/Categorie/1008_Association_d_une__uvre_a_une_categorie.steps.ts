@@ -41,7 +41,7 @@ When("elle tente de publier l'œuvre", async ({}) => {
   // TODO: implement
 });
 
-Then("l{string}est pas publiée", async ({}, str: string) => {
+Then("l'œuvre n'est pas publiée", async ({}) => {
   // TODO: implement
 });
 

@@ -31,8 +31,8 @@ Then("l'œuvre {string} est créée", async ({}, str: string) => {
 });
 
 Then(
-  "l{string}utilisateur {string}",
-  async ({}, str1: string, str2: string) => {
+  "l'œuvre est associée à l'utilisateur {string}",
+  async ({}, str: string) => {
     // TODO: implement
   },
 );
@@ -45,7 +45,7 @@ When("il tente de créer une œuvre", async ({}) => {
   // TODO: implement
 });
 
-Then("l{string}est pas créée", async ({}, str: string) => {
+Then("l'œuvre n'est pas créée", async ({}) => {
   // TODO: implement
 });
 

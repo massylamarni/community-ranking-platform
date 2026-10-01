@@ -6,7 +6,7 @@ Given("un utilisateur authentifié", async ({}) => {
   // TODO: implement
 });
 
-Given("une œuvre qui n{string}utilisateur", async ({}, str: string) => {
+Given("une œuvre qui n'appartient pas à l'utilisateur", async ({}) => {
   // TODO: implement
 });
 
@@ -18,8 +18,8 @@ Given(
 );
 
 When(
-  "l{string}attribuer un nouveau vote à cette œuvre",
-  async ({}, str: string) => {
+  "l'utilisateur tente d'attribuer un nouveau vote à cette œuvre",
+  async ({}) => {
     // TODO: implement
   },
 );

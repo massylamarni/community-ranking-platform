@@ -18,7 +18,7 @@ Given("une œuvre existe", async ({}) => {
   // TODO: implement
 });
 
-When("l{string}œuvre", async ({}, str: string) => {
+When("l'administrateur supprime l'œuvre", async ({}) => {
   // TODO: implement
 });
 

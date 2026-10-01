@@ -10,7 +10,7 @@ Given("une œuvre créée par cet utilisateur", async ({}) => {
   // TODO: implement
 });
 
-When("l{string}œuvre", async ({}, str: string) => {
+When("l'utilisateur modifie l'œuvre", async ({}) => {
   // TODO: implement
 });
 
@@ -19,6 +19,10 @@ Then("les modifications sont enregistrées", async ({}) => {
 });
 
 Given("une œuvre créée par un autre utilisateur", async ({}) => {
+  // TODO: implement
+});
+
+When("l'utilisateur tente de modifier l'œuvre", async ({}) => {
   // TODO: implement
 });
 

@@ -34,7 +34,7 @@ When("elle ne saisit aucune description", async ({}) => {
   // TODO: implement
 });
 
-Then("l{string}est pas créée", async ({}, str: string) => {
+Then("l'œuvre n'est pas créée", async ({}) => {
   // TODO: implement
 });
 

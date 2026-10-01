@@ -14,12 +14,15 @@ When(
 );
 
 Then(
-  "l'œuvre {string} apparaît en position {string} avec un score de {string}",
-  async ({}, str: string, position: string, score: string) => {
+  "l'œuvre {string} apparaît en position {int} avec un score de {int}",
+  async ({}, str: string, position: number, score: number) => {
     // TODO: implement
   },
 );
 
-Then("l{string}apparaît pas dans ce classement", async ({}, str: string) => {
-  // TODO: implement
-});
+Then(
+  "l'œuvre {string} n'apparaît pas dans ce classement",
+  async ({}, str: string) => {
+    // TODO: implement
+  },
+);

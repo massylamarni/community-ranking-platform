@@ -10,7 +10,7 @@ Given("une œuvre créée par cet utilisateur", async ({}) => {
   // TODO: implement
 });
 
-When("l{string}œuvre", async ({}, str: string) => {
+When("l'utilisateur supprime l'œuvre", async ({}) => {
   // TODO: implement
 });
 
@@ -27,6 +27,14 @@ Given("une œuvre existante", async ({}) => {
 });
 
 Given("une œuvre créée par un autre utilisateur", async ({}) => {
+  // TODO: implement
+});
+
+When("l'administrateur supprime l'œuvre", async ({}) => {
+  // TODO: implement
+});
+
+When("l'utilisateur tente de supprimer l'œuvre", async ({}) => {
   // TODO: implement
 });
 

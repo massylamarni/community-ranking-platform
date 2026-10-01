@@ -10,7 +10,7 @@ Given("une œuvre créée par un autre utilisateur", async ({}) => {
   // TODO: implement
 });
 
-When("l{string}œuvre", async ({}, str: string) => {
+When("l'utilisateur attribue un vote négatif à l'œuvre", async ({}) => {
   // TODO: implement
 });
 

@@ -33,6 +33,6 @@ When(
   },
 );
 
-Then("l{string}action réalisée", async ({}, str: string) => {
+Then("l'utilisateur est informé de l'action réalisée", async ({}) => {
   // TODO: implement
 });

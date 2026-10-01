@@ -2,7 +2,7 @@ import { createBdd } from "playwright-bdd";
 
 const { Given, When, Then } = createBdd();
 
-Given("l{string}œuvre {string}", async ({}, str1: string, str2: string) => {
+Given("l'utilisateur a proposé l'œuvre {string}", async ({}, str: string) => {
   // TODO: implement
 });
 

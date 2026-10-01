@@ -14,8 +14,8 @@ When("l'utilisateur consulte le classement global", async ({}) => {
 });
 
 Then(
-  "l'œuvre {string} apparaît en position {string} avec un score de {string}",
-  async ({}, str: string, position: string, score: string) => {
+  "l'œuvre {string} apparaît en position {int} avec un score de {int}",
+  async ({}, str: string, position: number, score: number) => {
     // TODO: implement
   },
 );

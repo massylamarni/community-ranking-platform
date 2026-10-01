@@ -13,7 +13,7 @@ Given(
   },
 );
 
-When("il associe l{string}œuvre", async ({}, str: string) => {
+When("il associe l'image {string} à l'œuvre", async ({}, str: string) => {
   // TODO: implement
 });
 
@@ -25,7 +25,7 @@ Then("l'œuvre est créée", async ({}) => {
   // TODO: implement
 });
 
-Then("l{string}œuvre", async ({}, str: string) => {
+Then("l'image {string} est associée à l'œuvre", async ({}, str: string) => {
   // TODO: implement
 });
 
@@ -33,6 +33,6 @@ When("il ne sélectionne aucune image", async ({}) => {
   // TODO: implement
 });
 
-Then("aucune image n{string}œuvre", async ({}, str: string) => {
+Then("aucune image n'est associée à l'œuvre", async ({}) => {
   // TODO: implement
 });

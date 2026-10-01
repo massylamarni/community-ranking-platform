@@ -26,8 +26,8 @@ Then("il est affiché sous l'œuvre concernée avec son auteur", async ({}) => {
 });
 
 Given(
-  "un utilisateur authentifié consulte une œuvre qu{string}a pas déposée",
-  async ({}, str: string) => {
+  "un utilisateur authentifié consulte une œuvre qu'il n'a pas déposée",
+  async ({}) => {
     // TODO: implement
   },
 );

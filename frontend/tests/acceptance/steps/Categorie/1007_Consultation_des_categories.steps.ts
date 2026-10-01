@@ -46,6 +46,6 @@ Then("aucune œuvre n'est affichée", async ({}) => {
   // TODO: implement
 });
 
-Then("un message indique qu{string}est disponible", async ({}, str: string) => {
+Then("un message indique qu'aucune œuvre n'est disponible", async ({}) => {
   // TODO: implement
 });

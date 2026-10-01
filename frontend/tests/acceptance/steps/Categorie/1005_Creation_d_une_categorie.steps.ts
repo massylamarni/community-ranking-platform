@@ -34,9 +34,6 @@ Then("la catégorie n'est pas créée", async ({}) => {
   // TODO: implement
 });
 
-Then(
-  "un message indique qu{string}a pas les droits nécessaires",
-  async ({}, str: string) => {
-    // TODO: implement
-  },
-);
+Then("un message indique qu'il n'a pas les droits nécessaires", async ({}) => {
+  // TODO: implement
+});

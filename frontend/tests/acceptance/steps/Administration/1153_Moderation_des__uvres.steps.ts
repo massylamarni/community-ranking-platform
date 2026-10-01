@@ -13,7 +13,11 @@ Given(
   },
 );
 
-When("l{string}œuvre", async ({}, str: string) => {
+When("l'administrateur accepte l'œuvre", async ({}) => {
+  // TODO: implement
+});
+
+When("l'administrateur refuse l'œuvre", async ({}) => {
   // TODO: implement
 });
 
@@ -25,6 +29,6 @@ Then("son statut est {string}", async ({}, str: string) => {
   // TODO: implement
 });
 
-Then("l{string}est pas publiée", async ({}, str: string) => {
+Then("l'œuvre n'est pas publiée", async ({}) => {
   // TODO: implement
 });

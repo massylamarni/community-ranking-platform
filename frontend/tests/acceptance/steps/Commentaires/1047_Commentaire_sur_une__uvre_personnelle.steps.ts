@@ -34,7 +34,7 @@ Given(
   },
 );
 
-When("l{string}œuvre répond à ce commentaire", async ({}, str: string) => {
+When("l'auteur de l'œuvre répond à ce commentaire", async ({}) => {
   // TODO: implement
 });
 

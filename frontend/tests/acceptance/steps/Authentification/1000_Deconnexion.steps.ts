@@ -1,35 +1,53 @@
-import { createBdd } from "playwright-bdd";
+import { regAccount } from "../../utils/accounts";
+import { defaultPassword } from "../../utils/env";
+import { logIn, logOut } from "../../utils/ui";
+import { Given, Then, When } from "../fixtures";
+import { expect } from "@playwright/test";
 
-const { Given, When, Then } = createBdd();
+Given(
+  "l'utilisateur {string} est authentifié",
+  async ({ page, request, ctx }, username: string) => {
+    const account = {
+      username,
+      email: `${username}@example.com`,
+      password: defaultPassword,
+    };
+    await regAccount(request, account);
+    await logIn(page, account);
+    ctx.account = account;
+  },
+);
 
-Given("l'utilisateur {string} est authentifié", async ({}, str: string) => {
-  // TODO: implement
+When("il demande à se déconnecter", async ({ page }) => {
+  await logOut(page);
 });
 
-When("il demande à se déconnecter", async ({}) => {
-  // TODO: implement
+Then("l'utilisateur n'est plus authentifié", async ({ page }) => {
+  expect((await page.request.get("/backend-api/auth/me")).status()).toBe(401);
 });
 
-Then("l{string}est plus authentifié", async ({}, str: string) => {
-  // TODO: implement
-});
-
-Then("il est redirigé vers une page accessible aux visiteurs", async ({}) => {
-  // TODO: implement
-});
+Then(
+  "il est redirigé vers une page accessible aux visiteurs",
+  async ({ page }) => {
+    await expect(
+      page.getByRole("navigation").getByRole("link", { name: "Se connecter" }),
+    ).toBeVisible();
+  },
+);
 
 When("il se déconnecte", async ({}) => {
   // TODO: implement
 });
 
-When("il tente d'accéder à son espace utilisateur", async ({}) => {
-  // TODO: implement
+When("il tente d'accéder à son espace utilisateur", async ({ page }) => {
+  await page.goto("/works/mine");
 });
 
-Then("l'accès lui est refusé", async ({}) => {
-  // TODO: implement
+Then("l'accès lui est refusé", async ({ page }) => {
+  await expect(page).not.toHaveURL(/\/works\/mine$/);
+  expect((await page.request.get("/backend-api/auth/me")).status()).toBe(401);
 });
 
-Then("il est invité à se connecter", async ({}) => {
-  // TODO: implement
+Then("il est invité à se connecter", async ({ page }) => {
+  await expect(page).toHaveURL(/\/auth\/login\?from=/);
 });

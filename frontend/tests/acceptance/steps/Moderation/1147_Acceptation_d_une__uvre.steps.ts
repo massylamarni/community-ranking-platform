@@ -17,7 +17,7 @@ Given("l'administrateur est connecté", async ({}) => {
   // TODO: implement
 });
 
-When("l{string}œuvre", async ({}, str: string) => {
+When("l'administrateur accepte l'œuvre", async ({}) => {
   // TODO: implement
 });
 
