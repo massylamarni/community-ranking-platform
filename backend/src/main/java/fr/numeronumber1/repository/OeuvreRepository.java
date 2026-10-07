@@ -13,4 +13,7 @@ public interface OeuvreRepository extends JpaRepository<Oeuvre, Long>, JpaSpecif
     Page<Oeuvre> findByStatus(OeuvreStatus status, Pageable pageable);
 
     boolean existsByTitleAndOeuvreIdNot(String title, Long oeuvreId);
+
+    Page<Oeuvre> findByStatusOrderByScoreDesc(OeuvreStatus status, Pageable pageable);
 }
+

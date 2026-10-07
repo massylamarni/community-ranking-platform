@@ -44,6 +44,9 @@ public class Oeuvre {
     @Column(nullable = false, length = 8)
     private OeuvreStatus status = OeuvreStatus.created;
 
+    @Column(nullable = false)
+    private int score;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -119,6 +122,14 @@ public class Oeuvre {
 
     public void setStatus(OeuvreStatus status) {
         this.status = status;
+    }
+
+    public int getScore() {
+        return score;
+    }
+
+    public void setScore(int score) {
+        this.score = score;
     }
 
     public LocalDateTime getCreatedAt() {
