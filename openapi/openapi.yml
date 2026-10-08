@@ -20,6 +20,8 @@ tags:
     description: Work creation, retrieval, submission, updates, and deletion.
   - name: moderation
     description: Administrator review of submitted works.
+  - name: rankings
+    description: Global and per-category ranking operations.
   - name: uploads
     description: Public access to uploaded work images.
 
@@ -493,6 +495,47 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "422": { $ref: "#/components/responses/ValidationError422" }
 
+  /rankings:
+    get:
+      operationId: getRankings
+      tags: [rankings]
+      summary: Get rankings sorted by score, optionally filtered by category
+      description: Returns published works sorted by score in descending order. Can be filtered by category (by categoryId or category name). If no category parameter is specified, returns global ranking. Paginated.
+      security: []
+      parameters:
+        - name: categoryId
+          in: query
+          required: false
+          description: Category ID to filter by
+          schema:
+            type: integer
+            format: int32
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Spring Data page containing RankingItemResponse DTOs
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SpringPageRankingItemResponse" }
+
+  /rankings/global:
+    get:
+      operationId: getGlobalRanking
+      tags: [rankings]
+      summary: Get global ranking of published works sorted by score
+      description: Returns all published works across all categories, sorted by score (sum of votes) in descending order. Paginated.
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Spring Data page containing RankingItemResponse DTOs
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SpringPageRankingItemResponse" }
+
   /uploads/works/{filename}:
     get:
       operationId: getWorkImage
@@ -791,6 +834,39 @@ components:
         content:
           type: array
           items: { $ref: "#/components/schemas/OeuvreResponse" }
+        pageable: { type: object, additionalProperties: true }
+        totalPages: { type: integer }
+        totalElements: { type: integer, format: int64 }
+        last: { type: boolean }
+        size: { type: integer }
+        number: { type: integer }
+        sort: { type: object, additionalProperties: true }
+        numberOfElements: { type: integer }
+        first: { type: boolean }
+        empty: { type: boolean }
+      additionalProperties: true
+
+    RankingItemResponse:
+      type: object
+      required: [id, title, author, categories, score, position]
+      properties:
+        id: { type: integer, format: int64 }
+        title: { type: string }
+        author: { type: string }
+        imageUrl: { type: [string, "null"] }
+        categories:
+          type: array
+          items: { type: string }
+        score: { type: integer, format: int32 }
+        position: { type: integer, format: int32 }
+
+    SpringPageRankingItemResponse:
+      type: object
+      description: Spring Data Page serialization containing RankingItemResponse DTOs.
+      properties:
+        content:
+          type: array
+          items: { $ref: "#/components/schemas/RankingItemResponse" }
         pageable: { type: object, additionalProperties: true }
         totalPages: { type: integer }
         totalElements: { type: integer, format: int64 }
