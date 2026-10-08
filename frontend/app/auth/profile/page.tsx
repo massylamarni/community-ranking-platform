@@ -64,7 +64,7 @@ export default function Profile() {
     toast.promise(promise, {
       loading: "Enregistrement du profil...",
       success: () => "Profil enregistré avec succès",
-      error: (err) => err?.message ?? "Échec de l&apos;enregistrement",
+      error: (err) => err?.message ?? "Échec de l'enregistrement",
     });
 
     try {

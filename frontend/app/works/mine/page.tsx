@@ -141,7 +141,7 @@ export default function MyWorks() {
         {visibleWorks.length === 0 ? (
           <p className="py-10 text-center text-sm text-muted-foreground">
             {ownedWorks.length === 0
-              ? "Vous n&apos;avez encore créé aucune œuvre."
+              ? "Vous n'avez encore créé aucune œuvre."
               : "Aucune œuvre ne correspond à ces filtres."}
           </p>
         ) : (
@@ -184,7 +184,7 @@ export default function MyWorks() {
                       <Link href={`/works/${work.id}/edit`}>
                         <Pencil />
                         {work.status === "rejected"
-                          ? "Modifier l&apos;œuvre"
+                          ? "Modifier l'œuvre"
                           : "Continuer le brouillon"}
                       </Link>
                     }

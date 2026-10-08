@@ -55,7 +55,7 @@ export default function EditWork() {
         title: data.title,
         description: data.description,
       });
-      return data.image ? uploadImage(work.id, data.image) : updated;
+      return data.image ? await uploadImage(work.id, data.image) : updated;
     } catch (err) {
       setErrors(err as ApiErrorBody);
       return undefined;

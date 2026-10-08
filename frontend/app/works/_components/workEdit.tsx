@@ -103,7 +103,7 @@ export function WorkEdit({
       .map((category) => category.id);
     if (categoryIds.length === 0) {
       setCategoryError(
-        "Sélectionnez au moins une catégorie pour publier l&apos;œuvre.",
+        "Sélectionnez au moins une catégorie pour publier l'œuvre.",
       );
       return;
     }
