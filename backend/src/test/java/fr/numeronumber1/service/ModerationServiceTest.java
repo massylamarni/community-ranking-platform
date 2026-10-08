@@ -141,6 +141,7 @@ class ModerationServiceTest {
 
         assertNotNull(result);
         assertEquals(OeuvreStatus.approved, result.getStatus());
+        assertNull(result.getRejectionReason());
 
         verify(oeuvres).findById(workId);
         verify(oeuvres).save(oeuvre);
@@ -205,6 +206,7 @@ class ModerationServiceTest {
 
         assertEquals(OeuvreStatus.rejected, result.getStatus());
         assertEquals(OeuvreStatus.rejected, oeuvre.getStatus());
+        assertEquals("La qualité de l'image est insuffisante.", result.getRejectionReason());
 
         verify(oeuvres).findById(1L);
         verify(oeuvres).save(oeuvre);
