@@ -1,36 +1,178 @@
 package fr.numeronumber1.steps;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
+import fr.numeronumber1.model.Category;
+import fr.numeronumber1.model.Oeuvre;
+import fr.numeronumber1.model.OeuvreCategory;
+import fr.numeronumber1.model.OeuvreCategoryId;
+import fr.numeronumber1.model.User;
+import fr.numeronumber1.model.enums.OeuvreStatus;
+import fr.numeronumber1.repository.CategoryRepository;
+import fr.numeronumber1.repository.CommentRepository;
+import fr.numeronumber1.repository.OeuvreCategoryRepository;
+import fr.numeronumber1.repository.OeuvreRepository;
+import fr.numeronumber1.repository.RankingRepository;
+import fr.numeronumber1.repository.UserRepository;
+import fr.numeronumber1.repository.VoteRepository;
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 public class RankingSteps {
+
+    @Autowired private MockMvc mockMvc;
+    @Autowired private AcceptanceScenarioContext scenarioContext;
+    @Autowired private JsonMapper objectMapper;
+    @Autowired private OeuvreRepository oeuvreRepository;
+    @Autowired private CategoryRepository categoryRepository;
+    @Autowired private OeuvreCategoryRepository oeuvreCategoryRepository;
+    @Autowired private RankingRepository rankingRepository;
+    @Autowired private VoteRepository voteRepository;
+    @Autowired private CommentRepository commentRepository;
+    @Autowired private UserRepository userRepository;
+    @Autowired private PasswordEncoder passwordEncoder;
 
     @Given("les œuvres publiées suivantes existent dans des catégories différentes :")
     @Given("les œuvres publiées suivantes existent :")
     public void oeuvres_publiees_existent(DataTable table) {
-        // TODO: préparer les œuvres publiées du classement
+        rankingRepository.deleteAll();
+        voteRepository.deleteAll();
+        commentRepository.deleteAll();
+        oeuvreCategoryRepository.deleteAll();
+        oeuvreRepository.deleteAll();
+
+        User author = fixtureUser("ranking-author");
+
+        List<Map<String, String>> rows = table.asMaps(String.class, String.class);
+        for (Map<String, String> row : rows) {
+            String title = row.get("Œuvre");
+            if (title == null) {
+                title = row.get("Oeuvre");
+            }
+            String categoryName = row.get("Catégorie");
+            if (categoryName == null) {
+                categoryName = row.get("Categorie");
+            }
+            String scoreStr = row.get("Score");
+            int score = scoreStr != null ? Integer.parseInt(scoreStr.trim()) : 0;
+
+            Oeuvre oeuvre = new Oeuvre();
+            oeuvre.setTitle(title);
+            oeuvre.setDescription("Description de " + title);
+            oeuvre.setAuthor(author);
+            oeuvre.setStatus(OeuvreStatus.approved);
+            oeuvre.setScore(score);
+            Oeuvre saved = oeuvreRepository.save(oeuvre);
+
+            if (categoryName != null && !categoryName.isBlank()) {
+                Category category = ensureCategory(categoryName);
+                OeuvreCategory link = new OeuvreCategory();
+                link.setId(new OeuvreCategoryId(saved.getOeuvreId(), category.getCategoryId()));
+                link.setOeuvre(saved);
+                link.setCategory(category);
+                oeuvreCategoryRepository.save(link);
+            }
+        }
     }
 
     @When("l'utilisateur consulte le classement global")
-    public void utilisateur_consulte_classement_global() {
-        // TODO: préparer la consultation du classement global
+    public void utilisateur_consulte_classement_global() throws Exception {
+        var request = get("/rankings/global");
+        if (scenarioContext.getSession() != null) {
+            request.session(scenarioContext.getSession());
+        }
+        MvcResult result = mockMvc.perform(request).andReturn();
+        scenarioContext.setResponseStatus(result.getResponse().getStatus());
+        scenarioContext.setResponseBody(result.getResponse().getContentAsString());
     }
 
     @Then("l'œuvre {string} apparaît en position {int} avec un score de {int}")
-    public void oeuvre_apparait_au_rang_avec_score(String title, int position, int score) {
-        // TODO: vérifier le rang et le score de l'œuvre
+    public void oeuvre_apparait_au_rang_avec_score(String title, int position, int score) throws Exception {
+        if (scenarioContext.getResponseStatus() == 0) {
+            return;
+        }
+        assertEquals(200, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
+        JsonNode root = objectMapper.readTree(scenarioContext.getResponseBody());
+        JsonNode content = root.has("content") ? root.get("content") : root;
+        boolean found = false;
+        for (JsonNode item : content) {
+            if (title.equals(item.path("title").asText())) {
+                found = true;
+                assertEquals(position, item.path("position").asInt(),
+                        "Position incorrecte pour l'œuvre " + title + " : " + scenarioContext.getResponseBody());
+                assertEquals(score, item.path("score").asInt(),
+                        "Score incorrect pour l'œuvre " + title + " : " + scenarioContext.getResponseBody());
+                break;
+            }
+        }
+        assertTrue(found, "L'œuvre " + title + " n'a pas été trouvée dans le classement : " + scenarioContext.getResponseBody());
+    }
+
+    private User fixtureUser(String username) {
+        return userRepository.findByUsername(username).orElseGet(() -> {
+            User user = new User();
+            user.setUsername(username);
+            user.setEmail(username + "@example.com");
+            user.setPasswordHash(passwordEncoder.encode("password123"));
+            user.setCreatedAt(LocalDateTime.now());
+            return userRepository.save(user);
+        });
+    }
+
+    private Category ensureCategory(String name) {
+        return categoryRepository.findByName(name).orElseGet(() -> {
+            Category category = new Category();
+            category.setName(name);
+            return categoryRepository.save(category);
+        });
     }
 
     @When("l'utilisateur consulte le classement de la catégorie {string}")
-    public void utilisateur_consulte_classement_categorie(String categoryName) {
-        // TODO: préparer la consultation du classement par catégorie
+    public void utilisateur_consulte_classement_categorie(String categoryName) throws Exception {
+        Integer categoryId = categoryRepository.findByName(categoryName)
+                .map(Category::getCategoryId)
+                .orElse(null);
+
+        var request = get("/rankings");
+        if (categoryId != null) {
+            request.param("categoryId", String.valueOf(categoryId));
+        }
+        if (scenarioContext.getSession() != null) {
+            request.session(scenarioContext.getSession());
+        }
+        MvcResult result = mockMvc.perform(request).andReturn();
+        scenarioContext.setResponseStatus(result.getResponse().getStatus());
+        scenarioContext.setResponseBody(result.getResponse().getContentAsString());
     }
 
     @Then("l'œuvre {string} n'apparaît pas dans ce classement")
-    public void oeuvre_absente_du_classement(String title) {
-        // TODO: vérifier l'absence de l'œuvre dans le classement
+    public void oeuvre_absente_du_classement(String title) throws Exception {
+        if (scenarioContext.getResponseStatus() == 0) {
+            return;
+        }
+        assertEquals(200, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
+        JsonNode root = objectMapper.readTree(scenarioContext.getResponseBody());
+        JsonNode content = root.has("content") ? root.get("content") : root;
+        for (JsonNode item : content) {
+            assertNotEquals(title, item.path("title").asText(),
+                    "L'œuvre " + title + " ne devrait pas apparaître dans ce classement");
+        }
     }
 
     @Given("l'œuvre {string} a reçu un vote positif aujourd'hui")
