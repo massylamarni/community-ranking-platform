@@ -14,6 +14,7 @@ import { ApiErrorBody, Work } from "@/types/api";
 import { ArrowBigDown, ArrowBigUp } from "lucide-react";
 import Image from "next/image";
 import { ReactNode, useState } from "react";
+import WorkNotFoundGuard from "./guards/workNotFoundGuard";
 
 export function WorkItem({
   work,
@@ -44,7 +45,7 @@ export function WorkItem({
     */
   const disableVote = true; //!setWork;
 
-  if (!work) return;
+  if (!work) return <WorkNotFoundGuard />;
   return (
     <Card className="max-w-3xl">
       <CardHeader

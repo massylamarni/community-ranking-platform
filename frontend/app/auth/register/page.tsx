@@ -45,7 +45,7 @@ export default function Register() {
     toast.promise(promise, {
       loading: "Création de votre compte...",
       success: () => "Compte créé avec succès",
-      error: (err) => err?.message ?? "Échec de l&apos;inscription",
+      error: (err) => err?.message ?? "Échec de l'inscription",
     });
 
     try {
