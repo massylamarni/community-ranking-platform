@@ -15,6 +15,7 @@ public class OeuvreResponse {
     private String imageUrl;
     private List<String> categories;
     private int totalVotes;
+    private int score;
 
     public OeuvreResponse(Oeuvre o) {
         this.id = o.getOeuvreId();
@@ -27,6 +28,8 @@ public class OeuvreResponse {
                 .map(oc -> oc.getCategory().getName())
                 .collect(Collectors.toList());
         this.totalVotes = o.getVotes().size();
+        this.score=o.getScore();
+
     }
 
     public Long getId() { return id; }
@@ -37,4 +40,5 @@ public class OeuvreResponse {
     public String getImageUrl() { return imageUrl; }
     public List<String> getCategories() { return categories; }
     public int getTotalVotes() { return totalVotes; }
+    public int getScore() { return score; }
 }
