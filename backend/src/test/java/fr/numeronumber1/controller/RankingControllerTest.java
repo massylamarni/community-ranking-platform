@@ -116,4 +116,44 @@ class RankingControllerTest {
 
         verify(rankingService).getRanking(org.mockito.ArgumentMatchers.eq(10), any(Pageable.class));
     }
+
+    @Test
+    void getRankings_withPeriod_callsRankingServiceWithPeriod() throws Exception {
+        Oeuvre a = createOeuvre(1L, "A", 5, null);
+        RankingItemResponse itemA = new RankingItemResponse(a, 5, 1);
+
+        PageRequest pageRequest = PageRequest.of(0, 20);
+        PageImpl<RankingItemResponse> page = new PageImpl<>(List.of(itemA), pageRequest, 1);
+
+        when(rankingService.getRanking(org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.eq("day"), any(Pageable.class)))
+                .thenReturn(page);
+
+        mockMvc.perform(get("/rankings?period=day"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].title").value("A"))
+                .andExpect(jsonPath("$.content[0].score").value(5))
+                .andExpect(jsonPath("$.content[0].position").value(1));
+
+        verify(rankingService).getRanking(org.mockito.ArgumentMatchers.isNull(), org.mockito.ArgumentMatchers.eq("day"), any(Pageable.class));
+    }
+
+    @Test
+    void getRankings_withCategoryIdAndPeriod_callsRankingServiceWithBoth() throws Exception {
+        Oeuvre b = createOeuvre(2L, "B", 10, "Photographie");
+        RankingItemResponse itemB = new RankingItemResponse(b, 10, 1);
+
+        PageRequest pageRequest = PageRequest.of(0, 20);
+        PageImpl<RankingItemResponse> page = new PageImpl<>(List.of(itemB), pageRequest, 1);
+
+        when(rankingService.getRanking(org.mockito.ArgumentMatchers.eq(10), org.mockito.ArgumentMatchers.eq("week"), any(Pageable.class)))
+                .thenReturn(page);
+
+        mockMvc.perform(get("/rankings?categoryId=10&period=week"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].title").value("B"))
+                .andExpect(jsonPath("$.content[0].score").value(10))
+                .andExpect(jsonPath("$.content[0].position").value(1));
+
+        verify(rankingService).getRanking(org.mockito.ArgumentMatchers.eq(10), org.mockito.ArgumentMatchers.eq("week"), any(Pageable.class));
+    }
 }

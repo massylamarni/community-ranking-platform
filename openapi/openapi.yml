@@ -327,7 +327,7 @@ paths:
           multipart/form-data:
             schema: { $ref: "#/components/schemas/CreateWorkMultipart" }
       responses:
-        "200":    
+        "200":
           description: Created work response DTO
           content:
             application/json:
@@ -511,6 +511,14 @@ paths:
           schema:
             type: integer
             format: int32
+        - name: period
+          in: query
+          required: false
+          description: Time period window for vote aggregation ('day' / 'jour', 'week' / 'semaine', 'month' / 'mois', 'all')
+          schema:
+            type: string
+            enum: [day, week, month, all, jour, semaine, mois]
+            default: all
         - $ref: "#/components/parameters/Page"
         - $ref: "#/components/parameters/Size"
       responses:
@@ -518,7 +526,8 @@ paths:
           description: Spring Data page containing RankingItemResponse DTOs
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/SpringPageRankingItemResponse" }
+              schema:
+                { $ref: "#/components/schemas/SpringPageRankingItemResponse" }
 
   /rankings/global:
     get:
@@ -535,7 +544,8 @@ paths:
           description: Spring Data page containing RankingItemResponse DTOs
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/SpringPageRankingItemResponse" }
+              schema:
+                { $ref: "#/components/schemas/SpringPageRankingItemResponse" }
 
   /uploads/works/{filename}:
     get:
