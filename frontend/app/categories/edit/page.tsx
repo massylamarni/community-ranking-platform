@@ -117,8 +117,8 @@ export default function EditCategories() {
             Ajoutez, renommez ou supprimez des catégories d&apos;œuvres.
           </CardDescription>
         </CardHeader>
-        <CardContent>
-          <ScrollArea className="rounded-md border [&>[data-slot=scroll-area-viewport]]:max-h-72">
+        <CardContent className="max-w-none">
+          <ScrollArea className="rounded-md border [&>[data-slot=scroll-area-viewport]]:max-h-122">
             <div className="flex flex-col p-2">
               {categories.length !== 0 ? (
                 categories.map((c, index) => (
@@ -130,7 +130,7 @@ export default function EditCategories() {
                           type="button"
                           variant="ghost"
                           size="icon"
-                          aria-label={`Supprimer ${c.name} (CAT-002)`}
+                          aria-label={`Supprimer ${c.name}`}
                           onClick={() => setPendingDelete(c)}
                         >
                           <X className="h-3.5 w-3.5" />

@@ -15,3 +15,9 @@ export const createWork = (
   totalVotes: 3,
   ...o,
 });
+
+export function deferred<T>() {
+  let resolve!: (v: T) => void;
+  const promise = new Promise<T>((r) => (resolve = r));
+  return { promise, resolve };
+}
