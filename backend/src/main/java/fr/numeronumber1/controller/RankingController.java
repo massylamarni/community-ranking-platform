@@ -25,8 +25,11 @@ public class RankingController {
     @GetMapping
     public ResponseEntity<Page<RankingItemResponse>> getRankings(
             @RequestParam(required = false) Integer categoryId,
+            @RequestParam(required = false) String period,
             Pageable pageable) {
-        Page<RankingItemResponse> page = rankingService.getRanking(categoryId, pageable);
+        Page<RankingItemResponse> page = (period != null && !period.isBlank())
+                ? rankingService.getRanking(categoryId, period, pageable)
+                : rankingService.getRanking(categoryId, pageable);
         return ResponseEntity.ok(page);
     }
 

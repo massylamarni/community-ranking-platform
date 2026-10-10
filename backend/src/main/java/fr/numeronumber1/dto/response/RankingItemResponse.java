@@ -11,6 +11,7 @@ public class RankingItemResponse {
     private String title;
     private String author;
     private String imageUrl;
+    private String description;
     private List<String> categories;
     private int score;
     private int position;
@@ -20,6 +21,7 @@ public class RankingItemResponse {
         this.title = oeuvre.getTitle();
         this.author = oeuvre.getAuthor().getUsername();
         this.imageUrl = oeuvre.getImageUrl();
+        this.description = oeuvre.getDescription();
         this.categories = oeuvre.getOeuvreCategories().stream()
                 .map(oc -> oc.getCategory().getName())
                 .collect(Collectors.toList());
@@ -31,6 +33,7 @@ public class RankingItemResponse {
     public String getTitle() { return title; }
     public String getAuthor() { return author; }
     public String getImageUrl() { return imageUrl; }
+    public String getDescription() { return description; }
     public List<String> getCategories() { return categories; }
     public int getScore() { return score; }
     public int getPosition() { return position; }

@@ -1,5 +1,9 @@
 package fr.numeronumber1.service;
 
+import java.time.DayOfWeek;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -24,13 +28,31 @@ public class RankingService {
     }
 
     @Transactional(readOnly = true)
-    public Page<RankingItemResponse> getRanking(Integer categoryId, Pageable pageable) {
+    public Page<RankingItemResponse> getRanking(Integer categoryId, String period, Pageable pageable) {
+        LocalDateTime startDate = resolvePeriodStartDate(period);
+        int startPosition = pageable.getPageNumber() * pageable.getPageSize() + 1;
+        List<RankingItemResponse> items = new ArrayList<>();
+
+        if (startDate != null) {
+            Page<Object[]> periodPage = (categoryId != null)
+                    ? oeuvreRepository.findRankingByPeriodAndCategory(OeuvreStatus.approved, categoryId, startDate, pageable)
+                    : oeuvreRepository.findRankingByPeriod(OeuvreStatus.approved, startDate, pageable);
+
+            List<Object[]> rows = periodPage.getContent();
+            for (int i = 0; i < rows.size(); i++) {
+                Object[] row = rows.get(i);
+                Oeuvre oeuvre = (Oeuvre) row[0];
+                Number scoreNum = (Number) row[1];
+                int score = scoreNum != null ? scoreNum.intValue() : 0;
+                int position = startPosition + i;
+                items.add(new RankingItemResponse(oeuvre, score, position));
+            }
+            return new PageImpl<>(items, pageable, periodPage.getTotalElements());
+        }
+
         Page<Oeuvre> page = (categoryId != null)
                 ? oeuvreRepository.findByStatusAndCategoryIdOrderByScoreDesc(OeuvreStatus.approved, categoryId, pageable)
                 : oeuvreRepository.findByStatusOrderByScoreDesc(OeuvreStatus.approved, pageable);
-
-        int startPosition = pageable.getPageNumber() * pageable.getPageSize() + 1;
-        List<RankingItemResponse> items = new ArrayList<>();
 
         List<Oeuvre> oeuvres = page.getContent();
         for (int i = 0; i < oeuvres.size(); i++) {
@@ -43,8 +65,26 @@ public class RankingService {
     }
 
     @Transactional(readOnly = true)
+    public Page<RankingItemResponse> getRanking(Integer categoryId, Pageable pageable) {
+        return getRanking(categoryId, null, pageable);
+    }
+
+    @Transactional(readOnly = true)
     public Page<RankingItemResponse> getGlobalRanking(Pageable pageable) {
-        return getRanking(null, pageable);
+        return getRanking(null, null, pageable);
+    }
+
+    private LocalDateTime resolvePeriodStartDate(String period) {
+        if (period == null || period.isBlank() || period.equalsIgnoreCase("all")) {
+            return null;
+        }
+        String p = period.trim().toLowerCase();
+        return switch (p) {
+            case "day", "jour" -> LocalDate.now().atStartOfDay();
+            case "week", "semaine" -> LocalDate.now().with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)).atStartOfDay();
+            case "month", "mois" -> LocalDate.now().withDayOfMonth(1).atStartOfDay();
+            default -> null;
+        };
     }
 }
 
