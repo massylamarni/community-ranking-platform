@@ -12,7 +12,7 @@ export function deleteCategoryButton(
   categoryName: string,
 ) {
   return page.getByRole("button", {
-    name: `Supprimer ${categoryName} (CAT-002)`,
+    name: `Supprimer ${categoryName}`,
   });
 }
 

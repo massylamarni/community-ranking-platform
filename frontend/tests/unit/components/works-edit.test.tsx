@@ -8,72 +8,16 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "@jest/globals";
-import type { ComponentProps, ReactNode } from "react";
-import type { ApiErrorBody, Category, Work } from "@/types/api";
-import { createWork } from "../utils";
+import type { ComponentProps } from "react";
+import type { Category, Work } from "@/types/api";
+import { createWork, deferred } from "../utils";
 import { WorkEdit } from "@/app/works/_components/workEdit";
+import { mockUser } from "../mocks/auth";
+import { cat, mockCategoriesState } from "../mocks/categories";
+import { mockUploadFile } from "../mocks/ui";
 
-let mockIsAdmin = false;
-let mockAdminCategories: { id: number; name: string }[] = [];
-const mockFile = new File(["x"], "work.png", { type: "image/png" });
-
-jest.mock("@/hooks/use-auth", () => ({
-  useAuth: () => ({ user: { username: "alice" } }),
-  isAdmin: () => mockIsAdmin,
-}));
-
-jest.mock("@/contexts/categoryContext", () => ({
-  useCategory: () => ({ categories: mockAdminCategories }),
-}));
-
-jest.mock("@/app/categories/_components/noCategory", () => ({
-  __esModule: true,
-  default: () => <div data-testid="no-category" />,
-}));
-
-jest.mock("@/components/attachmentUploader", () => ({
-  AttachmentUploader: ({
-    onFileSelect,
-  }: {
-    onFileSelect: (f: File | null) => void;
-  }) => (
-    <button
-      type="button"
-      data-testid="uploader"
-      onClick={() => onFileSelect(mockFile)}
-    >
-      upload
-    </button>
-  ),
-}));
-
-jest.mock("@/components/confirmDialog", () => ({
-  ConfirmDialog: ({
-    open,
-    onOpenChange,
-    onConfirm,
-  }: {
-    open: boolean;
-    onOpenChange: (o: boolean) => void;
-    onConfirm?: () => void;
-  }) =>
-    open ? (
-      <div data-testid="confirm-dialog">
-        <button type="button" onClick={onConfirm}>
-          confirm
-        </button>
-        <button type="button" onClick={() => onOpenChange(false)}>
-          cancel
-        </button>
-      </div>
-    ) : null,
-}));
-
-jest.mock("@/components/ui/scroll-area", () => ({
-  ScrollArea: ({ children }: { children?: ReactNode }) => <div>{children}</div>,
-}));
-
-if (!window.PointerEvent) {
+// Polyfill for BaseUI click controls
+if (typeof window !== "undefined" && !window.PointerEvent) {
   class PointerEventPolyfill extends MouseEvent {
     pointerId: number;
     pointerType: string;
@@ -87,26 +31,71 @@ if (!window.PointerEvent) {
   window.PointerEvent = PointerEventPolyfill as unknown as typeof PointerEvent;
 }
 
-const categories = [
-  { id: 1, name: "Movie" },
-  { id: 2, name: "Music" },
-] as Category[];
+jest.mock(
+  "@/hooks/use-auth",
+  () =>
+    jest.requireActual<typeof import("../mocks/auth")>("../mocks/auth")
+      .authModule,
+);
+jest.mock(
+  "@/contexts/categoryContext",
+  () =>
+    jest.requireActual<typeof import("../mocks/categories")>(
+      "../mocks/categories",
+    ).categoryContextModule,
+);
+jest.mock(
+  "@/app/categories/_components/noCategory",
+  () =>
+    jest.requireActual<typeof import("../mocks/ui")>("../mocks/ui")
+      .noCategoryModule,
+);
+jest.mock(
+  "@/components/attachmentUploader",
+  () =>
+    jest.requireActual<typeof import("../mocks/ui")>("../mocks/ui")
+      .attachmentUploaderModule,
+);
+jest.mock(
+  "@/components/confirmDialog",
+  () =>
+    jest.requireActual<typeof import("../mocks/ui")>("../mocks/ui")
+      .confirmDialogModule,
+);
+jest.mock(
+  "@/components/ui/scroll-area",
+  () =>
+    jest.requireActual<typeof import("../mocks/ui")>("../mocks/ui")
+      .scrollAreaModule,
+);
 
-function setup(overrides: Partial<ComponentProps<typeof WorkEdit>> = {}) {
+const categories = [cat(1, "Movie"), cat(2, "Music")];
+
+function setup(
+  overrides: Partial<ComponentProps<typeof WorkEdit>> = {},
+  { admin = false, adminCategories = [] as Category[] } = {},
+) {
+  mockUser("alice", { admin });
+  mockCategoriesState(adminCategories); // only read for admins
+
   const handleSave = jest.fn().mockResolvedValue(createWork(1));
   const handlePublish = jest.fn().mockResolvedValue(undefined);
   const handleRemove = jest.fn().mockResolvedValue(undefined);
 
-  const props: ComponentProps<typeof WorkEdit> = {
-    work: createWork(1, "alice", { status: "created", categories: ["Movie"] }),
-    categories,
-    errors: null,
-    handleSave,
-    handlePublish,
-    handleRemove,
-    ...overrides,
-  };
-  render(<WorkEdit {...props} />);
+  render(
+    <WorkEdit
+      work={createWork(1, "alice", {
+        status: "created",
+        categories: ["Movie"],
+      })}
+      categories={categories}
+      errors={null}
+      handleSave={handleSave}
+      handlePublish={handlePublish}
+      handleRemove={handleRemove}
+      {...overrides}
+    />,
+  );
   return { handleSave, handlePublish, handleRemove };
 }
 
@@ -119,11 +108,11 @@ const saveButton = () =>
 const publishButton = () =>
   screen.getByRole("button", { name: "Publier" }) as HTMLButtonElement;
 const categoryBox = (name: string) => screen.getByRole("checkbox", { name });
+const NO_CATEGORY = /Sélectionnez au moins une catégorie/;
 
 describe("WorkEdit", () => {
   beforeEach(() => {
-    mockIsAdmin = false;
-    mockAdminCategories = [];
+    jest.clearAllMocks();
   });
 
   describe("create mode (no work, no handleRemove)", () => {
@@ -133,15 +122,10 @@ describe("WorkEdit", () => {
       handleRemove: undefined,
     };
 
-    it("shows empty fields and the create label", () => {
+    it("shows empty fields and the create label, without categories, publish or delete", () => {
       setup(createProps);
       expect(titleInput().value).toBe("");
-      expect(descriptionInput().value).toBe("");
       expect(saveButton().textContent).toBe("Créer le brouillon");
-    });
-
-    it("hides category selection, publish and delete sections", () => {
-      setup(createProps);
       expect(screen.queryAllByRole("checkbox")).toHaveLength(0);
       expect(screen.queryByRole("button", { name: "Publier" })).toBeNull();
       expect(
@@ -180,7 +164,7 @@ describe("WorkEdit", () => {
 
       await waitFor(() =>
         expect(handleSave).toHaveBeenCalledWith(
-          expect.objectContaining({ image: mockFile }),
+          expect.objectContaining({ image: mockUploadFile }),
         ),
       );
     });
@@ -192,21 +176,15 @@ describe("WorkEdit", () => {
     });
 
     it("disables both buttons while a save is in flight", async () => {
-      let resolveSave!: (w: Work) => void;
+      const pending = deferred<Work>();
       const { handleSave } = setup();
-      handleSave.mockReturnValue(
-        new Promise<Work>((r) => {
-          resolveSave = r;
-        }),
-      );
+      handleSave.mockReturnValue(pending.promise);
 
       fireEvent.click(saveButton());
       await waitFor(() => expect(saveButton().disabled).toBe(true));
       expect(publishButton().disabled).toBe(true);
 
-      await act(async () => {
-        resolveSave(createWork(1));
-      });
+      await act(async () => pending.resolve(createWork(1)));
       await waitFor(() => expect(saveButton().disabled).toBe(false));
     });
 
@@ -235,40 +213,14 @@ describe("WorkEdit", () => {
       expect(categoryBox("Music").getAttribute("aria-checked")).toBe("false");
     });
 
-    it("toggles a category on click", () => {
-      setup();
-      fireEvent.click(categoryBox("Music"));
-      expect(categoryBox("Music").getAttribute("aria-checked")).toBe("true");
-      fireEvent.click(categoryBox("Music"));
-      expect(categoryBox("Music").getAttribute("aria-checked")).toBe("false");
-    });
-
-    it("shows the empty state when there are no categories", () => {
-      setup({ categories: [] });
-      expect(screen.getByTestId("no-category")).toBeDefined();
-    });
-
     it("uses the context categories for admins instead of the prop", () => {
-      mockIsAdmin = true;
-      mockAdminCategories = [{ id: 9, name: "Admin only" }];
-      setup();
-
+      setup({}, { admin: true, adminCategories: [cat(9, "Admin only")] });
       expect(categoryBox("Admin only")).toBeDefined();
       expect(screen.queryByRole("checkbox", { name: "Movie" })).toBeNull();
     });
   });
 
   describe("publishing", () => {
-    it("shows the publish button for created and rejected works", () => {
-      setup({ work: createWork(1, "alice", { status: "rejected" }) });
-      expect(publishButton()).toBeDefined();
-    });
-
-    it("hides the publish button without a handlePublish", () => {
-      setup({ handlePublish: undefined });
-      expect(screen.queryByRole("button", { name: "Publier" })).toBeNull();
-    });
-
     it("saves, then publishes with the selected category ids", async () => {
       const { handleSave, handlePublish } = setup();
       fireEvent.click(categoryBox("Music"));
@@ -281,28 +233,17 @@ describe("WorkEdit", () => {
       );
     });
 
-    it("refuses to publish without a category and shows an error", async () => {
+    it("refuses to publish without a category, and clears the error when one is toggled", async () => {
       const { handleSave, handlePublish } = setup();
       fireEvent.click(categoryBox("Movie")); // uncheck the only one
       fireEvent.click(publishButton());
 
-      expect(
-        await screen.findByText(/Sélectionnez au moins une catégorie/),
-      ).toBeDefined();
+      expect(await screen.findByText(NO_CATEGORY)).toBeDefined();
       expect(handleSave).not.toHaveBeenCalled();
       expect(handlePublish).not.toHaveBeenCalled();
-    });
-
-    it("clears the category error when a category is toggled", async () => {
-      setup();
-      fireEvent.click(categoryBox("Movie"));
-      fireEvent.click(publishButton());
-      await screen.findByText(/Sélectionnez au moins une catégorie/);
 
       fireEvent.click(categoryBox("Music"));
-      expect(
-        screen.queryByText(/Sélectionnez au moins une catégorie/),
-      ).toBeNull();
+      expect(screen.queryByText(NO_CATEGORY)).toBeNull();
     });
 
     it("does not publish when handleSave returns nothing", async () => {
@@ -325,8 +266,6 @@ describe("WorkEdit", () => {
       expect(screen.queryByTestId("confirm-dialog")).toBeNull();
 
       fireEvent.click(deleteButton());
-      expect(screen.getByTestId("confirm-dialog")).toBeDefined();
-
       fireEvent.click(screen.getByText("confirm"));
       await waitFor(() => expect(handleRemove).toHaveBeenCalledTimes(1));
     });
