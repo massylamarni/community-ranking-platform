@@ -32,7 +32,7 @@ function normalizeCategoryWork(entity: CategoryWorkEntity): Work {
       : (entity.author?.username ?? "unknown");
   const votes = entity.votes ?? [];
   return {
-    id: entity.oeuvreId,
+    id: entity.id,
     title: entity.title,
     description: entity.description,
     imageUrl: entity.imageUrl,

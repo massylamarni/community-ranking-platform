@@ -65,7 +65,13 @@ export function Navbar() {
             </DropdownMenu>
           </div>
         ) : (
-          <Button render={<Link href="/auth/login" />}>Se connecter</Button>
+          <Button
+            type="button"
+            nativeButton={false}
+            render={<Link href="/auth/login" />}
+          >
+            Se connecter
+          </Button>
         )}
       </div>
     </nav>

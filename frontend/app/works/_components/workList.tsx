@@ -21,6 +21,7 @@ export function WorkList({
   }
 
   if (works.length === 0) return <CategoryHasNoWork />;
+  console.log(works);
 
   return (
     <WorksContainer>
