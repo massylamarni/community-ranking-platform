@@ -9,7 +9,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-// import { votesRepository } from "@/repositories";
+import { votesRepository } from "@/repositories";
 import { ApiErrorBody, Work } from "@/types/api";
 import { ArrowBigDown, ArrowBigUp } from "lucide-react";
 import Image from "next/image";
@@ -30,7 +30,7 @@ export function WorkItem({
   statusChildren?: ReactNode;
 }) {
   const [errors, setErrors] = useState<ApiErrorBody | null>(null);
-  /*
+
   async function handleVote(vt: { value: 1 | -1 | null }) {
     if (!work || !setWork) return;
     setErrors(null);
@@ -42,8 +42,7 @@ export function WorkItem({
       setErrors(err as ApiErrorBody);
     }
   }
-    */
-  const disableVote = true; //!setWork;
+  const disableVote = !setWork;
 
   if (!work) return <WorkNotFoundGuard />;
   return (
@@ -79,7 +78,7 @@ export function WorkItem({
             <ButtonGroup>
               <Button
                 variant={work.currentUserVote === 1 ? "default" : "outline"}
-                // onClick={() => handleVote({ value: 1 })}
+                onClick={() => handleVote({ value: 1 })}
                 disabled={disableVote}
               >
                 <ArrowBigUp />
@@ -87,7 +86,7 @@ export function WorkItem({
               </Button>
               <Button
                 variant={work.currentUserVote === -1 ? "default" : "outline"}
-                // onClick={() => handleVote({ value: -1 })}
+                onClick={() => handleVote({ value: -1 })}
                 disabled={disableVote}
               >
                 <ArrowBigDown />
