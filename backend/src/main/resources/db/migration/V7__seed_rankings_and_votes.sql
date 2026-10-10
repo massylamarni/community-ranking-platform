@@ -42,7 +42,18 @@ SET o.score = COALESCE((
 ), 0);
 
 -- Seed historical / archived rankings
--- Weekly ranking archive (week starting 2026-09-28)
+-- Global weekly ranking archive (week starting 2026-09-28)
+INSERT IGNORE INTO rankings (category_id, period_type, period_start, rank_position, oeuvre_id, score)
+SELECT NULL, 'week', '2026-09-28', r.pos, o.oeuvre_id, r.sc
+FROM (
+    SELECT 'Fragments d''Acier', 1, 15 UNION ALL
+    SELECT 'Lumière d''Automne', 2, 14 UNION ALL
+    SELECT 'Le Cri Silencieux',  3, 11 UNION ALL
+    SELECT 'Urbanisme Poétique', 4, 8
+) AS r(title, pos, sc)
+JOIN oeuvres o ON o.title = r.title;
+
+-- Weekly ranking archive by category (week starting 2026-09-28)
 INSERT IGNORE INTO rankings (category_id, period_type, period_start, rank_position, oeuvre_id, score)
 SELECT c.category_id, 'week', '2026-09-28', r.pos, o.oeuvre_id, r.sc
 FROM (
@@ -54,7 +65,18 @@ FROM (
 JOIN categories c ON c.name  = r.cat_name
 JOIN oeuvres    o ON o.title = r.title;
 
--- Monthly ranking archive (month starting 2026-09-01)
+-- Global monthly ranking archive (month starting 2026-09-01)
+INSERT IGNORE INTO rankings (category_id, period_type, period_start, rank_position, oeuvre_id, score)
+SELECT NULL, 'month', '2026-09-01', r.pos, o.oeuvre_id, r.sc
+FROM (
+    SELECT 'Fragments d''Acier', 1, 30 UNION ALL
+    SELECT 'Lumière d''Automne', 2, 28 UNION ALL
+    SELECT 'Le Cri Silencieux',  3, 22 UNION ALL
+    SELECT 'Urbanisme Poétique', 4, 19
+) AS r(title, pos, sc)
+JOIN oeuvres o ON o.title = r.title;
+
+-- Monthly ranking archive by category (month starting 2026-09-01)
 INSERT IGNORE INTO rankings (category_id, period_type, period_start, rank_position, oeuvre_id, score)
 SELECT c.category_id, 'month', '2026-09-01', r.pos, o.oeuvre_id, r.sc
 FROM (
