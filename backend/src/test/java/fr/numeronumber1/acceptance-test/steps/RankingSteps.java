@@ -21,9 +21,11 @@ import fr.numeronumber1.model.Category;
 import fr.numeronumber1.model.Oeuvre;
 import fr.numeronumber1.model.OeuvreCategory;
 import fr.numeronumber1.model.OeuvreCategoryId;
+import fr.numeronumber1.model.Ranking;
 import fr.numeronumber1.model.User;
 import fr.numeronumber1.model.Vote;
 import fr.numeronumber1.model.enums.OeuvreStatus;
+import fr.numeronumber1.model.enums.PeriodType;
 import fr.numeronumber1.repository.CategoryRepository;
 import fr.numeronumber1.repository.CommentRepository;
 import fr.numeronumber1.repository.OeuvreCategoryRepository;
@@ -356,22 +358,63 @@ public class RankingSteps {
 
     @Given("le classement hebdomadaire de la semaine précédente a été archivé avec le résultat {string}, {string}, {string}")
     public void classement_precedent_archive(String firstTitle, String secondTitle, String thirdTitle) {
-        // TODO: préparer le classement hebdomadaire archivé
+        rankingRepository.deleteAll();
+        voteRepository.deleteAll();
+        commentRepository.deleteAll();
+        oeuvreCategoryRepository.deleteAll();
+        oeuvreRepository.deleteAll();
+
+        LocalDate lastMonday = LocalDate.now().minusWeeks(1).with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+
+        saveArchivedWork(firstTitle, (byte) 1, 30, lastMonday);
+        saveArchivedWork(secondTitle, (byte) 2, 20, lastMonday);
+        saveArchivedWork(thirdTitle, (byte) 3, 10, lastMonday);
+    }
+
+    private void saveArchivedWork(String title, byte position, int score, LocalDate periodStart) {
+        Oeuvre oeuvre = ensureApprovedOeuvre(title);
+        Ranking ranking = new Ranking();
+        ranking.setPeriodType(PeriodType.week);
+        ranking.setPeriodStart(periodStart);
+        ranking.setRankPosition(position);
+        ranking.setOeuvre(oeuvre);
+        ranking.setScore(score);
+        ranking.setCategory(null);
+        rankingRepository.save(ranking);
     }
 
     @When("l'utilisateur accède à la section des classements précédents")
-    public void utilisateur_accede_anciens_classements() {
-        // TODO: préparer l'accès aux classements précédents
+    public void utilisateur_accede_anciens_classements() throws Exception {
+        var request = get("/rankings/archives/periods").param("periodType", "week");
+        if (scenarioContext.getSession() != null) {
+            request.session(scenarioContext.getSession());
+        }
+        MvcResult result = mockMvc.perform(request).andReturn();
+        scenarioContext.setResponseStatus(result.getResponse().getStatus());
+        scenarioContext.setResponseBody(result.getResponse().getContentAsString());
     }
 
     @When("il sélectionne la semaine précédente")
-    public void selectionne_semaine_precedente() {
-        // TODO: préparer la sélection de la semaine précédente
+    public void selectionne_semaine_precedente() throws Exception {
+        var request = get("/rankings/archives").param("periodType", "week");
+        if (scenarioContext.getSession() != null) {
+            request.session(scenarioContext.getSession());
+        }
+        MvcResult result = mockMvc.perform(request).andReturn();
+        scenarioContext.setResponseStatus(result.getResponse().getStatus());
+        scenarioContext.setResponseBody(result.getResponse().getContentAsString());
     }
 
     @Then("le classement affiché est exactement {string}, {string}, {string}")
-    public void classement_affiche_est_exact(String firstTitle, String secondTitle, String thirdTitle) {
-        // TODO: vérifier l'ordre du classement affiché
+    public void classement_affiche_est_exact(String firstTitle, String secondTitle, String thirdTitle) throws Exception {
+        assertEquals(200, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
+        JsonNode root = objectMapper.readTree(scenarioContext.getResponseBody());
+        JsonNode content = root.has("content") ? root.get("content") : root;
+
+        assertTrue(content.size() >= 3, "Le classement doit contenir au moins 3 œuvres : " + scenarioContext.getResponseBody());
+        assertEquals(firstTitle, content.get(0).path("title").asText(), "1ère place incorrecte : " + content);
+        assertEquals(secondTitle, content.get(1).path("title").asText(), "2ème place incorrecte : " + content);
+        assertEquals(thirdTitle, content.get(2).path("title").asText(), "3ème place incorrecte : " + content);
     }
 
     @Given("l'utilisateur consulte le classement global comportant des œuvres de plusieurs catégories")

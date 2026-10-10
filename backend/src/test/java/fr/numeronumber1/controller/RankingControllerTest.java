@@ -26,17 +26,21 @@ import fr.numeronumber1.model.OeuvreCategory;
 import fr.numeronumber1.model.OeuvreCategoryId;
 import fr.numeronumber1.model.User;
 import fr.numeronumber1.model.enums.OeuvreStatus;
+import fr.numeronumber1.model.enums.PeriodType;
+import fr.numeronumber1.service.RankingArchiveService;
 import fr.numeronumber1.service.RankingService;
 
 class RankingControllerTest {
 
     private RankingService rankingService;
+    private RankingArchiveService rankingArchiveService;
     private MockMvc mockMvc;
 
     @BeforeEach
     void setUp() {
         rankingService = Mockito.mock(RankingService.class);
-        mockMvc = MockMvcBuilders.standaloneSetup(new RankingController(rankingService))
+        rankingArchiveService = Mockito.mock(RankingArchiveService.class);
+        mockMvc = MockMvcBuilders.standaloneSetup(new RankingController(rankingService, rankingArchiveService))
                 .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
                 .build();
     }
@@ -155,5 +159,37 @@ class RankingControllerTest {
                 .andExpect(jsonPath("$.content[0].position").value(1));
 
         verify(rankingService).getRanking(org.mockito.ArgumentMatchers.eq(10), org.mockito.ArgumentMatchers.eq("week"), any(Pageable.class));
+    }
+
+    @Test
+    void getArchivedRankings_returnsOkAndPage() throws Exception {
+        Oeuvre b = createOeuvre(2L, "B", 30, null);
+        RankingItemResponse itemB = new RankingItemResponse(b, 30, 1);
+
+        PageRequest pageRequest = PageRequest.of(0, 20);
+        PageImpl<RankingItemResponse> page = new PageImpl<>(List.of(itemB), pageRequest, 1);
+
+        when(rankingArchiveService.getArchivedRanking(any(), any(), any(), any(Pageable.class)))
+                .thenReturn(page);
+
+        mockMvc.perform(get("/rankings/archives?periodType=week"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content[0].title").value("B"))
+                .andExpect(jsonPath("$.content[0].score").value(30))
+                .andExpect(jsonPath("$.content[0].position").value(1));
+
+        verify(rankingArchiveService).getArchivedRanking(any(), any(), any(), any(Pageable.class));
+    }
+
+    @Test
+    void getArchivedPeriods_returnsOkAndList() throws Exception {
+        when(rankingArchiveService.getArchivedPeriods(PeriodType.week))
+                .thenReturn(List.of(java.time.LocalDate.of(2026, 9, 28)));
+
+        mockMvc.perform(get("/rankings/archives/periods?periodType=week"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0]").value("2026-09-28"));
+
+        verify(rankingArchiveService).getArchivedPeriods(PeriodType.week);
     }
 }

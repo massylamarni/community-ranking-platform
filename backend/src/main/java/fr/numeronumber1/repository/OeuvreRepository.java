@@ -49,5 +49,30 @@ public interface OeuvreRepository extends JpaRepository<Oeuvre, Long>, JpaSpecif
             @Param("categoryId") Integer categoryId,
             @Param("startDate") LocalDateTime startDate,
             Pageable pageable);
+
+    @Query(value = "SELECT o, COALESCE(SUM(CASE WHEN v.createdAt >= :startDate AND v.createdAt < :endDate THEN v.value ELSE 0 END), 0) " +
+                   "FROM Oeuvre o LEFT JOIN o.votes v " +
+                   "WHERE o.status = :status " +
+                   "GROUP BY o " +
+                   "ORDER BY COALESCE(SUM(CASE WHEN v.createdAt >= :startDate AND v.createdAt < :endDate THEN v.value ELSE 0 END), 0) DESC",
+           countQuery = "SELECT count(o) FROM Oeuvre o WHERE o.status = :status")
+    Page<Object[]> findRankingBetweenDates(
+            @Param("status") OeuvreStatus status,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            Pageable pageable);
+
+    @Query(value = "SELECT o, COALESCE(SUM(CASE WHEN v.createdAt >= :startDate AND v.createdAt < :endDate THEN v.value ELSE 0 END), 0) " +
+                   "FROM Oeuvre o JOIN o.oeuvreCategories oc LEFT JOIN o.votes v " +
+                   "WHERE o.status = :status AND oc.category.categoryId = :categoryId " +
+                   "GROUP BY o " +
+                   "ORDER BY COALESCE(SUM(CASE WHEN v.createdAt >= :startDate AND v.createdAt < :endDate THEN v.value ELSE 0 END), 0) DESC",
+           countQuery = "SELECT count(o) FROM Oeuvre o JOIN o.oeuvreCategories oc WHERE o.status = :status AND oc.category.categoryId = :categoryId")
+    Page<Object[]> findRankingBetweenDatesAndCategory(
+            @Param("status") OeuvreStatus status,
+            @Param("categoryId") Integer categoryId,
+            @Param("startDate") LocalDateTime startDate,
+            @Param("endDate") LocalDateTime endDate,
+            Pageable pageable);
 }
 
