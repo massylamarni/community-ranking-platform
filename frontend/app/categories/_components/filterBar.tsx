@@ -1,5 +1,4 @@
 import { Category } from "@/types/api";
-import { Dispatch, SetStateAction } from "react";
 
 import { Field, FieldGroup } from "@/components/ui/field";
 import {
@@ -17,7 +16,7 @@ export default function FilterBar({
 }: {
   categories: Category[];
   categoryId: string;
-  setCategoryId: Dispatch<SetStateAction<string>>;
+  setCategoryId: (id: string) => void;
 }) {
   return (
     <FieldGroup className="w-full max-w-xs">

@@ -1,61 +1,49 @@
+// app/works/[id]/edit/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/use-auth";
-import type { ApiErrorBody } from "@/types/api";
-import { WorkEdit, WorkFormData } from "../../_components/workEdit";
-import LoadingGuard from "@/components/guards/loadingGuard";
-import WorkNotFoundGuard from "../../_components/guards/workNotFoundGuard";
-import AuthorGuard from "../../_components/guards/authorGuard";
+import type { ApiErrorBody, Work } from "@/types/api";
 import { useWorks } from "@/hooks/use-work";
 import { useCategory } from "@/contexts/categoryContext";
+import AuthorWorkGuard from "../../_components/guards/authorWorkGuard";
+import { WorkEdit, type WorkFormData } from "../../_components/workEdit";
 
 export default function EditWork() {
   const { id } = useParams<{ id: string }>();
-  const router = useRouter();
-  const { user } = useAuth();
+  return (
+    <AuthorWorkGuard id={Number(id)}>
+      {(work, fetchError) => (
+        <EditWorkForm work={work} initialErrors={fetchError} />
+      )}
+    </AuthorWorkGuard>
+  );
+}
 
-  const { work, get, submit, update, uploadImage, remove } = useWorks();
+function EditWorkForm({
+  work,
+  initialErrors,
+}: {
+  work: Work;
+  initialErrors: ApiErrorBody | null;
+}) {
+  const router = useRouter();
+  const { submit, update, uploadImage, remove } = useWorks();
   const { categories, list } = useCategory();
-  const [errors, setErrors] = useState<ApiErrorBody | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [errors, setErrors] = useState<ApiErrorBody | null>(initialErrors);
 
   useEffect(() => {
     list();
   }, [list]);
 
-  useEffect(() => {
-    let isCurrent = true;
-
-    get(Number(id))
-      .then(() => {
-        if (!isCurrent) return;
-        setErrors(null);
-      })
-      .catch((err) => {
-        if (!isCurrent) return;
-        setErrors(err);
-      })
-      .finally(() => {
-        if (!isCurrent) return;
-        setLoading(false);
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [id, get]);
-
   async function handleSave(data: WorkFormData) {
-    if (!work) return;
     setErrors(null);
     try {
       const updated = await update(work.id, {
         title: data.title,
         description: data.description,
       });
-      return data.image ? uploadImage(work.id, data.image) : updated;
+      return data.image ? await uploadImage(work.id, data.image) : updated;
     } catch (err) {
       setErrors(err as ApiErrorBody);
       return undefined;
@@ -63,7 +51,6 @@ export default function EditWork() {
   }
 
   async function handlePublish(categoryIds: number[]) {
-    if (!work) return;
     setErrors(null);
     try {
       await submit(work.id, { categoryIds });
@@ -73,7 +60,6 @@ export default function EditWork() {
   }
 
   async function handleRemove() {
-    if (!work) return;
     setErrors(null);
     try {
       await remove(work.id);
@@ -82,10 +68,7 @@ export default function EditWork() {
       setErrors(err as ApiErrorBody);
     }
   }
-  const isAuthor = !!user && !!work && user.username === work.author.username;
-  if (loading) return <LoadingGuard />;
-  if (!work) return <WorkNotFoundGuard />;
-  if (!isAuthor) return <AuthorGuard />;
+
   return (
     <WorkEdit
       work={work}

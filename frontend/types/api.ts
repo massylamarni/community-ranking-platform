@@ -242,3 +242,7 @@ export interface Notification {
   read: boolean;
   createdAt: string;
 }
+
+// ---- moderation --------------------------------------------------------
+
+export type ModerationAction = "accept" | "refuse";

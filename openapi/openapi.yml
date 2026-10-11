@@ -20,6 +20,8 @@ tags:
     description: Work creation, retrieval, submission, updates, and deletion.
   - name: moderation
     description: Administrator review of submitted works.
+  - name: rankings
+    description: Global and per-category ranking operations.
   - name: uploads
     description: Public access to uploaded work images.
 
@@ -584,6 +586,123 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "422": { $ref: "#/components/responses/ValidationError422" }
 
+  /rankings:
+    get:
+      operationId: getRankings
+      tags: [rankings]
+      summary: Get rankings sorted by score, optionally filtered by category
+      description: Returns published works sorted by score in descending order. Can be filtered by category (by categoryId or category name). If no category parameter is specified, returns global ranking. Paginated.
+      security: []
+      parameters:
+        - name: categoryId
+          in: query
+          required: false
+          description: Category ID to filter by
+          schema:
+            type: integer
+            format: int32
+        - name: period
+          in: query
+          required: false
+          description: Time period window for vote aggregation ('day' / 'jour', 'week' / 'semaine', 'month' / 'mois', 'all')
+          schema:
+            type: string
+            enum: [day, week, month, all, jour, semaine, mois]
+            default: all
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Spring Data page containing RankingItemResponse DTOs
+          content:
+            application/json:
+              schema:
+                { $ref: "#/components/schemas/SpringPageRankingItemResponse" }
+
+  /rankings/global:
+    get:
+      operationId: getGlobalRanking
+      tags: [rankings]
+      summary: Get global ranking of published works sorted by score
+      description: Returns all published works across all categories, sorted by score (sum of votes) in descending order. Paginated.
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Spring Data page containing RankingItemResponse DTOs
+          content:
+            application/json:
+              schema:
+                { $ref: "#/components/schemas/SpringPageRankingItemResponse" }
+
+  /rankings/archives:
+    get:
+      operationId: getArchivedRankings
+      tags: [rankings]
+      summary: Browse archived rankings for past periods
+      description: Returns snapshots of past rankings for a given period (day, week, month, year) and start date. If periodStart is omitted, defaults to the most recent archived period. Paginated.
+      security: []
+      parameters:
+        - name: periodType
+          in: query
+          required: false
+          description: Type of ranking period (day, week, month, year)
+          schema:
+            type: string
+            enum: [day, week, month, year]
+            default: week
+        - name: periodStart
+          in: query
+          required: false
+          description: Start date of the archived period (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: categoryId
+          in: query
+          required: false
+          description: Optional category ID to filter archived ranking
+          schema:
+            type: integer
+            format: int32
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Archived ranking items
+          content:
+            application/json:
+              schema:
+                { $ref: "#/components/schemas/SpringPageRankingItemResponse" }
+
+  /rankings/archives/periods:
+    get:
+      operationId: getArchivedPeriods
+      tags: [rankings]
+      summary: List available archived period dates
+      description: Returns the list of distinct start dates for which ranking snapshots exist.
+      security: []
+      parameters:
+        - name: periodType
+          in: query
+          required: false
+          description: Optional filter by period type
+          schema:
+            type: string
+            enum: [day, week, month, year]
+      responses:
+        "200":
+          description: List of dates in YYYY-MM-DD format
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  format: date
+
   /uploads/works/{filename}:
     get:
       operationId: getWorkImage
@@ -847,6 +966,11 @@ components:
         title: { type: string, minLength: 1, maxLength: 150 }
         description: { type: string, minLength: 1 }
         imageUrl: { type: [string, "null"], maxLength: 255 }
+        categoryIds:
+          type: array
+          description: Optional category IDs to assign immediately; admins only.
+          uniqueItems: true
+          items: { type: integer, format: int32 }
 
     CreateWorkMultipart:
       type: object
@@ -945,3 +1069,36 @@ components:
           type: string
         vote:
           $ref: "#/components/schemas/VoteType"
+
+    RankingItemResponse:
+      type: object
+      required: [id, title, author, categories, score, position]
+      properties:
+        id: { type: integer, format: int64 }
+        title: { type: string }
+        author: { type: string }
+        imageUrl: { type: [string, "null"] }
+        categories:
+          type: array
+          items: { type: string }
+        score: { type: integer, format: int32 }
+        position: { type: integer, format: int32 }
+
+    SpringPageRankingItemResponse:
+      type: object
+      description: Spring Data Page serialization containing RankingItemResponse DTOs.
+      properties:
+        content:
+          type: array
+          items: { $ref: "#/components/schemas/RankingItemResponse" }
+        pageable: { type: object, additionalProperties: true }
+        totalPages: { type: integer }
+        totalElements: { type: integer, format: int64 }
+        last: { type: boolean }
+        size: { type: integer }
+        number: { type: integer }
+        sort: { type: object, additionalProperties: true }
+        numberOfElements: { type: integer }
+        first: { type: boolean }
+        empty: { type: boolean }
+      additionalProperties: true

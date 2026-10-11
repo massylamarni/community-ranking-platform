@@ -36,6 +36,7 @@ public class ModerationService {
         }
 
         oeuvre.setStatus(OeuvreStatus.approved);
+        oeuvre.setRejectionReason(null);
 
         return oeuvres.save(oeuvre);
     }
@@ -53,6 +54,7 @@ public class ModerationService {
         }
 
         oeuvre.setStatus(OeuvreStatus.rejected);
+        oeuvre.setRejectionReason(request.getReason().trim());
 
         return oeuvres.save(oeuvre);
     }
