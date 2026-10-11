@@ -165,6 +165,10 @@ class VoteServiceTest {
 
     @Test
     void shouldThrowExceptionWhenVotingTwiceForSameWork() {
+        User author = mock(User.class);
+
+        when(author.getUserId()).thenReturn(20);
+        when(oeuvre.getAuthor()).thenReturn(author);
         when(user.getUserId()).thenReturn(10);
 
         when(oeuvreRepository.findById(1L))
@@ -266,6 +270,13 @@ class VoteServiceTest {
 
     @Test
     void shouldThrowExceptionWhenUpdatingVoteWithInvalidType() {
+
+        Vote existingVote = mock(Vote.class);
+
+        when(user.getUserId()).thenReturn(10);
+        when(voteRepository.findByOeuvreOeuvreIdAndUserUserId(1L, 10))
+                .thenReturn(Optional.of(existingVote));
+
         IllegalArgumentException exception = assertThrows(
                 IllegalArgumentException.class,
                 () -> voteService.updateVote(

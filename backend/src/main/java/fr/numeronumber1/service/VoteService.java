@@ -89,7 +89,7 @@ public class VoteService {
                 .findByOeuvreOeuvreIdAndUserUserId(
                         oeuvreId, user.getUserId())
                 .orElseThrow(() ->
-                        new IllegalArgumentException(
+                        new ResourceNotFoundException(
                                 "Vous n'avez pas encore voté pour cette œuvre"));
         Oeuvre oeuvre = vote.getOeuvre();
         voteRepository.delete(vote);
