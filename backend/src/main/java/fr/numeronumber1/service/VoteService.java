@@ -56,7 +56,6 @@ public class VoteService {
 
         Vote savedVote = voteRepository.save(vote);
 
-        // Recalculer et enregistrer le nouveau score.
         recalculerScore(oeuvre);
 
         return savedVote;
@@ -69,7 +68,7 @@ public class VoteService {
                 .findByOeuvreOeuvreIdAndUserUserId(
                         oeuvreId, user.getUserId())
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
+                        new IllegalArgumentException(
                                 "Vous n'avez pas encore voté pour cette œuvre"));
 
         byte value = convertVoteType(request.getType());
@@ -90,7 +89,7 @@ public class VoteService {
                 .findByOeuvreOeuvreIdAndUserUserId(
                         oeuvreId, user.getUserId())
                 .orElseThrow(() ->
-                        new ResourceNotFoundException(
+                        new IllegalArgumentException(
                                 "Vous n'avez pas encore voté pour cette œuvre"));
         Oeuvre oeuvre = vote.getOeuvre();
         voteRepository.delete(vote);
