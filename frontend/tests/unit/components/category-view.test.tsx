@@ -5,80 +5,95 @@ import { render, screen, fireEvent, act } from "@testing-library/react";
 import { describe, expect, it, beforeEach } from "@jest/globals";
 import CategoryView from "@/app/categories/_components/categoryView";
 import type { Work } from "@/types/api";
-import { createWork, deferred } from "../utils";
-import { mockUser } from "../mocks/auth";
-import { cat, categoryActions, mockCategoriesState } from "../mocks/categories";
+import { createWork, deferred } from "../shared/utils";
+import { mockUser } from "../shared/mocks/auth";
+import {
+  cat,
+  categoryActions,
+  mockCategoriesState,
+} from "../shared/mocks/categories";
 import {
   lastFilterBarProps,
   lastWorkItemProps,
   lastWorkListProps,
-} from "../mocks/views";
+} from "../shared/mocks/views";
 
 jest.mock(
   "next/link",
   () =>
-    jest.requireActual<typeof import("../mocks/ui")>("../mocks/ui").linkModule,
+    jest.requireActual<typeof import("../shared/mocks/ui")>(
+      "../shared/mocks/ui",
+    ).linkModule,
 );
 jest.mock(
   "@/components/ui/button",
   () =>
-    jest.requireActual<typeof import("../mocks/ui")>("../mocks/ui")
-      .buttonModule,
+    jest.requireActual<typeof import("../shared/mocks/ui")>(
+      "../shared/mocks/ui",
+    ).buttonModule,
 );
 jest.mock(
   "@/components/ui/dialog",
   () =>
-    jest.requireActual<typeof import("../mocks/ui")>("../mocks/ui")
-      .dialogModule,
+    jest.requireActual<typeof import("../shared/mocks/ui")>(
+      "../shared/mocks/ui",
+    ).dialogModule,
 );
 jest.mock(
   "@/components/header-portal",
   () =>
-    jest.requireActual<typeof import("../mocks/ui")>("../mocks/ui")
-      .headerPortalModule,
+    jest.requireActual<typeof import("../shared/mocks/ui")>(
+      "../shared/mocks/ui",
+    ).headerPortalModule,
 );
 jest.mock(
   "@/hooks/use-auth",
   () =>
-    jest.requireActual<typeof import("../mocks/auth")>("../mocks/auth")
-      .authModule,
+    jest.requireActual<typeof import("../shared/mocks/auth")>(
+      "../shared/mocks/auth",
+    ).authModule,
 );
 jest.mock(
   "@/contexts/categoryContext",
   () =>
-    jest.requireActual<typeof import("../mocks/categories")>(
-      "../mocks/categories",
+    jest.requireActual<typeof import("../shared/mocks/categories")>(
+      "../shared/mocks/categories",
     ).categoryContextModule,
 );
 jest.mock(
   "@/components/guards/loadingGuard",
   () =>
-    jest.requireActual<typeof import("../mocks/guards")>("../mocks/guards")
-      .loadingGuardModule,
+    jest.requireActual<typeof import("../shared/mocks/guards")>(
+      "../shared/mocks/guards",
+    ).loadingGuardModule,
 );
 jest.mock(
   "@/app/categories/_components/guards/categoryNotFoundGuard",
   () =>
-    jest.requireActual<typeof import("../mocks/guards")>("../mocks/guards")
-      .categoryNotFoundGuardModule,
+    jest.requireActual<typeof import("../shared/mocks/guards")>(
+      "../shared/mocks/guards",
+    ).categoryNotFoundGuardModule,
 );
 jest.mock(
   "@/app/categories/_components/filterBar",
   () =>
-    jest.requireActual<typeof import("../mocks/views")>("../mocks/views")
-      .filterBarModule,
+    jest.requireActual<typeof import("../shared/mocks/views")>(
+      "../shared/mocks/views",
+    ).filterBarModule,
 );
 jest.mock(
   "@/app/works/_components/workList",
   () =>
-    jest.requireActual<typeof import("../mocks/views")>("../mocks/views")
-      .workListModule,
+    jest.requireActual<typeof import("../shared/mocks/views")>(
+      "../shared/mocks/views",
+    ).workListModule,
 );
 jest.mock(
   "@/app/works/_components/workItem",
   () =>
-    jest.requireActual<typeof import("../mocks/views")>("../mocks/views")
-      .workItemModule,
+    jest.requireActual<typeof import("../shared/mocks/views")>(
+      "../shared/mocks/views",
+    ).workItemModule,
 );
 
 const { getById, worksOf } = categoryActions;

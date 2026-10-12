@@ -5,7 +5,7 @@ import { WorkItem } from "@/app/works/_components/workItem";
 import { votesRepository } from "@/repositories";
 import type { Work } from "@/types/api";
 import { describe, expect, it, beforeEach } from "@jest/globals";
-import { createWork } from "../utils";
+import { createWork } from "../shared/utils";
 
 jest.mock("@/app/works/_components/guards/workNotFoundGuard", () => ({
   __esModule: true,

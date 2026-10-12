@@ -5,40 +5,48 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, expect, it, beforeEach } from "@jest/globals";
 import EditCategories from "@/app/categories/edit/page";
 import type { Category } from "@/types/api";
-import { mockUser } from "../mocks/auth";
-import { cat, categoryActions, mockCategoriesState } from "../mocks/categories";
-import { lastConfirmDialogProps } from "../mocks/ui";
+import { mockUser } from "../shared/mocks/auth";
+import {
+  cat,
+  categoryActions,
+  mockCategoriesState,
+} from "../shared/mocks/categories";
+import { lastConfirmDialogProps } from "../shared/mocks/ui";
 
 jest.mock(
   "@/hooks/use-auth",
   () =>
-    jest.requireActual<typeof import("../mocks/auth")>("../mocks/auth")
-      .authModule,
+    jest.requireActual<typeof import("../shared/mocks/auth")>(
+      "../shared/mocks/auth",
+    ).authModule,
 );
 jest.mock(
   "@/contexts/categoryContext",
   () =>
-    jest.requireActual<typeof import("../mocks/categories")>(
-      "../mocks/categories",
+    jest.requireActual<typeof import("../shared/mocks/categories")>(
+      "../shared/mocks/categories",
     ).categoryContextModule,
 );
 jest.mock(
   "@/components/header-portal",
   () =>
-    jest.requireActual<typeof import("../mocks/ui")>("../mocks/ui")
-      .headerPortalModule,
+    jest.requireActual<typeof import("../shared/mocks/ui")>(
+      "../shared/mocks/ui",
+    ).headerPortalModule,
 );
 jest.mock(
   "@/components/confirmDialog",
   () =>
-    jest.requireActual<typeof import("../mocks/ui")>("../mocks/ui")
-      .confirmDialogModule,
+    jest.requireActual<typeof import("../shared/mocks/ui")>(
+      "../shared/mocks/ui",
+    ).confirmDialogModule,
 );
 jest.mock(
   "@/app/categories/_components/noCategory",
   () =>
-    jest.requireActual<typeof import("../mocks/ui")>("../mocks/ui")
-      .noCategoryModule,
+    jest.requireActual<typeof import("../shared/mocks/ui")>(
+      "../shared/mocks/ui",
+    ).noCategoryModule,
 );
 
 // Local: only this page uses a Popover. Rendered inline to avoid portals.
