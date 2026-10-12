@@ -4,7 +4,7 @@ import type { VoteForWorkPayload, Work } from "@/types/api";
 export const votesRepository = {
   vote(workId: number, payload: VoteForWorkPayload): Promise<Work> {
     return request(`/works/${workId}/vote`, {
-      method: "PATCH",
+      method: "PUT",
       body: payload,
     });
   },
