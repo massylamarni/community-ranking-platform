@@ -9,6 +9,7 @@ describe("normalizeWorkResponse", () => {
       title: "The Left Hand of Darkness",
       description: "A science-fiction novel",
       status: "approved",
+      reason: "",
       author: "ursula",
       imageUrl: null,
       categories: ["Science-fiction"],

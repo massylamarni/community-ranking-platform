@@ -76,6 +76,7 @@ export const worksHandlers = [
       authorId: user.id,
       categoryIds: [],
       status: "created",
+      reason: "",
       votes: [],
       createdAt: new Date().toISOString(),
     };

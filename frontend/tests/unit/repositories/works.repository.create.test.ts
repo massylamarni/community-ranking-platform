@@ -12,6 +12,7 @@ describe("worksRepository.create", () => {
       title: "Unit test work",
       description: "A draft",
       status: "created",
+      reason: "",
       author: "alice",
       imageUrl: null,
       categories: [],

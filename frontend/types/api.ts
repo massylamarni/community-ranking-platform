@@ -121,6 +121,7 @@ export interface WorkResponse {
   title: string;
   description: string;
   status: WorkStatus;
+  reason: string;
   author: string;
   imageUrl: string | null;
   categories: string[];
@@ -135,6 +136,7 @@ export interface Work {
   author: { username: string };
   categories: string[];
   status: WorkStatus;
+  reason?: string;
   score?: number;
   totalVotes: number;
   currentUserVote?: 1 | -1 | null;

@@ -37,6 +37,7 @@ interface DbWork {
   authorId: string;
   categoryIds: number[];
   status: WorkStatus;
+  reason: string;
   votes: DbVote[];
   createdAt: string;
 }
@@ -120,6 +121,7 @@ const works: DbWork[] = [
     authorId: "u2",
     categoryIds: [1],
     status: "approved",
+    reason: "",
     votes: [
       { userId: "u1", value: 1, createdAt: daysAgo(0) },
       { userId: "u3", value: 1, createdAt: daysAgo(1) },
@@ -135,6 +137,7 @@ const works: DbWork[] = [
     authorId: "u2",
     categoryIds: [1],
     status: "approved",
+    reason: "",
     votes: [
       { userId: "u1", value: 1, createdAt: daysAgo(0) },
       { userId: "u3", value: 1, createdAt: daysAgo(1) },
@@ -149,6 +152,7 @@ const works: DbWork[] = [
     authorId: "u2",
     categoryIds: [1],
     status: "approved",
+    reason: "",
     votes: [
       { userId: "u1", value: 1, createdAt: daysAgo(0) },
       { userId: "u3", value: 1, createdAt: daysAgo(1) },
@@ -163,6 +167,7 @@ const works: DbWork[] = [
     authorId: "u3",
     categoryIds: [2],
     status: "approved",
+    reason: "",
     votes: [
       { userId: "u2", value: 1, createdAt: daysAgo(40) },
       { userId: "u1", value: -1, createdAt: daysAgo(2) },
@@ -177,6 +182,7 @@ const works: DbWork[] = [
     authorId: "u2",
     categoryIds: [3],
     status: "pending",
+    reason: "",
     votes: [],
     createdAt: daysAgo(1),
   },
@@ -188,6 +194,7 @@ const works: DbWork[] = [
     authorId: "u3",
     categoryIds: [1],
     status: "rejected",
+    reason: "",
     votes: [],
     createdAt: daysAgo(3),
   },
@@ -393,6 +400,7 @@ export function serializeWorkResponse(work: DbWork): WorkResponse {
     title: work.title,
     description: work.description,
     status: work.status,
+    reason: work.reason,
     author: author?.username ?? "unknown",
     imageUrl: work.imageUrl,
     categories: categories

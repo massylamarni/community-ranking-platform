@@ -15,16 +15,10 @@ import {
   tableFeatures,
   useTable,
 } from "@tanstack/react-table";
-import {
-  ArrowUpRight,
-  ChevronLeft,
-  ChevronRight,
-  Pencil,
-  SearchIcon,
-} from "lucide-react";
+import { AlertCircle, ArrowUpRight, Pencil, SearchIcon } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
 import { useWorks } from "@/hooks/use-work";
-import type { WorkStatus } from "@/types/api";
+import type { Work, WorkStatus } from "@/types/api";
 import LoadingGuard from "@/components/guards/loadingGuard";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -40,8 +34,7 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -62,8 +55,15 @@ import {
 } from "@/components/ui/pagination";
 import { cn } from "cn";
 import { Label } from "@/components/ui/label";
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemFooter,
+  ItemTitle,
+} from "@/components/ui/item";
+import { Alert, AlertTitle } from "@/components/ui/alert";
 
-type Work = ReturnType<typeof useWorks>["works"][number];
 type StatusFilter = "all" | WorkStatus;
 type CellMeta = { className?: string };
 
@@ -100,17 +100,22 @@ const columns: ColumnDef<typeof features, Work>[] = [
     cell: ({ row }) => {
       const work = row.original;
       return (
-        <div className="flex flex-col gap-0.5">
-          <span className="truncate font-medium">{work.title}</span>
-          <p className="line-clamp-2 text-sm text-muted-foreground">
-            {work.description}
-          </p>
+        <Item className="p-0" size="sm">
+          <ItemContent>
+            <ItemTitle>{work.title}</ItemTitle>
+            <ItemDescription>{work.description}</ItemDescription>
+          </ItemContent>
           {work.status === "rejected" && (
-            <p className="text-sm text-destructive">
-              Motif du refus indisponible.
-            </p>
+            <ItemFooter>
+              <Alert variant="destructive" className="w-fit max-w-md">
+                <AlertCircle />
+                <AlertTitle className="wrap-break-word min-w-0">
+                  {work.reason ?? "Motif du refus indisponible."}
+                </AlertTitle>
+              </Alert>
+            </ItemFooter>
           )}
-        </div>
+        </Item>
       );
     },
   },

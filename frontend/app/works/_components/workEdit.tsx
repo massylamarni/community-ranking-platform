@@ -20,7 +20,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import { useCategory } from "@/contexts/categoryContext";
 import { isAdmin, useAuth } from "@/hooks/use-auth";
 import { ApiErrorBody, Category, Work } from "@/types/api";
@@ -34,6 +33,7 @@ const DEFAULT_WORK: Work = {
   author: { username: "" },
   categories: [],
   status: "created",
+  reason: "",
   score: 0,
   totalVotes: 0,
   currentUserVote: null,
