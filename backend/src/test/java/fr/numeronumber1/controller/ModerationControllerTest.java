@@ -73,4 +73,20 @@ class ModerationControllerTest {
                 .andExpect(jsonPath("$.status").value("approved"))
                 .andExpect(jsonPath("$.oeuvreId").doesNotExist());
     }
+
+    @Test
+    void refusedWorkReturnsReason() throws Exception {
+        String reason = "La qualité de l'image est insuffisante.";
+        oeuvre.setStatus(OeuvreStatus.rejected);
+        oeuvre.setRejectionReason(reason);
+        when(moderationService.refuse(org.mockito.ArgumentMatchers.eq(12L),
+                org.mockito.ArgumentMatchers.any())).thenReturn(oeuvre);
+
+        mockMvc.perform(post("/moderation/works/12/refuse")
+                        .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .content("{\"reason\":\"" + reason + "\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("rejected"))
+                .andExpect(jsonPath("$.reason").value(reason));
+    }
 }

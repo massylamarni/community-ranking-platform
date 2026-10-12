@@ -46,7 +46,7 @@ export function NavMain({
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton
                   tooltip={item.title}
-                  render={<Link href={"/categories"} />}
+                  render={<Link href={item.url} />}
                 >
                   {item.icon}
                   <span>{item.title}</span>
