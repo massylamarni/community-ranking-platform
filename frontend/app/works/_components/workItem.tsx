@@ -31,12 +31,14 @@ export function WorkItem({
 }) {
   const [errors, setErrors] = useState<ApiErrorBody | null>(null);
 
-  async function handleVote(vt: { value: 1 | -1 | null }) {
+  async function handleVote(vt: 1 | -1) {
     if (!work || !setWork) return;
     setErrors(null);
 
+    const next = work.currentUserVote === vt ? null : vt;
+
     try {
-      const updated = await votesRepository.vote(work.id, vt);
+      const updated = await votesRepository.vote(work.id, { value: next });
       setWork(updated);
     } catch (err) {
       setErrors(err as ApiErrorBody);
@@ -78,7 +80,7 @@ export function WorkItem({
             <ButtonGroup>
               <Button
                 variant={work.currentUserVote === 1 ? "default" : "outline"}
-                onClick={() => handleVote({ value: 1 })}
+                onClick={() => handleVote(1)}
                 disabled={disableVote}
               >
                 <ArrowBigUp />
@@ -86,7 +88,7 @@ export function WorkItem({
               </Button>
               <Button
                 variant={work.currentUserVote === -1 ? "default" : "outline"}
-                onClick={() => handleVote({ value: -1 })}
+                onClick={() => handleVote(-1)}
                 disabled={disableVote}
               >
                 <ArrowBigDown />

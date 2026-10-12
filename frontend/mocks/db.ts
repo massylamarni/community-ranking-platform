@@ -415,7 +415,7 @@ function serializeCategoryEntity(category: Category): CategoryEntityResponse {
 function serializeCategoryWorkEntity(work: DbWork): CategoryWorkEntity {
   const author = findUserById(work.authorId);
   return {
-    oeuvreId: numericWorkId(work.id),
+    id: numericWorkId(work.id),
     title: work.title,
     description: work.description,
     imageUrl: work.imageUrl,

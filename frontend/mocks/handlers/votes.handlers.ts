@@ -10,8 +10,8 @@ import {
 } from "../utils";
 
 export const votesHandlers = [
-  // PATCH /works/:workId/vote
-  http.patch("*/works/:workId/vote", async ({ request, params }) => {
+  // PUT /works/:workId/vote
+  http.put("*/works/:workId/vote", async ({ request, params }) => {
     await delay(150);
 
     const user = currentUserFrom(request);
@@ -32,16 +32,15 @@ export const votesHandlers = [
       });
 
     const existingIndex = work.votes.findIndex((v) => v.userId === user.id);
-    const existingVote =
-      existingIndex !== -1 ? work.votes[existingIndex] : null;
 
     if (newValue === null) {
+      // Remove (idempotent: nothing to do if no vote exists)
       if (existingIndex !== -1) work.votes.splice(existingIndex, 1);
-    } else if (existingVote && existingVote.value === newValue) {
-      work.votes.splice(existingIndex, 1);
-    } else if (existingVote) {
-      existingVote.value = newValue;
+    } else if (existingIndex !== -1) {
+      // Replace (idempotent: same value leaves state unchanged)
+      work.votes[existingIndex].value = newValue;
     } else {
+      // Create
       work.votes.push({
         userId: user.id,
         value: newValue,
