@@ -4,33 +4,40 @@ import React from "react";
 import { render, screen, act } from "@testing-library/react";
 import { describe, expect, it, beforeEach } from "@jest/globals";
 import CategoryPage from "@/app/categories/page";
-import { cat, categoryActions, mockCategoriesState } from "../mocks/categories";
-import { lastCategoryViewProps } from "../mocks/views";
+import {
+  cat,
+  categoryActions,
+  mockCategoriesState,
+} from "../shared/mocks/categories";
+import { lastCategoryViewProps } from "../shared/mocks/views";
 
 jest.mock(
   "@/contexts/categoryContext",
   () =>
-    jest.requireActual<typeof import("../mocks/categories")>(
-      "../mocks/categories",
+    jest.requireActual<typeof import("../shared/mocks/categories")>(
+      "../shared/mocks/categories",
     ).categoryContextModule,
 );
 jest.mock(
   "@/components/guards/loadingGuard",
   () =>
-    jest.requireActual<typeof import("../mocks/guards")>("../mocks/guards")
-      .loadingGuardModule,
+    jest.requireActual<typeof import("../shared/mocks/guards")>(
+      "../shared/mocks/guards",
+    ).loadingGuardModule,
 );
 jest.mock(
   "@/app/categories/_components/noCategory",
   () =>
-    jest.requireActual<typeof import("../mocks/ui")>("../mocks/ui")
-      .noCategoryModule,
+    jest.requireActual<typeof import("../shared/mocks/ui")>(
+      "../shared/mocks/ui",
+    ).noCategoryModule,
 );
 jest.mock(
   "@/app/categories/_components/categoryView",
   () =>
-    jest.requireActual<typeof import("../mocks/views")>("../mocks/views")
-      .categoryViewModule,
+    jest.requireActual<typeof import("../shared/mocks/views")>(
+      "../shared/mocks/views",
+    ).categoryViewModule,
 );
 
 const { list } = categoryActions;

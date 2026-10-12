@@ -5,52 +5,59 @@ import userEvent from "@testing-library/user-event";
 import { describe, expect, it, beforeEach } from "@jest/globals";
 import MyWorks from "@/app/works/mine/page";
 import type { Work } from "@/types/api";
-import { createWork, deferred } from "../utils";
-import { mockReplace } from "../mocks/navigation";
-import { mockAuthState } from "../mocks/auth";
-import { mockWorksList, workActions } from "../mocks/works";
+import { createWork, deferred } from "../shared/utils";
+import { mockReplace } from "../shared/mocks/navigation";
+import { mockAuthState } from "../shared/mocks/auth";
+import { mockWorksList, workActions } from "../shared/mocks/works";
 
 jest.mock(
   "next/navigation",
   () =>
-    jest.requireActual<typeof import("../mocks/navigation")>(
-      "../mocks/navigation",
+    jest.requireActual<typeof import("../shared/mocks/navigation")>(
+      "../shared/mocks/navigation",
     ).navigationModule,
 );
 jest.mock(
   "next/link",
   () =>
-    jest.requireActual<typeof import("../mocks/ui")>("../mocks/ui").linkModule,
+    jest.requireActual<typeof import("../shared/mocks/ui")>(
+      "../shared/mocks/ui",
+    ).linkModule,
 );
 jest.mock(
   "@/hooks/use-auth",
   () =>
-    jest.requireActual<typeof import("../mocks/auth")>("../mocks/auth")
-      .authModule,
+    jest.requireActual<typeof import("../shared/mocks/auth")>(
+      "../shared/mocks/auth",
+    ).authModule,
 );
 jest.mock(
   "@/hooks/use-work",
   () =>
-    jest.requireActual<typeof import("../mocks/works")>("../mocks/works")
-      .useWorksModule,
+    jest.requireActual<typeof import("../shared/mocks/works")>(
+      "../shared/mocks/works",
+    ).useWorksModule,
 );
 jest.mock(
   "@/components/guards/loadingGuard",
   () =>
-    jest.requireActual<typeof import("../mocks/guards")>("../mocks/guards")
-      .loadingGuardModule,
+    jest.requireActual<typeof import("../shared/mocks/guards")>(
+      "../shared/mocks/guards",
+    ).loadingGuardModule,
 );
 jest.mock(
   "@/app/works/_components/noPersonalWork",
   () =>
-    jest.requireActual<typeof import("../mocks/views")>("../mocks/views")
-      .noPersonalWorkModule,
+    jest.requireActual<typeof import("../shared/mocks/views")>(
+      "../shared/mocks/views",
+    ).noPersonalWorkModule,
 );
 jest.mock(
   "@/app/works/_components/filterHasNoWork",
   () =>
-    jest.requireActual<typeof import("../mocks/views")>("../mocks/views")
-      .filterHasNoWorkModule,
+    jest.requireActual<typeof import("../shared/mocks/views")>(
+      "../shared/mocks/views",
+    ).filterHasNoWorkModule,
 );
 
 const { list } = workActions;

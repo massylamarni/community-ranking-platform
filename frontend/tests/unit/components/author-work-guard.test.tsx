@@ -5,39 +5,44 @@ import { render, screen, waitFor, act } from "@testing-library/react";
 import { describe, expect, it, beforeEach } from "@jest/globals";
 import AuthorWorkGuard from "@/app/works/_components/guards/authorWorkGuard";
 import type { Work } from "@/types/api";
-import { createWork, deferred } from "../utils";
-import { mockUser } from "../mocks/auth";
-import { mockWorksState, workActions } from "../mocks/works";
+import { createWork, deferred } from "../shared/utils";
+import { mockUser } from "../shared/mocks/auth";
+import { mockWorksState, workActions } from "../shared/mocks/works";
 
 jest.mock(
   "@/hooks/use-auth",
   () =>
-    jest.requireActual<typeof import("../mocks/auth")>("../mocks/auth")
-      .authModule,
+    jest.requireActual<typeof import("../shared/mocks/auth")>(
+      "../shared/mocks/auth",
+    ).authModule,
 );
 jest.mock(
   "@/hooks/use-work",
   () =>
-    jest.requireActual<typeof import("../mocks/works")>("../mocks/works")
-      .useWorksModule,
+    jest.requireActual<typeof import("../shared/mocks/works")>(
+      "../shared/mocks/works",
+    ).useWorksModule,
 );
 jest.mock(
   "@/components/guards/loadingGuard",
   () =>
-    jest.requireActual<typeof import("../mocks/guards")>("../mocks/guards")
-      .loadingGuardModule,
+    jest.requireActual<typeof import("../shared/mocks/guards")>(
+      "../shared/mocks/guards",
+    ).loadingGuardModule,
 );
 jest.mock(
   "@/app/works/_components/guards/workNotFoundGuard",
   () =>
-    jest.requireActual<typeof import("../mocks/guards")>("../mocks/guards")
-      .workNotFoundGuardModule,
+    jest.requireActual<typeof import("../shared/mocks/guards")>(
+      "../shared/mocks/guards",
+    ).workNotFoundGuardModule,
 );
 jest.mock(
   "@/app/works/_components/guards/authorGuard",
   () =>
-    jest.requireActual<typeof import("../mocks/guards")>("../mocks/guards")
-      .authorGuardModule,
+    jest.requireActual<typeof import("../shared/mocks/guards")>(
+      "../shared/mocks/guards",
+    ).authorGuardModule,
 );
 
 const { get } = workActions;
