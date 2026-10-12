@@ -26,15 +26,15 @@ interface AuthContextValue {
   profile: OwnProfile | null;
   userLoading: boolean;
   profileLoading: boolean;
-  login(payload: LoginUserPayload): Promise<void>;
-  register(payload: RegisterUserPayload): Promise<void>;
+  login(payload: LoginUserPayload): Promise<CurrentUser | null>;
+  register(payload: RegisterUserPayload): Promise<CurrentUser | null>;
   changePassword(payload: ChangePasswordPayload): Promise<void>;
   forgotPassword(payload: ForgotPasswordPayload): Promise<void>;
   resetPassword(payload: ResetPasswordPayload): Promise<void>;
   updateProfile(payload: UpdateProfilePayload): Promise<OwnProfile>;
   refreshProfile(): Promise<OwnProfile>;
   logout(): Promise<void>;
-  refreshUser(): Promise<void>;
+  refreshUser(): Promise<CurrentUser | null>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -45,15 +45,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userLoading, setUserLoading] = useState(true);
   const [profileLoading, setProfileLoading] = useState(false);
 
-  const refreshUser = useCallback(async () => {
+  const refreshUser = useCallback(async (): Promise<CurrentUser | null> => {
     try {
-      setUser(await authRepository.me());
+      const me = await authRepository.me();
+      setUser(me);
+      return me;
     } catch (err) {
       if (err instanceof ApiError && err.isUnauthorized) {
         setUser(null);
-      } else {
-        throw err;
+        return null;
       }
+      throw err;
     }
   }, []);
 
@@ -90,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = useCallback(
     async (payload: LoginUserPayload) => {
       await authRepository.login(payload);
-      await refreshUser();
+      return refreshUser();
     },
     [refreshUser],
   );
@@ -98,7 +100,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const register = useCallback(
     async (payload: RegisterUserPayload) => {
       await authRepository.register(payload);
-      await refreshUser();
+      return refreshUser();
     },
     [refreshUser],
   );
@@ -182,7 +184,7 @@ export function isAdmin(user: CurrentUser | null): boolean {
 
 export function isOwner(
   user: CurrentUser | null,
-  ownerUsername: string,
+  ownerId: number | string | null | undefined,
 ): boolean {
-  return !!user && user.username === ownerUsername;
+  return !!user && ownerId != null && String(user.id) === String(ownerId);
 }

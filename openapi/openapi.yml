@@ -327,7 +327,7 @@ paths:
           multipart/form-data:
             schema: { $ref: "#/components/schemas/CreateWorkMultipart" }
       responses:
-        "200":    
+        "200":
           description: Created work response DTO
           content:
             application/json:
@@ -511,6 +511,14 @@ paths:
           schema:
             type: integer
             format: int32
+        - name: period
+          in: query
+          required: false
+          description: Time period window for vote aggregation ('day' / 'jour', 'week' / 'semaine', 'month' / 'mois', 'all')
+          schema:
+            type: string
+            enum: [day, week, month, all, jour, semaine, mois]
+            default: all
         - $ref: "#/components/parameters/Page"
         - $ref: "#/components/parameters/Size"
       responses:
@@ -518,7 +526,8 @@ paths:
           description: Spring Data page containing RankingItemResponse DTOs
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/SpringPageRankingItemResponse" }
+              schema:
+                { $ref: "#/components/schemas/SpringPageRankingItemResponse" }
 
   /rankings/global:
     get:
@@ -535,7 +544,74 @@ paths:
           description: Spring Data page containing RankingItemResponse DTOs
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/SpringPageRankingItemResponse" }
+              schema:
+                { $ref: "#/components/schemas/SpringPageRankingItemResponse" }
+
+  /rankings/archives:
+    get:
+      operationId: getArchivedRankings
+      tags: [rankings]
+      summary: Browse archived rankings for past periods
+      description: Returns snapshots of past rankings for a given period (day, week, month, year) and start date. If periodStart is omitted, defaults to the most recent archived period. Paginated.
+      security: []
+      parameters:
+        - name: periodType
+          in: query
+          required: false
+          description: Type of ranking period (day, week, month, year)
+          schema:
+            type: string
+            enum: [day, week, month, year]
+            default: week
+        - name: periodStart
+          in: query
+          required: false
+          description: Start date of the archived period (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: categoryId
+          in: query
+          required: false
+          description: Optional category ID to filter archived ranking
+          schema:
+            type: integer
+            format: int32
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Archived ranking items
+          content:
+            application/json:
+              schema:
+                { $ref: "#/components/schemas/SpringPageRankingItemResponse" }
+
+  /rankings/archives/periods:
+    get:
+      operationId: getArchivedPeriods
+      tags: [rankings]
+      summary: List available archived period dates
+      description: Returns the list of distinct start dates for which ranking snapshots exist.
+      security: []
+      parameters:
+        - name: periodType
+          in: query
+          required: false
+          description: Optional filter by period type
+          schema:
+            type: string
+            enum: [day, week, month, year]
+      responses:
+        "200":
+          description: List of dates in YYYY-MM-DD format
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  format: date
 
   /uploads/works/{filename}:
     get:

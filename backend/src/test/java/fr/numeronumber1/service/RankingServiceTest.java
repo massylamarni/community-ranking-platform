@@ -3,10 +3,12 @@ package fr.numeronumber1.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -180,5 +182,54 @@ class RankingServiceTest {
 
         verify(oeuvreRepository).findByStatusAndCategoryIdOrderByScoreDesc(
                 OeuvreStatus.approved, categoryId, pageable);
+    }
+
+    @Test
+    void getRanking_withPeriod_callsFindRankingByPeriod() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Oeuvre oeuvreA = createOeuvre(1L, "A", 0, null);
+        Oeuvre oeuvreB = createOeuvre(2L, "B", 0, null);
+
+        Object[] row1 = new Object[]{oeuvreA, 5};
+        Object[] row2 = new Object[]{oeuvreB, 2};
+        Page<Object[]> periodPage = new PageImpl<>(List.of(row1, row2), pageable, 2);
+
+        when(oeuvreRepository.findRankingByPeriod(eq(OeuvreStatus.approved), any(LocalDateTime.class), eq(pageable)))
+                .thenReturn(periodPage);
+
+        Page<RankingItemResponse> result = rankingService.getRanking(null, "day", pageable);
+
+        assertNotNull(result);
+        assertEquals(2, result.getTotalElements());
+        assertEquals("A", result.getContent().get(0).getTitle());
+        assertEquals(5, result.getContent().get(0).getScore());
+        assertEquals(1, result.getContent().get(0).getPosition());
+        assertEquals("B", result.getContent().get(1).getTitle());
+        assertEquals(2, result.getContent().get(1).getScore());
+        assertEquals(2, result.getContent().get(1).getPosition());
+
+        verify(oeuvreRepository).findRankingByPeriod(eq(OeuvreStatus.approved), any(LocalDateTime.class), eq(pageable));
+    }
+
+    @Test
+    void getRanking_withCategoryAndPeriod_callsFindRankingByPeriodAndCategory() {
+        Pageable pageable = PageRequest.of(0, 10);
+        Integer categoryId = 10;
+        Oeuvre oeuvreA = createOeuvre(1L, "A", 0, null);
+
+        Object[] row1 = new Object[]{oeuvreA, 3};
+        Page<Object[]> periodPage = new PageImpl<>(Collections.singletonList(row1), pageable, 1);
+
+        when(oeuvreRepository.findRankingByPeriodAndCategory(eq(OeuvreStatus.approved), eq(categoryId), any(LocalDateTime.class), eq(pageable)))
+                .thenReturn(periodPage);
+
+        Page<RankingItemResponse> result = rankingService.getRanking(categoryId, "week", pageable);
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+        assertEquals("A", result.getContent().get(0).getTitle());
+        assertEquals(3, result.getContent().get(0).getScore());
+
+        verify(oeuvreRepository).findRankingByPeriodAndCategory(eq(OeuvreStatus.approved), eq(categoryId), any(LocalDateTime.class), eq(pageable));
     }
 }
