@@ -2,6 +2,7 @@ package fr.numeronumber1.service;
 import fr.numeronumber1.dto.request.VoteRequest;
 import fr.numeronumber1.dto.response.OeuvreResponse;
 import fr.numeronumber1.dto.response.UserVoteResponse;
+import fr.numeronumber1.dto.response.VoteResponse;
 import fr.numeronumber1.exception.ResourceNotFoundException;
 import fr.numeronumber1.exception.UnauthorizedActionException;
 import fr.numeronumber1.model.Oeuvre;
@@ -40,7 +41,7 @@ public class VoteService {
 
 
     @Transactional
-    public OeuvreResponse vote(Long workId, VoteRequest request, User user) {
+    public VoteResponse vote(Long workId, VoteRequest request, User user) {
         Oeuvre oeuvre = oeuvreRepository.findById(workId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Œuvre introuvable."));
@@ -61,27 +62,52 @@ public class VoteService {
                 voteRepository.findByOeuvreOeuvreIdAndUserUserId(
                         workId, user.getUserId());
 
+        Vote vote;
+
         if (value == null) {
-            existingVote.ifPresent(voteRepository::delete);
+            if (existingVote.isPresent()) {
+                vote = existingVote.get();
+                voteRepository.delete(vote);
+            } else {
+                vote = new Vote();
+                vote.setOeuvre(oeuvre);
+                vote.setUser(user);
+                vote.setCreatedAt(LocalDateTime.now());
+            }
         } else if (existingVote.isPresent()) {
-            Vote vote = existingVote.get();
-            vote.setValue(value.byteValue());
-            voteRepository.save(vote);
+            vote = existingVote.get();
+
+            if (vote.getValue() != value.byteValue()) {
+                vote.setValue(value.byteValue());
+                vote = voteRepository.save(vote);
+            }
         } else {
-            Vote vote = new Vote();
+            vote = new Vote();
             vote.setOeuvre(oeuvre);
             vote.setUser(user);
             vote.setValue(value.byteValue());
             vote.setCreatedAt(LocalDateTime.now());
-            voteRepository.save(vote);
+
+            vote = voteRepository.save(vote);
         }
 
         recalculerScore(oeuvre);
-        ;
-        OeuvreResponse oeuvreResponse=new OeuvreResponse(oeuvreRepository.save(oeuvre));
-        return oeuvreResponse;
-    }
+        oeuvreRepository.save(oeuvre);
 
+        OeuvreResponse oeuvreResponse = new OeuvreResponse(oeuvre);
+
+        if (value == null) {
+            return new VoteResponse(
+                    vote.getVoteId(),
+                    vote.getUser().getUserId(),
+                    null,
+                    vote.getCreatedAt(),
+                    oeuvreResponse
+            );
+        }
+
+        return new VoteResponse(vote, oeuvreResponse);
+    }
     private void recalculerScore(Oeuvre oeuvre) {
         long positifs =
                 voteRepository.countByOeuvreOeuvreIdAndValue(

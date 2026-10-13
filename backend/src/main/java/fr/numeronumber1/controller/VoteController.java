@@ -31,16 +31,16 @@ public class VoteController {
     }
 
         @PutMapping("/{workId}/vote")
-        public ResponseEntity<OeuvreResponse> vote(
+        public ResponseEntity<VoteResponse> vote(
                 @PathVariable Long workId,
                 @RequestBody VoteRequest request,
                 Authentication authentication
         ) {
             User user = userService.findByUsername(authentication.getName());
 
-            OeuvreResponse oeuvre = voteService.vote(workId, request, user);
+            VoteResponse voteResponse = voteService.vote(workId, request, user);
 
-            return ResponseEntity.ok(oeuvre);
+            return ResponseEntity.ok(voteResponse);
         }
 
     @GetMapping("/{workId}/vote")
