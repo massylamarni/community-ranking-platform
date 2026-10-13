@@ -10,11 +10,11 @@ import {
 import { beforeEach, describe, expect, it } from "@jest/globals";
 import type { ComponentProps } from "react";
 import type { Category, Work } from "@/types/api";
-import { createWork, deferred } from "../utils";
+import { createWork, deferred } from "../shared/utils";
 import { WorkEdit } from "@/app/works/_components/workEdit";
-import { mockUser } from "../mocks/auth";
-import { cat, mockCategoriesState } from "../mocks/categories";
-import { mockUploadFile } from "../mocks/ui";
+import { mockUser } from "../shared/mocks/auth";
+import { cat, mockCategoriesState } from "../shared/mocks/categories";
+import { mockUploadFile } from "../shared/mocks/ui";
 
 // Polyfill for BaseUI click controls
 if (typeof window !== "undefined" && !window.PointerEvent) {
@@ -34,39 +34,44 @@ if (typeof window !== "undefined" && !window.PointerEvent) {
 jest.mock(
   "@/hooks/use-auth",
   () =>
-    jest.requireActual<typeof import("../mocks/auth")>("../mocks/auth")
-      .authModule,
+    jest.requireActual<typeof import("../shared/mocks/auth")>(
+      "../shared/mocks/auth",
+    ).authModule,
 );
 jest.mock(
   "@/contexts/categoryContext",
   () =>
-    jest.requireActual<typeof import("../mocks/categories")>(
-      "../mocks/categories",
+    jest.requireActual<typeof import("../shared/mocks/categories")>(
+      "../shared/mocks/categories",
     ).categoryContextModule,
 );
 jest.mock(
   "@/app/categories/_components/noCategory",
   () =>
-    jest.requireActual<typeof import("../mocks/ui")>("../mocks/ui")
-      .noCategoryModule,
+    jest.requireActual<typeof import("../shared/mocks/ui")>(
+      "../shared/mocks/ui",
+    ).noCategoryModule,
 );
 jest.mock(
   "@/components/attachmentUploader",
   () =>
-    jest.requireActual<typeof import("../mocks/ui")>("../mocks/ui")
-      .attachmentUploaderModule,
+    jest.requireActual<typeof import("../shared/mocks/ui")>(
+      "../shared/mocks/ui",
+    ).attachmentUploaderModule,
 );
 jest.mock(
   "@/components/confirmDialog",
   () =>
-    jest.requireActual<typeof import("../mocks/ui")>("../mocks/ui")
-      .confirmDialogModule,
+    jest.requireActual<typeof import("../shared/mocks/ui")>(
+      "../shared/mocks/ui",
+    ).confirmDialogModule,
 );
 jest.mock(
   "@/components/ui/scroll-area",
   () =>
-    jest.requireActual<typeof import("../mocks/ui")>("../mocks/ui")
-      .scrollAreaModule,
+    jest.requireActual<typeof import("../shared/mocks/ui")>(
+      "../shared/mocks/ui",
+    ).scrollAreaModule,
 );
 
 const categories = [cat(1, "Movie"), cat(2, "Music")];

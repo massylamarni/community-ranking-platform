@@ -84,7 +84,7 @@ export interface CreateCategoryPayload {
 }
 
 export interface CategoryWorkEntity {
-  oeuvreId: number;
+  id: number;
   title: string;
   description: string;
   imageUrl: string | null;
