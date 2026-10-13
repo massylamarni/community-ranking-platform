@@ -157,6 +157,7 @@ export interface SubmitWorkPayload {
 export interface UpdateWorkPayload {
   title?: string | null;
   description?: string | null;
+  categoryIds?: string[] | null;
 }
 
 export interface Page<T> {

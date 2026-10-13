@@ -42,6 +42,7 @@ function EditWorkForm({
       const updated = await update(work.id, {
         title: data.title,
         description: data.description,
+        categoryIds: data.categoryIds,
       });
       return data.image ? await uploadImage(work.id, data.image) : updated;
     } catch (err) {

@@ -91,7 +91,7 @@ export function WorkEdit({
         title: newWork.title,
         description: newWork.description,
         image,
-        ...(asAdmin && { categoryIds: selectedCategories }),
+        categoryIds: selectedCategories,
       });
       setPendingDelete(false);
     } finally {
@@ -116,6 +116,7 @@ export function WorkEdit({
         title: newWork.title,
         description: newWork.description,
         image,
+        categoryIds: selectedCategories,
       });
       if (!saved) return;
       await handlePublish(categoryIds);
