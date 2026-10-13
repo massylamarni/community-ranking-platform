@@ -18,7 +18,7 @@ import fr.numeronumber1.service.VoteService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/work")
+@RequestMapping("/works")
 public class VoteController {
 
     private final VoteService voteService;
