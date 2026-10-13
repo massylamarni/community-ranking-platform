@@ -2,6 +2,7 @@ package fr.numeronumber1.controller;
 
 import java.util.List;
 
+import fr.numeronumber1.dto.response.OeuvreResponse;
 import fr.numeronumber1.model.Oeuvre;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,14 +31,14 @@ public class VoteController {
     }
 
         @PutMapping("/{workId}/vote")
-        public ResponseEntity<Oeuvre> vote(
+        public ResponseEntity<OeuvreResponse> vote(
                 @PathVariable Long workId,
                 @RequestBody VoteRequest request,
                 Authentication authentication
         ) {
             User user = userService.findByUsername(authentication.getName());
 
-            Oeuvre oeuvre = voteService.vote(workId, request, user);
+            OeuvreResponse oeuvre = voteService.vote(workId, request, user);
 
             return ResponseEntity.ok(oeuvre);
         }

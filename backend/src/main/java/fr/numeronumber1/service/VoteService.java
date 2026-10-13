@@ -1,5 +1,6 @@
 package fr.numeronumber1.service;
 import fr.numeronumber1.dto.request.VoteRequest;
+import fr.numeronumber1.dto.response.OeuvreResponse;
 import fr.numeronumber1.dto.response.UserVoteResponse;
 import fr.numeronumber1.exception.ResourceNotFoundException;
 import fr.numeronumber1.exception.UnauthorizedActionException;
@@ -39,7 +40,7 @@ public class VoteService {
 
 
     @Transactional
-    public Oeuvre vote(Long workId, VoteRequest request, User user) {
+    public OeuvreResponse vote(Long workId, VoteRequest request, User user) {
         Oeuvre oeuvre = oeuvreRepository.findById(workId)
                 .orElseThrow(() ->
                         new ResourceNotFoundException("Œuvre introuvable."));
@@ -76,8 +77,9 @@ public class VoteService {
         }
 
         recalculerScore(oeuvre);
-
-        return oeuvreRepository.save(oeuvre);
+        ;
+        OeuvreResponse oeuvreResponse=new OeuvreResponse(oeuvreRepository.save(oeuvre));
+        return oeuvreResponse;
     }
 
     private void recalculerScore(Oeuvre oeuvre) {
