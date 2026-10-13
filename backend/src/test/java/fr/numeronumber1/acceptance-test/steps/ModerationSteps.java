@@ -39,6 +39,9 @@ public class ModerationSteps {
     @Autowired
     private JsonMapper objectMapper;
 
+    @Autowired
+    private AuthSteps authSteps;
+
     @Given("l'œuvre {string} est en attente de modération")
     public void oeuvre_en_attente_moderation(String title) {
         User author = users.findByUsername(scenarioContext.getUsername()).orElse(null);
@@ -57,7 +60,13 @@ public class ModerationSteps {
 
     @Given("l'œuvre est en attente de modération")
     public void oeuvre_est_en_attente_moderation() {
-        // TODO: préparer une œuvre en attente de modération
+        if (scenarioContext.getOeuvreId() != null) {
+            Oeuvre oeuvre = oeuvres.findById(scenarioContext.getOeuvreId()).orElse(null);
+            if (oeuvre != null) {
+                oeuvre.setStatus(OeuvreStatus.pending);
+                oeuvres.save(oeuvre);
+            }
+        }
     }
 
     @Given("l'œuvre appartient à la catégorie {string}")
@@ -70,6 +79,9 @@ public class ModerationSteps {
     public void administrateur_accepte_oeuvre() throws Exception {
         if (scenarioContext.getOeuvreId() == null) {
             return;
+        }
+        if (scenarioContext.getSession() == null || !scenarioContext.isAdministrator()) {
+            authSteps.authenticateAs("cucumber-admin", true);
         }
         var request = post("/moderation/works/{workId}/accept", scenarioContext.getOeuvreId());
         if (scenarioContext.getSession() != null) {

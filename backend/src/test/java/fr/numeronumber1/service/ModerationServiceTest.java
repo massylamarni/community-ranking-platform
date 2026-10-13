@@ -19,6 +19,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
 import fr.numeronumber1.model.Oeuvre;
+import fr.numeronumber1.model.User;
+import fr.numeronumber1.model.enums.NotificationType;
 import fr.numeronumber1.model.enums.OeuvreStatus;
 import fr.numeronumber1.repository.OeuvreRepository;
 
@@ -27,6 +29,9 @@ class ModerationServiceTest {
 
     @Mock
     private OeuvreRepository oeuvres;
+
+    @Mock
+    private NotificationService notificationService;
 
     @InjectMocks
     private ModerationService moderationService;
@@ -126,10 +131,14 @@ class ModerationServiceTest {
     void shouldAcceptPendingWork() {
         Long workId = 1L;
 
+        User author = new User();
+        author.setUsername("alice");
+
         Oeuvre oeuvre = new Oeuvre();
         oeuvre.setOeuvreId(workId);
         oeuvre.setTitle("Œuvre 1");
         oeuvre.setStatus(OeuvreStatus.pending);
+        oeuvre.setAuthor(author);
 
         when(oeuvres.findById(workId))
                 .thenReturn(Optional.of(oeuvre));
@@ -145,6 +154,31 @@ class ModerationServiceTest {
 
         verify(oeuvres).findById(workId);
         verify(oeuvres).save(oeuvre);
+    }
+
+    @Test
+    void shouldSendNotificationToAuthorWhenWorkIsAccepted() {
+        Long workId = 1L;
+
+        User author = new User();
+        author.setUsername("alice");
+
+        Oeuvre oeuvre = new Oeuvre();
+        oeuvre.setOeuvreId(workId);
+        oeuvre.setTitle("Mon Dessin");
+        oeuvre.setStatus(OeuvreStatus.pending);
+        oeuvre.setAuthor(author);
+
+        when(oeuvres.findById(workId)).thenReturn(Optional.of(oeuvre));
+        when(oeuvres.save(oeuvre)).thenReturn(oeuvre);
+
+        moderationService.accept(workId);
+
+        verify(notificationService).create(
+                "alice",
+                NotificationType.MODERATION,
+                "Votre œuvre \"Mon Dessin\" a été acceptée."
+        );
     }
 
     @Test

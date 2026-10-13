@@ -24,6 +24,8 @@ tags:
     description: Global and per-category ranking operations.
   - name: uploads
     description: Public access to uploaded work images.
+  - name: notifications
+    description: In-app notifications for the authenticated user.
 
 paths:
   /auth/register:
@@ -459,6 +461,10 @@ paths:
       operationId: acceptWork
       tags: [moderation]
       summary: Accept a pending work (admin only)
+      description: >
+        Changes the work status to `approved`.
+        Triggers a `MODERATION` in-app notification to the author with the message
+        `Votre œuvre "<title>" a été acceptée.` (NOTIF-001).
       parameters:
         - $ref: "#/components/parameters/ModerationWorkId"
       responses:
@@ -638,6 +644,45 @@ paths:
             image/gif:
               schema: { type: string, format: binary }
         "404": { description: Image not found }
+
+  /notifications:
+    get:
+      operationId: getMyNotifications
+      tags: [notifications]
+      summary: List notifications for the authenticated user
+      responses:
+        "200":
+          description: Notifications retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/NotificationResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /notifications/{id}/read:
+    patch:
+      operationId: markNotificationAsRead
+      tags: [notifications]
+      summary: Mark a single notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int32 }
+      responses:
+        "204": { description: Notification marked as read }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /notifications/read-all:
+    patch:
+      operationId: markAllNotificationsAsRead
+      tags: [notifications]
+      summary: Mark all notifications of the authenticated user as read
+      responses:
+        "204": { description: All notifications marked as read }
+        "401": { $ref: "#/components/responses/Unauthorized" }
 
 components:
   securitySchemes:
@@ -974,3 +1019,15 @@ components:
         first: { type: boolean }
         empty: { type: boolean }
       additionalProperties: true
+
+    NotificationResponse:
+      type: object
+      required: [id, type, message, createdAt, read]
+      properties:
+        id: { type: integer, format: int32 }
+        type:
+          type: string
+          enum: [MODERATION, SYSTEM]
+        message: { type: string }
+        createdAt: { type: string, format: date-time }
+        read: { type: boolean }
