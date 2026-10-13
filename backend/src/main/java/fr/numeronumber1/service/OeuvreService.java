@@ -75,22 +75,6 @@ public class OeuvreService {
         if (oeuvres.existsByTitle(req.getTitle()))
             throw new IllegalArgumentException("Une œuvre avec ce titre existe déjà");
 
-        List<Integer> categoryIds = req.getCategoryIds();
-        List<Category> chosenCategories = List.of();
-        if (categoryIds != null && !categoryIds.isEmpty()) {
-            if (!author.isAdmin()) {
-                throw new UnauthorizedActionException(
-                        "Seuls les administrateurs peuvent associer des catégories lors de la création");
-            }
-            if (categoryIds.stream().distinct().count() != categoryIds.size()) {
-                throw new IllegalArgumentException("Une catégorie ne peut être sélectionnée qu'une seule fois");
-            }
-            chosenCategories = categories.findAllById(categoryIds);
-            if (chosenCategories.size() != categoryIds.size()) {
-                throw new ResourceNotFoundException("Une ou plusieurs catégories sont introuvables");
-            }
-        }
-
         Oeuvre o = new Oeuvre();
         o.setTitle(req.getTitle());
         o.setDescription(req.getDescription());
@@ -105,17 +89,7 @@ public class OeuvreService {
         if (author.isAdmin()) {
             o.setStatus(OeuvreStatus.approved);
         }
-
-        Oeuvre saved = oeuvres.save(o);
-        for (Category category : chosenCategories) {
-            OeuvreCategory link = new OeuvreCategory();
-            link.setId(new OeuvreCategoryId(saved.getOeuvreId(), category.getCategoryId()));
-            link.setOeuvre(saved);
-            link.setCategory(category);
-            oeuvreCategories.save(link);
-            saved.getOeuvreCategories().add(link);
-        }
-        return saved;
+        return oeuvres.save(o);
     }
 
     @Transactional
@@ -145,7 +119,6 @@ public class OeuvreService {
 
         if (st != OeuvreStatus.created) {
             o.setStatus(OeuvreStatus.created);
-            o.setRejectionReason(null);
         }
 
         return oeuvres.save(o);
@@ -177,7 +150,6 @@ public class OeuvreService {
 
         if (o.getStatus() == OeuvreStatus.rejected) {
             o.setStatus(OeuvreStatus.pending);
-            o.setRejectionReason(null);
             return oeuvres.save(o);
         }
 
@@ -210,3 +182,4 @@ public class OeuvreService {
         oeuvres.delete(o);
     }
 }
+

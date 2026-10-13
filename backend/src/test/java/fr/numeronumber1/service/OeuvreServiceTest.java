@@ -485,62 +485,6 @@ class OeuvreServiceTest {
     }
 
     @Test
-    void create_par_administrateur_associe_categories_directement() {
-        Category category = new Category();
-        category.setCategoryId(1);
-        category.setName("Peinture");
-
-        CreateOeuvreRequest req = new CreateOeuvreRequest();
-        req.setTitle("Œuvre Admin catégorisée");
-        req.setDescription("Description Admin");
-        req.setCategoryIds(List.of(1));
-
-        when(oeuvreRepository.existsByTitle("Œuvre Admin catégorisée")).thenReturn(false);
-        when(categoryRepository.findAllById(List.of(1))).thenReturn(List.of(category));
-        when(oeuvreRepository.save(any(Oeuvre.class))).thenAnswer(invocation -> {
-            Oeuvre saved = invocation.getArgument(0);
-            saved.setOeuvreId(20L);
-            return saved;
-        });
-        when(oeuvreCategoryRepository.save(any(OeuvreCategory.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-
-        Oeuvre result = oeuvreService.create(req, adminUser);
-
-        assertEquals(OeuvreStatus.approved, result.getStatus());
-        assertEquals(1, result.getOeuvreCategories().size());
-        assertEquals(category, result.getOeuvreCategories().get(0).getCategory());
-        verify(oeuvreCategoryRepository).save(any(OeuvreCategory.class));
-    }
-
-    @Test
-    void create_par_utilisateur_refuse_categories() {
-        CreateOeuvreRequest req = new CreateOeuvreRequest();
-        req.setTitle("Œuvre avec catégorie non autorisée");
-        req.setCategoryIds(List.of(1));
-
-        when(oeuvreRepository.existsByTitle("Œuvre avec catégorie non autorisée")).thenReturn(false);
-
-        assertThrows(UnauthorizedActionException.class, () -> oeuvreService.create(req, author));
-        verify(oeuvreRepository, never()).save(any(Oeuvre.class));
-        verify(oeuvreCategoryRepository, never()).save(any(OeuvreCategory.class));
-    }
-
-    @Test
-    void create_par_administrateur_echoue_si_categorie_introuvable() {
-        CreateOeuvreRequest req = new CreateOeuvreRequest();
-        req.setTitle("Œuvre catégorie inconnue");
-        req.setCategoryIds(List.of(99));
-
-        when(oeuvreRepository.existsByTitle("Œuvre catégorie inconnue")).thenReturn(false);
-        when(categoryRepository.findAllById(List.of(99))).thenReturn(List.of());
-
-        assertThrows(ResourceNotFoundException.class, () -> oeuvreService.create(req, adminUser));
-        verify(oeuvreRepository, never()).save(any(Oeuvre.class));
-        verify(oeuvreCategoryRepository, never()).save(any(OeuvreCategory.class));
-    }
-
-    @Test
     void getAll_succes_avec_filtres() {
         when(oeuvreRepository.findAll(any(Specification.class))).thenReturn(List.of(oeuvre));
 
