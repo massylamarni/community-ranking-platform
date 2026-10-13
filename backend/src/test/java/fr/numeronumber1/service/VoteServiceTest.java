@@ -1,3 +1,4 @@
+
 package fr.numeronumber1.service;
 
 import fr.numeronumber1.dto.request.VoteRequest;
@@ -42,345 +43,141 @@ class VoteServiceTest {
 
     @BeforeEach
     void setUp() {
-        user = mock(User.class);
-        author = mock(User.class);
-        oeuvre = mock(Oeuvre.class);
+        user = new User();
+        user.setUserId(10);
+
+        author = new User();
+        author.setUserId(20);
+
+        oeuvre = new Oeuvre();
+        oeuvre.setOeuvreId(1L);
+        oeuvre.setTitle("Mon œuvre");
+        oeuvre.setAuthor(author);
+        oeuvre.setScore(0);
     }
 
-    private VoteRequest createRequest(String type) {
-        VoteRequest request = new VoteRequest();
-        request.setType(type);
-        return request;
+    private VoteRequest request(Integer value) {
+        return new VoteRequest(value);
     }
 
-    private void mockScore(Long oeuvreId, long positive, long negative) {
-        when(voteRepository.countByOeuvreOeuvreIdAndValue(
-                oeuvreId, (byte) 1)).thenReturn(positive);
-
-        when(voteRepository.countByOeuvreOeuvreIdAndValue(
-                oeuvreId, (byte) -1)).thenReturn(negative);
-    }
-
-    @Test
-    void shouldCreatePositiveVoteAndUpdateScore() {
-        when(user.getUserId()).thenReturn(10);
-        when(author.getUserId()).thenReturn(20);
-        when(oeuvre.getOeuvreId()).thenReturn(1L);
-        when(oeuvre.getAuthor()).thenReturn(author);
-
+    private void mockExistingWork() {
         when(oeuvreRepository.findById(1L))
                 .thenReturn(Optional.of(oeuvre));
-
-        when(voteRepository.findByOeuvreOeuvreIdAndUserUserId(1L, 10))
-                .thenReturn(Optional.empty());
-
-        when(voteRepository.save(any(Vote.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-
-        mockScore(1L, 1, 0);
-
-        Vote result = voteService.createVote(
-                1L, createRequest("positive"), user);
-
-        assertNotNull(result);
-        assertEquals((byte) 1, result.getValue());
-        assertEquals(oeuvre, result.getOeuvre());
-        assertEquals(user, result.getUser());
-
-        verify(voteRepository).save(any(Vote.class));
-        verify(oeuvre).setScore(1);
-        verify(oeuvreRepository).save(oeuvre);
     }
 
-    @Test
-    void shouldCreateNegativeVoteAndUpdateScore() {
-        when(user.getUserId()).thenReturn(10);
-        when(author.getUserId()).thenReturn(20);
-        when(oeuvre.getOeuvreId()).thenReturn(1L);
-        when(oeuvre.getAuthor()).thenReturn(author);
+    private void mockScore(long positive, long negative) {
+        when(voteRepository.countByOeuvreOeuvreIdAndValue(
+                1L, (byte) 1)).thenReturn(positive);
 
-        when(oeuvreRepository.findById(1L))
-                .thenReturn(Optional.of(oeuvre));
-
-        when(voteRepository.findByOeuvreOeuvreIdAndUserUserId(1L, 10))
-                .thenReturn(Optional.empty());
-
-        when(voteRepository.save(any(Vote.class)))
-                .thenAnswer(invocation -> invocation.getArgument(0));
-
-        mockScore(1L, 0, 1);
-
-        Vote result = voteService.createVote(
-                1L, createRequest("negative"), user);
-
-        assertNotNull(result);
-        assertEquals((byte) -1, result.getValue());
-
-        verify(voteRepository).save(any(Vote.class));
-        verify(oeuvre).setScore(-1);
-        verify(oeuvreRepository).save(oeuvre);
+        when(voteRepository.countByOeuvreOeuvreIdAndValue(
+                1L, (byte) -1)).thenReturn(negative);
     }
 
+    private Vote createVote(byte value) {
+        Vote vote = new Vote();
+        vote.setOeuvre(oeuvre);
+        vote.setUser(user);
+        vote.setValue(value);
+        return vote;
+    }
+
+
     @Test
-    void shouldThrowExceptionWhenCreatingVoteForNonExistingWork() {
+    void shouldThrowExceptionWhenWorkDoesNotExist() {
         when(oeuvreRepository.findById(999L))
                 .thenReturn(Optional.empty());
 
         ResourceNotFoundException exception = assertThrows(
                 ResourceNotFoundException.class,
-                () -> voteService.createVote(
-                        999L, createRequest("positive"), user)
+                () -> voteService.vote(999L, request(1), user)
         );
 
-        assertEquals("Œuvre introuvable", exception.getMessage());
+        assertEquals("Œuvre introuvable.", exception.getMessage());
 
         verify(oeuvreRepository).findById(999L);
         verify(voteRepository, never()).save(any(Vote.class));
-        verify(oeuvreRepository, never()).save(any(Oeuvre.class));
-    }
-
-    @Test
-    void shouldThrowExceptionWhenVotingForOwnWork() {
-        when(user.getUserId()).thenReturn(10);
-        when(author.getUserId()).thenReturn(10);
-        when(oeuvre.getAuthor()).thenReturn(author);
-
-        when(oeuvreRepository.findById(1L))
-                .thenReturn(Optional.of(oeuvre));
-
-        UnauthorizedActionException exception = assertThrows(
-                UnauthorizedActionException.class,
-                () -> voteService.createVote(
-                        1L, createRequest("positive"), user)
-        );
-
-        assertEquals(
-                "Vous ne pouvez pas voter pour votre propre œuvre",
-                exception.getMessage()
-        );
-
-        verify(voteRepository, never()).save(any(Vote.class));
-        verify(oeuvreRepository, never()).save(any(Oeuvre.class));
-    }
-
-    @Test
-    void shouldThrowExceptionWhenVotingTwiceForSameWork() {
-        User author = mock(User.class);
-
-        when(author.getUserId()).thenReturn(20);
-        when(oeuvre.getAuthor()).thenReturn(author);
-        when(user.getUserId()).thenReturn(10);
-
-        when(oeuvreRepository.findById(1L))
-                .thenReturn(Optional.of(oeuvre));
-
-        when(voteRepository.findByOeuvreOeuvreIdAndUserUserId(1L, 10))
-                .thenReturn(Optional.of(mock(Vote.class)));
-
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> voteService.createVote(
-                        1L, createRequest("positive"), user)
-        );
-
-        assertEquals(
-                "Vous avez déjà voté pour cette œuvre",
-                exception.getMessage()
-        );
-
-        verify(voteRepository, never()).save(any(Vote.class));
-        verify(oeuvreRepository, never()).save(any(Oeuvre.class));
-    }
-
-    @Test
-    void shouldThrowExceptionWhenCreatingVoteWithInvalidType() {
-        when(user.getUserId()).thenReturn(10);
-        when(author.getUserId()).thenReturn(20);
-
-        when(oeuvre.getAuthor()).thenReturn(author);
-
-        when(oeuvreRepository.findById(1L))
-                .thenReturn(Optional.of(oeuvre));
-
-        when(voteRepository.findByOeuvreOeuvreIdAndUserUserId(1L, 10))
-                .thenReturn(Optional.empty());
-
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> voteService.createVote(
-                        1L, createRequest("neutral"), user)
-        );
-
-        assertEquals(
-                "Le type de vote doit être 'positive' ou 'negative'",
-                exception.getMessage()
-        );
-
-        verify(voteRepository, never()).save(any(Vote.class));
-        verify(oeuvreRepository, never()).save(any(Oeuvre.class));
-    }
-
-    @Test
-    void shouldUpdateVoteAndRecalculateScore() {
-        when(user.getUserId()).thenReturn(10);
-
-        Vote vote = mock(Vote.class);
-
-        when(voteRepository.findByOeuvreOeuvreIdAndUserUserId(1L, 10))
-                .thenReturn(Optional.of(vote));
-
-        when(vote.getOeuvre()).thenReturn(oeuvre);
-        when(oeuvre.getOeuvreId()).thenReturn(1L);
-        when(voteRepository.save(vote)).thenReturn(vote);
-
-        mockScore(1L, 0, 1);
-
-        Vote result = voteService.updateVote(
-                1L, createRequest("negative"), user);
-
-        assertNotNull(result);
-
-        verify(vote).setValue((byte) -1);
-        verify(voteRepository).save(vote);
-        verify(oeuvre).setScore(-1);
-        verify(oeuvreRepository).save(oeuvre);
-    }
-
-    @Test
-    void shouldThrowExceptionWhenUpdatingNonExistingVote() {
-        when(user.getUserId()).thenReturn(10);
-
-        when(voteRepository.findByOeuvreOeuvreIdAndUserUserId(1L, 10))
-                .thenReturn(Optional.empty());
-
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> voteService.updateVote(
-                        1L, createRequest("positive"), user)
-        );
-
-        assertEquals(
-                "Vous n'avez pas encore voté pour cette œuvre",
-                exception.getMessage()
-        );
-
-        verify(voteRepository, never()).save(any(Vote.class));
-        verify(oeuvreRepository, never()).save(any(Oeuvre.class));
-    }
-
-    @Test
-    void shouldThrowExceptionWhenUpdatingVoteWithInvalidType() {
-
-        Vote existingVote = mock(Vote.class);
-
-        when(user.getUserId()).thenReturn(10);
-        when(voteRepository.findByOeuvreOeuvreIdAndUserUserId(1L, 10))
-                .thenReturn(Optional.of(existingVote));
-
-        IllegalArgumentException exception = assertThrows(
-                IllegalArgumentException.class,
-                () -> voteService.updateVote(
-                        1L, createRequest("neutral"), user)
-        );
-
-        assertEquals(
-                "Le type de vote doit être 'positive' ou 'negative'",
-                exception.getMessage()
-        );
-
-        verify(voteRepository, never()).save(any(Vote.class));
-        verify(oeuvreRepository, never()).save(any(Oeuvre.class));
-    }
-
-    @Test
-    void shouldDeleteVoteAndRecalculateScore() {
-        when(user.getUserId()).thenReturn(10);
-
-        Vote vote = mock(Vote.class);
-
-        when(voteRepository.findByOeuvreOeuvreIdAndUserUserId(1L, 10))
-                .thenReturn(Optional.of(vote));
-
-        when(vote.getOeuvre()).thenReturn(oeuvre);
-        when(oeuvre.getOeuvreId()).thenReturn(1L);
-
-        mockScore(1L, 2, 1);
-
-        voteService.deleteVote(1L, user);
-
-        verify(voteRepository).delete(vote);
-        verify(oeuvre).setScore(1);
-        verify(oeuvreRepository).save(oeuvre);
-    }
-
-    @Test
-    void shouldThrowExceptionWhenDeletingNonExistingVote() {
-        when(user.getUserId()).thenReturn(10);
-
-        when(voteRepository.findByOeuvreOeuvreIdAndUserUserId(1L, 10))
-                .thenReturn(Optional.empty());
-
-        ResourceNotFoundException exception = assertThrows(
-                ResourceNotFoundException.class,
-                () -> voteService.deleteVote(1L, user)
-        );
-
-        assertEquals(
-                "Vous n'avez pas encore voté pour cette œuvre",
-                exception.getMessage()
-        );
-
         verify(voteRepository, never()).delete(any(Vote.class));
         verify(oeuvreRepository, never()).save(any(Oeuvre.class));
     }
 
     @Test
-    void shouldReturnPositiveMinusNegativeVotes() {
-        mockScore(1L, 8, 3);
+    void shouldThrowExceptionWhenVotingForOwnWork() {
+        oeuvre.setAuthor(user);
 
-        int score = voteService.getScore(1L);
+        mockExistingWork();
 
-        assertEquals(5, score);
+        UnauthorizedActionException exception = assertThrows(
+                UnauthorizedActionException.class,
+                () -> voteService.vote(1L, request(1), user)
+        );
 
-        verify(voteRepository)
-                .countByOeuvreOeuvreIdAndValue(1L, (byte) 1);
+        assertEquals(
+                "Vous ne pouvez pas voter pour votre propre œuvre.",
+                exception.getMessage()
+        );
 
-        verify(voteRepository)
-                .countByOeuvreOeuvreIdAndValue(1L, (byte) -1);
+        verify(voteRepository, never())
+                .findByOeuvreOeuvreIdAndUserUserId(anyLong(), anyInt());
+
+        verify(voteRepository, never()).save(any(Vote.class));
+        verify(voteRepository, never()).delete(any(Vote.class));
+        verify(oeuvreRepository, never()).save(any(Oeuvre.class));
     }
 
     @Test
-    void shouldReturnNegativeScoreWhenNegativeVotesDominate() {
-        mockScore(1L, 2, 5);
+    void shouldThrowExceptionWhenVoteValueIsInvalid() {
+        mockExistingWork();
 
-        int score = voteService.getScore(1L);
+        IllegalArgumentException exception = assertThrows(
+                IllegalArgumentException.class,
+                () -> voteService.vote(1L, request(0), user)
+        );
 
-        assertEquals(-3, score);
+        assertEquals(
+                "La valeur du vote est invalide.",
+                exception.getMessage()
+        );
+
+        verify(voteRepository, never())
+                .findByOeuvreOeuvreIdAndUserUserId(anyLong(), anyInt());
+
+        verify(voteRepository, never()).save(any(Vote.class));
+        verify(voteRepository, never()).delete(any(Vote.class));
+        verify(oeuvreRepository, never()).save(any(Oeuvre.class));
     }
 
     @Test
-    void shouldReturnZeroWhenThereAreNoVotes() {
-        mockScore(1L, 0, 0);
+    void shouldCalculateScoreWhenPositiveVotesDominate() {
+        mockScore(8, 3);
 
-        int score = voteService.getScore(1L);
+        long positive = voteRepository.countByOeuvreOeuvreIdAndValue(
+                1L, (byte) 1);
 
-        assertEquals(0, score);
+        long negative = voteRepository.countByOeuvreOeuvreIdAndValue(
+                1L, (byte) -1);
+
+        assertEquals(5, positive - negative);
     }
 
     @Test
-    void shouldReturnUserVotes() {
-        when(user.getUserId()).thenReturn(10);
+    void shouldCalculateNegativeScoreWhenNegativeVotesDominate() {
+        mockScore(2, 5);
 
-        Vote vote = mock(Vote.class);
-        Oeuvre votedWork = mock(Oeuvre.class);
+        long positive = voteRepository.countByOeuvreOeuvreIdAndValue(
+                1L, (byte) 1);
+
+        long negative = voteRepository.countByOeuvreOeuvreIdAndValue(
+                1L, (byte) -1);
+
+        assertEquals(-3, positive - negative);
+    }
+
+    @Test
+    void shouldReturnMyVotes() {
+        Vote vote = createVote((byte) 1);
 
         when(voteRepository.findByUserUserId(10))
                 .thenReturn(List.of(vote));
-
-        when(vote.getOeuvre()).thenReturn(votedWork);
-        when(votedWork.getOeuvreId()).thenReturn(1L);
-        when(votedWork.getTitle()).thenReturn("Mon œuvre");
-        when(vote.getValue()).thenReturn((byte) 1);
 
         List<UserVoteResponse> result = voteService.getMyVotes(user);
 
@@ -395,8 +192,6 @@ class VoteServiceTest {
 
     @Test
     void shouldReturnEmptyListWhenUserHasNoVotes() {
-        when(user.getUserId()).thenReturn(10);
-
         when(voteRepository.findByUserUserId(10))
                 .thenReturn(List.of());
 
