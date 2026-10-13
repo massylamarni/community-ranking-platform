@@ -123,7 +123,7 @@ public class VoteService {
         Integer value = request.value();
 
         if (value != null && value != 1 && value != -1) {
-            throw new InvalidVoteValueException(
+            throw new IllegalArgumentException(
                     "La valeur du vote est invalide.");
         }
 
