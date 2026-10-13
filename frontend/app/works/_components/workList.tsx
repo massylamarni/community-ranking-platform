@@ -29,7 +29,7 @@ export function WorkList({
         <WorkItem
           key={w.id}
           work={w}
-          setWork={w.author.username === username ? undefined : handleSetWork}
+          setWork={w.author === username ? undefined : handleSetWork}
           setSelectedWork={setSelectedWork}
         />
       ))}

@@ -375,7 +375,7 @@ export function serializeWork(work: DbWork, viewer: DbUser | undefined): Work {
     title: work.title,
     description: work.description,
     imageUrl: work.imageUrl,
-    author: { username: author?.username ?? "unknown" },
+    author: author?.username ?? "unknown",
     categories: categories
       .filter((category) => work.categoryIds.includes(category.id))
       .map((category) => category.name),

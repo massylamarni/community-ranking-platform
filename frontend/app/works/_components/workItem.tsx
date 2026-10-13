@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { votesRepository } from "@/repositories";
-import { ApiErrorBody, Work } from "@/types/api";
+import { ApiErrorBody, VoteForWorkReponse, Work } from "@/types/api";
 import { ArrowBigDown, ArrowBigUp } from "lucide-react";
 import Image from "next/image";
 import { ReactNode, useState } from "react";
@@ -30,16 +30,18 @@ export function WorkItem({
   statusChildren?: ReactNode;
 }) {
   const [errors, setErrors] = useState<ApiErrorBody | null>(null);
+  const [vote, setVote] = useState<VoteForWorkReponse | null>(null);
 
   async function handleVote(vt: 1 | -1) {
     if (!work || !setWork) return;
     setErrors(null);
 
-    const next = work.currentUserVote === vt ? null : vt;
+    const next = vote?.value === vt ? null : vt;
 
     try {
       const updated = await votesRepository.vote(work.id, { value: next });
-      setWork(updated);
+      setWork(updated.oeuvre);
+      setVote(updated);
     } catch (err) {
       setErrors(err as ApiErrorBody);
     }
@@ -79,7 +81,7 @@ export function WorkItem({
           ) : (
             <ButtonGroup>
               <Button
-                variant={work.currentUserVote === 1 ? "default" : "outline"}
+                variant={vote?.value === 1 ? "default" : "outline"}
                 onClick={() => handleVote(1)}
                 disabled={disableVote}
               >
@@ -87,7 +89,7 @@ export function WorkItem({
                 {work.totalVotes - (work.totalVotes - work.score) / 2}
               </Button>
               <Button
-                variant={work.currentUserVote === -1 ? "default" : "outline"}
+                variant={vote?.value === -1 ? "default" : "outline"}
                 onClick={() => handleVote(-1)}
                 disabled={disableVote}
               >
@@ -100,10 +102,10 @@ export function WorkItem({
         <div className="flex justify-center items-center gap-2 w-fit">
           <Avatar>
             <AvatarFallback>
-              {work.author.username.slice(0, 2).toUpperCase()}
+              {work.author.slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <div>{work.author.username}</div>
+          <div>{work.author}</div>
         </div>
         {statusChildren}
       </CardFooter>

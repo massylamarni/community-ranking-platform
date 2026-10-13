@@ -36,7 +36,7 @@ function normalizeCategoryWork(entity: CategoryWorkEntity): Work {
     title: entity.title,
     description: entity.description,
     imageUrl: entity.imageUrl,
-    author: { username: author },
+    author: author,
     categories: (entity.oeuvreCategories ?? [])
       .map(relationCategoryName)
       .filter((name): name is string => name !== null),

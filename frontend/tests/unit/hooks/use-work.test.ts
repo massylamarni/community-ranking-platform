@@ -17,7 +17,7 @@ describe("useWorks", () => {
       title: "Hook test work",
       description: "Created through the hook",
       imageUrl: null,
-      author: { username: "alice" },
+      author: "alice",
       categories: [],
       status: "created",
       totalVotes: 0,
