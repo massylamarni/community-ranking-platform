@@ -12,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class VoteService {
@@ -82,20 +83,6 @@ public class VoteService {
         return updatedVote;
     }
 
-    @Transactional
-    public void deleteVote(Long oeuvreId, User user) {
-
-        Vote vote = voteRepository
-                .findByOeuvreOeuvreIdAndUserUserId(
-                        oeuvreId, user.getUserId())
-                .orElseThrow(() ->
-                        new ResourceNotFoundException(
-                                "Vous n'avez pas encore voté pour cette œuvre"));
-        Oeuvre oeuvre = vote.getOeuvre();
-        voteRepository.delete(vote);
-        recalculerScore(oeuvre);
-    }
-
 
     @Transactional(readOnly = true)
     public List<UserVoteResponse> getMyVotes(User user) {
@@ -122,27 +109,57 @@ public class VoteService {
     }
 
 
-    private void recalculerScore(Oeuvre oeuvre) {
+    @Transactional
+    public Oeuvre vote(Long workId, VoteRequest request, User user) {
+        Oeuvre oeuvre = oeuvreRepository.findById(workId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Œuvre introuvable."));
 
-        int score = getScore(oeuvre.getOeuvreId());
+        if (oeuvre.getAuthor().getUserId().equals(user.getUserId())) {
+            throw new UnauthorizedActionException(
+                    "Vous ne pouvez pas voter pour votre propre œuvre.");
+        }
 
-        oeuvre.setScore(score);
+        Integer value = request.value();
 
-        oeuvreRepository.save(oeuvre);
+        if (value != null && value != 1 && value != -1) {
+            throw new InvalidVoteValueException(
+                    "La valeur du vote est invalide.");
+        }
+
+        Optional<Vote> existingVote =
+                voteRepository.findByOeuvreOeuvreIdAndUserUserId(
+                        workId, user.getUserId());
+
+        if (value == null) {
+            existingVote.ifPresent(voteRepository::delete);
+        } else if (existingVote.isPresent()) {
+            Vote vote = existingVote.get();
+            vote.setValue(value.byteValue());
+            voteRepository.save(vote);
+        } else {
+            Vote vote = new Vote();
+            vote.setOeuvre(oeuvre);
+            vote.setUser(user);
+            vote.setValue(value.byteValue());
+            vote.setCreatedAt(LocalDateTime.now());
+            voteRepository.save(vote);
+        }
+
+        recalculerScore(oeuvre);
+
+        return oeuvreRepository.save(oeuvre);
     }
 
+    private void recalculerScore(Oeuvre oeuvre) {
+        long positifs =
+                voteRepository.countByOeuvreOeuvreIdAndValue(
+                        oeuvre.getOeuvreId(), (byte) 1);
 
-    private byte convertVoteType(String type) {
+        long negatifs =
+                voteRepository.countByOeuvreOeuvreIdAndValue(
+                        oeuvre.getOeuvreId(), (byte) -1);
 
-        if ("positive".equals(type)) {
-            return 1;
-        }
-
-        if ("negative".equals(type)) {
-            return -1;
-        }
-
-        throw new IllegalArgumentException(
-                "Le type de vote doit être 'positive' ou 'negative'");
+        oeuvre.setScore((int) (positifs - negatifs));
     }
 }
