@@ -911,6 +911,11 @@ components:
       properties:
         title: { type: [string, "null"], maxLength: 150 }
         description: { type: [string, "null"] }
+        categoryIds:
+          type: array
+          description: Replaces the work's categories when provided; an empty array removes all categories.
+          uniqueItems: true
+          items: { type: integer, format: int32 }
 
     RefuseWork:
       type: object

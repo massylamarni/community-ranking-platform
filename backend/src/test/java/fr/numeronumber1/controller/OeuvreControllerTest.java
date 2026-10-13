@@ -1,5 +1,6 @@
 package fr.numeronumber1.controller;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doNothing;
@@ -19,6 +20,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
@@ -243,10 +245,15 @@ public class OeuvreControllerTest {
 
         mockMvc.perform(patch("/works/10")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"title\": \"Titre modifié\", \"description\": \"Description modifiée\"}"))
+                        .content("{\"title\": \"Titre modifié\", \"description\": \"Description modifiée\", "
+                                + "\"categoryIds\": [1, 4]}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Titre modifié"))
                 .andExpect(jsonPath("$.description").value("Description modifiée"));
+
+        ArgumentCaptor<UpdateOeuvreRequest> request = ArgumentCaptor.forClass(UpdateOeuvreRequest.class);
+        verify(oeuvreService).update(eq(10L), request.capture(), eq(alice));
+        assertEquals(List.of(1, 4), request.getValue().getCategoryIds());
     }
 
     @Test
@@ -388,4 +395,3 @@ public class OeuvreControllerTest {
                 .andExpect(jsonPath("$[0].author").value("alice"));
     }
 }
-

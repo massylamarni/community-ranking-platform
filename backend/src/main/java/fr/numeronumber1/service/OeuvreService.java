@@ -1,7 +1,9 @@
 package fr.numeronumber1.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -143,6 +145,10 @@ public class OeuvreService {
             o.setDescription(req.getDescription());
         }
 
+        if (req.getCategoryIds() != null) {
+            replaceCategories(o, req.getCategoryIds());
+        }
+
         if (st != OeuvreStatus.created) {
             o.setStatus(OeuvreStatus.created);
             o.setRejectionReason(null);
@@ -175,27 +181,51 @@ public class OeuvreService {
         if (o.getStatus() != OeuvreStatus.created && o.getStatus() != OeuvreStatus.rejected)
             throw new IllegalArgumentException("Cette œuvre a déjà été soumise");
 
+        replaceCategories(o, req.getCategoryIds());
+
         if (o.getStatus() == OeuvreStatus.rejected) {
             o.setStatus(OeuvreStatus.pending);
             o.setRejectionReason(null);
             return oeuvres.save(o);
         }
 
-        List<Category> chosen = categories.findAllById(req.getCategoryIds());
-        if (chosen.size() != req.getCategoryIds().size())
-            throw new ResourceNotFoundException("Une ou plusieurs catégories sont introuvables");
-
-        for (Category c : chosen) {
-            OeuvreCategoryId compositeId = new OeuvreCategoryId(o.getOeuvreId(), c.getCategoryId());
-            OeuvreCategory link = new OeuvreCategory();
-            link.setId(compositeId);
-            link.setOeuvre(o);
-            link.setCategory(c);
-            oeuvreCategories.save(link);
-        }
-
         o.setStatus(OeuvreStatus.pending);
         return oeuvres.save(o);
+    }
+
+    private void replaceCategories(Oeuvre oeuvre, List<Integer> categoryIds) {
+        if (categoryIds.stream().distinct().count() != categoryIds.size()) {
+            throw new IllegalArgumentException("Une catégorie ne peut être sélectionnée qu'une seule fois");
+        }
+
+        List<Category> chosen = categories.findAllById(categoryIds);
+        if (chosen.size() != categoryIds.size()) {
+            throw new ResourceNotFoundException("Une ou plusieurs catégories sont introuvables");
+        }
+
+        List<OeuvreCategory> links = new ArrayList<>();
+        List<OeuvreCategory> linksToRemove = new ArrayList<>();
+        List<OeuvreCategory> linksToAdd = new ArrayList<>();
+        Map<Integer, OeuvreCategory> existingLinks = new HashMap<>();
+        for (OeuvreCategory link : oeuvre.getOeuvreCategories()) {
+            existingLinks.put(link.getCategory().getCategoryId(), link);
+        }
+
+        for (Category category : chosen) {
+            OeuvreCategory link = existingLinks.remove(category.getCategoryId());
+            if (link == null) {
+                link = new OeuvreCategory();
+                link.setId(new OeuvreCategoryId(oeuvre.getOeuvreId(), category.getCategoryId()));
+                link.setOeuvre(oeuvre);
+                link.setCategory(category);
+                linksToAdd.add(link);
+            }
+            links.add(link);
+        }
+        linksToRemove.addAll(existingLinks.values());
+        oeuvreCategories.deleteAll(linksToRemove);
+        oeuvreCategories.saveAll(linksToAdd);
+        oeuvre.setOeuvreCategories(links);
     }
 
     @Transactional
