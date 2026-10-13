@@ -43,6 +43,7 @@ export type WorkFormData = {
   title: string;
   description: string;
   image: File | null;
+  categoryIds?: string[];
 };
 
 export function WorkEdit({
@@ -71,6 +72,7 @@ export function WorkEdit({
   const [pendingDelete, setPendingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [categoryError, setCategoryError] = useState("");
+  const asAdmin = isAdmin(user);
 
   function toggleSubmitCategory(name: string) {
     setCategoryError("");
@@ -89,6 +91,7 @@ export function WorkEdit({
         title: newWork.title,
         description: newWork.description,
         image,
+        ...(asAdmin && { categoryIds: selectedCategories }),
       });
       setPendingDelete(false);
     } finally {
@@ -159,7 +162,7 @@ export function WorkEdit({
               />
               {fe.description && <FieldError>{fe.description}</FieldError>}
             </Field>
-            {work && !isAdmin(user) && (
+            {work && !asAdmin && (
               <Field>
                 <FieldLabel>Sélectionner des catégories</FieldLabel>
                 <ScrollArea className="rounded-md border [&>[data-slot=scroll-area-viewport]]:max-h-72">
@@ -190,7 +193,7 @@ export function WorkEdit({
                 )}
               </Field>
             )}
-            {isAdmin(user) && (
+            {asAdmin && (
               <Field>
                 <FieldLabel>Sélectionner des catégories</FieldLabel>
                 <ScrollArea className="rounded-md border [&>[data-slot=scroll-area-viewport]]:max-h-72">
@@ -237,7 +240,11 @@ export function WorkEdit({
             variant={isEdit ? "secondary" : "default"}
             disabled={!canEdit || deleting}
           >
-            {isEdit ? "Enregistrer le brouillon" : "Créer le brouillon"}
+            {asAdmin
+              ? "Publier"
+              : isEdit
+                ? "Enregistrer le brouillon"
+                : "Créer le brouillon"}
           </Button>
           {canPublish && handlePublish && (
             <Button type="button" onClick={onPublish} disabled={deleting}>

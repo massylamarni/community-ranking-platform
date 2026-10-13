@@ -147,6 +147,7 @@ export interface CreateWorkPayload {
   description: string;
   image?: File | null;
   imageUrl?: string | null;
+  categoryIds?: string[];
 }
 
 export interface SubmitWorkPayload {
