@@ -1,8 +1,6 @@
 package fr.numeronumber1.service;
 import fr.numeronumber1.dto.request.VoteRequest;
-import fr.numeronumber1.dto.response.OeuvreResponse;
-import fr.numeronumber1.dto.response.UserVoteResponse;
-import fr.numeronumber1.dto.response.VoteResponse;
+import fr.numeronumber1.dto.response.*;
 import fr.numeronumber1.exception.ResourceNotFoundException;
 import fr.numeronumber1.exception.UnauthorizedActionException;
 import fr.numeronumber1.model.Oeuvre;
@@ -31,14 +29,18 @@ public class VoteService {
 
 
     @Transactional(readOnly = true)
-    public List<UserVoteResponse> getMyVotes(User user) {
+    public VoteResponse getMyVote(Long workId, User user) {
+        Oeuvre oeuvre = oeuvreRepository.findById(workId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Œuvre introuvable."));
 
-        return voteRepository.findByUserUserId(user.getUserId())
-                .stream()
-                .map(UserVoteResponse::new)
-                .toList();
+        OeuvreResponse oeuvreResponse = new OeuvreResponse(oeuvre);
+
+        return voteRepository
+                .findByOeuvreOeuvreIdAndUserUserId(workId, user.getUserId())
+                .map(vote -> new VoteResponse(vote, oeuvreResponse))
+                .orElse(null);
     }
-
 
     @Transactional
     public VoteResponse vote(Long workId, VoteRequest request, User user) {
@@ -127,5 +129,22 @@ public class VoteService {
         }
 
         return voteRepository.findByOeuvreOeuvreId(workId);
+    }
+
+    @Transactional(readOnly = true)
+    public OeuvreVoteResponse getOeuvreVotes(Long workId) {
+        Oeuvre oeuvre = oeuvreRepository.findById(workId)
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Œuvre introuvable."));
+
+        OeuvreResponse oeuvreResponse = new OeuvreResponse(oeuvre);
+
+        List<VoteItemResponse> votes = voteRepository
+                .findByOeuvreOeuvreId(workId)
+                .stream()
+                .map(vote -> new VoteItemResponse(vote))
+                .toList();
+
+        return new OeuvreVoteResponse(oeuvreResponse, votes);
     }
 }

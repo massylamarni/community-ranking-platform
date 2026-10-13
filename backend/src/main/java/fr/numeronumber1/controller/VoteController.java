@@ -2,15 +2,12 @@ package fr.numeronumber1.controller;
 
 import java.util.List;
 
-import fr.numeronumber1.dto.response.OeuvreResponse;
-import fr.numeronumber1.model.Oeuvre;
-import org.springframework.http.HttpStatus;
+import fr.numeronumber1.dto.response.OeuvreVoteResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import fr.numeronumber1.dto.request.VoteRequest;
-import fr.numeronumber1.dto.response.UserVoteResponse;
 import fr.numeronumber1.dto.response.VoteResponse;
 import fr.numeronumber1.model.User;
 import fr.numeronumber1.model.Vote;
@@ -44,10 +41,21 @@ public class VoteController {
         }
 
     @GetMapping("/{workId}/vote")
-    public ResponseEntity<List<Vote>> getVotesByWork(
-            @PathVariable Long workId) {
+    public ResponseEntity<List<Vote>> getVoteByWork(
+            @PathVariable Long workId,
+            Authentication authentication) {
 
+        User user = userService.findByUsername(authentication.getName());
+        VoteResponse response = voteService.getMyVote(workId,user);
         List<Vote> votes = voteService.getVotesByWork(workId);
         return ResponseEntity.ok(votes);
+    }
+
+    @GetMapping("/{workId}/votes")
+    public ResponseEntity<OeuvreVoteResponse> getVotesByWork(
+            @PathVariable Long workId
+    ) {
+        OeuvreVoteResponse response = voteService.getOeuvreVotes(workId);
+        return ResponseEntity.ok(response);
     }
 }

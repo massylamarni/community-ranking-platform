@@ -171,35 +171,4 @@ class VoteServiceTest {
 
         assertEquals(-3, positive - negative);
     }
-
-    @Test
-    void shouldReturnMyVotes() {
-        Vote vote = createVote((byte) 1);
-
-        when(voteRepository.findByUserUserId(10))
-                .thenReturn(List.of(vote));
-
-        List<UserVoteResponse> result = voteService.getMyVotes(user);
-
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals(1L, result.get(0).getWorkId());
-        assertEquals("Mon œuvre", result.get(0).getWorkTitle());
-        assertEquals("positive", result.get(0).getVote());
-
-        verify(voteRepository).findByUserUserId(10);
-    }
-
-    @Test
-    void shouldReturnEmptyListWhenUserHasNoVotes() {
-        when(voteRepository.findByUserUserId(10))
-                .thenReturn(List.of());
-
-        List<UserVoteResponse> result = voteService.getMyVotes(user);
-
-        assertNotNull(result);
-        assertTrue(result.isEmpty());
-
-        verify(voteRepository).findByUserUserId(10);
-    }
 }
