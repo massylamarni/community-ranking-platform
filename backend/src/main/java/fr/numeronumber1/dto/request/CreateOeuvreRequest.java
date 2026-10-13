@@ -1,7 +1,5 @@
 package fr.numeronumber1.dto.request;
 
-import java.util.List;
-
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.constraints.NotBlank;
@@ -21,8 +19,6 @@ public class CreateOeuvreRequest {
 
     private MultipartFile image;
 
-    private List<Integer> categoryIds;
-
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
 
@@ -34,7 +30,4 @@ public class CreateOeuvreRequest {
 
     public MultipartFile getImage() { return image; }
     public void setImage(MultipartFile image) { this.image = image; }
-
-    public List<Integer> getCategoryIds() { return categoryIds; }
-    public void setCategoryIds(List<Integer> categoryIds) { this.categoryIds = categoryIds; }
 }
