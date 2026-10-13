@@ -47,10 +47,10 @@ public class VoteSteps {
     private JsonMapper objectMapper;
 
     @Autowired
-    private AcceptanceScenarioContext scenarioContext;
+    private fr.numeronumber1.steps.AcceptanceScenarioContext scenarioContext;
 
     @Autowired
-    private AuthSteps authSteps;
+    private fr.numeronumber1.steps.AuthSteps authSteps;
 
     private Long oeuvreId;
     private Integer voteCountBefore;

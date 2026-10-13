@@ -24,7 +24,7 @@ import fr.numeronumber1.service.VoteService;
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/votes")
+@RequestMapping("/work")
 public class VoteController {
 
     private final VoteService voteService;
@@ -35,49 +35,41 @@ public class VoteController {
         this.userService = userService;
     }
 
-    @PostMapping("/work/{id}")
-    public ResponseEntity<VoteResponse> createVote(
-            @PathVariable Long id,
-            @Valid @RequestBody VoteRequest req,
-            Authentication auth) {
+    http.put("*/works/:workId/vote", async ({ request, params }) => {
+        await delay(150);
 
-        User user = userService.findByUsername(auth.getName());
-        Vote saved = voteService.createVote(id, req, user);
+    const user = currentUserFrom(request);
+        if (!user) return unauthorized();
 
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new VoteResponse(saved));
-    }
+    const work = db.findWorkByApiId(params.workId);
+        if (!work) return notFound("Œuvre introuvable.");
 
-    @PatchMapping("/work/{id}")
-    public ResponseEntity<VoteResponse> updateVote(
-            @PathVariable Long id,
-            @Valid @RequestBody VoteRequest req,
-            Authentication auth) {
+        if (work.authorId === user.id)
+            return forbidden("Vous ne pouvez pas voter pour votre propre œuvre.");
 
-        User user = userService.findByUsername(auth.getName());
-        Vote updated = voteService.updateVote(id, req, user);
+    const body = (await request.json()) as VoteForWorkPayload;
+    const newValue = body.value;
 
-        return ResponseEntity.ok(new VoteResponse(updated));
-    }
+        if (newValue !== null && newValue !== 1 && newValue !== -1)
+            return errorResponse(422, "Échec de la validation", {
+                    value: "La valeur du vote est invalide.",
+      });
 
-    @DeleteMapping("/work/{id}")
-    public ResponseEntity<Void> deleteVote(
-            @PathVariable Long id,
-            Authentication auth) {
+    const existingIndex = work.votes.findIndex((v) => v.userId === user.id);
 
-        User user = userService.findByUsername(auth.getName());
-        voteService.deleteVote(id, user);
+        if (newValue === null) {
+            if (existingIndex !== -1) work.votes.splice(existingIndex, 1);
+        } else if (existingIndex !== -1) {
+            work.votes[existingIndex].value = newValue;
+        } else {
 
-        return ResponseEntity.noContent().build();
-    }
+            work.votes.push({
+                    userId: user.id,
+                    value: newValue,
+                    createdAt: new Date().toISOString(),
+      });
+        }
 
-    @GetMapping("/work/me")
-    public ResponseEntity<List<UserVoteResponse>> getMyVotes(
-            Authentication auth) {
-
-        User user = userService.findByUsername(auth.getName());
-        List<UserVoteResponse> votes = voteService.getMyVotes(user);
-
-        return ResponseEntity.ok(votes);
-    }
+        return HttpResponse.json(db.serializeWork(work, user));
+    })
 }
