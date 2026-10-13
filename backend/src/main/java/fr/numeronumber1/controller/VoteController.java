@@ -41,4 +41,12 @@ public class VoteController {
 
             return ResponseEntity.ok(oeuvre);
         }
+
+    @GetMapping("/{workId}/vote")
+    public ResponseEntity<List<Vote>> getVotesByWork(
+            @PathVariable Long workId) {
+
+        List<Vote> votes = voteService.getVotesByWork(workId);
+        return ResponseEntity.ok(votes);
+    }
 }

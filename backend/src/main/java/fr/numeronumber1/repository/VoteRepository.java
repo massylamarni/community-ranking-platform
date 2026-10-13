@@ -12,5 +12,7 @@ public interface VoteRepository extends JpaRepository<Vote, Integer> {
 
     List<Vote> findByUserUserId(Integer userId);
 
+    List<Vote> findByOeuvreOeuvreId(Long oeuvreId);
+
     long countByOeuvreOeuvreIdAndValue(Long oeuvreId, byte value);
 }

@@ -27,62 +27,6 @@ public class VoteService {
         this.oeuvreRepository = oeuvreRepository;
     }
 
-    @Transactional
-    public Vote createVote(Long oeuvreId, VoteRequest request, User user) {
-
-        Oeuvre oeuvre = oeuvreRepository.findById(oeuvreId)
-                .orElseThrow(() ->
-                        new ResourceNotFoundException("Œuvre introuvable"));
-
-        if (oeuvre.getAuthor().getUserId().equals(user.getUserId())) {
-            throw new UnauthorizedActionException(
-                    "Vous ne pouvez pas voter pour votre propre œuvre");
-        }
-
-        if (voteRepository
-                .findByOeuvreOeuvreIdAndUserUserId(
-                        oeuvreId, user.getUserId())
-                .isPresent()) {
-            throw new IllegalArgumentException(
-                    "Vous avez déjà voté pour cette œuvre");
-        }
-
-        byte value = convertVoteType(request.getType());
-
-        Vote vote = new Vote();
-        vote.setOeuvre(oeuvre);
-        vote.setUser(user);
-        vote.setValue(value);
-        vote.setCreatedAt(LocalDateTime.now());
-
-        Vote savedVote = voteRepository.save(vote);
-
-        recalculerScore(oeuvre);
-
-        return savedVote;
-    }
-
-    @Transactional
-    public Vote updateVote(Long oeuvreId, VoteRequest request, User user) {
-
-        Vote vote = voteRepository
-                .findByOeuvreOeuvreIdAndUserUserId(
-                        oeuvreId, user.getUserId())
-                .orElseThrow(() ->
-                        new IllegalArgumentException(
-                                "Vous n'avez pas encore voté pour cette œuvre"));
-
-        byte value = convertVoteType(request.getType());
-
-        vote.setValue(value);
-
-        Vote updatedVote = voteRepository.save(vote);
-
-        recalculerScore(vote.getOeuvre());
-
-        return updatedVote;
-    }
-
 
     @Transactional(readOnly = true)
     public List<UserVoteResponse> getMyVotes(User user) {
@@ -91,21 +35,6 @@ public class VoteService {
                 .stream()
                 .map(UserVoteResponse::new)
                 .toList();
-    }
-
-
-    @Transactional(readOnly = true)
-    public int getScore(Long oeuvreId) {
-
-        long positiveVotes =
-                voteRepository.countByOeuvreOeuvreIdAndValue(
-                        oeuvreId, (byte) 1);
-
-        long negativeVotes =
-                voteRepository.countByOeuvreOeuvreIdAndValue(
-                        oeuvreId, (byte) -1);
-
-        return (int) (positiveVotes - negativeVotes);
     }
 
 
@@ -161,5 +90,14 @@ public class VoteService {
                         oeuvre.getOeuvreId(), (byte) -1);
 
         oeuvre.setScore((int) (positifs - negatifs));
+    }
+
+    @Transactional(readOnly = true)
+    public List<Vote> getVotesByWork(Long workId) {
+        if (!oeuvreRepository.existsById(workId)) {
+            throw new ResourceNotFoundException("Œuvre introuvable.");
+        }
+
+        return voteRepository.findByOeuvreOeuvreId(workId);
     }
 }
