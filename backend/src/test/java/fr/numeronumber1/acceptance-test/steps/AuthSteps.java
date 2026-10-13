@@ -505,6 +505,12 @@ public class AuthSteps {
         assertEquals(200, responseStatus, responseBody);
     }
 
+    @Then("il est redirigé vers une page accessible aux visiteurs")
+    public void ressource_visiteur_accessible_apres_deconnexion() throws Exception {
+        capture(mockMvc.perform(get("/categories")));
+        assertEquals(200, responseStatus, responseBody);
+    }
+
     @Then("il est redirigé vers son espace utilisateur")
     public void redirige_vers_espace_utilisateur() throws Exception {
         var request = get("/auth/me");
@@ -627,7 +633,10 @@ public class AuthSteps {
 
     @Given("un utilisateur non authentifié")
     public void utilisateur_non_authentifie_sans_session() {
-        // TODO: préparer un utilisateur non authentifié
+        session = null;
+        scenarioContext.setSession(null);
+        scenarioContext.setUsername(null);
+        scenarioContext.setAdministrator(false);
     }
 
     @Given("un utilisateur non administrateur est authentifié")

@@ -65,6 +65,12 @@ public class ModerationService {
         oeuvre.setStatus(OeuvreStatus.rejected);
         oeuvre.setRejectionReason(request.getReason().trim());
 
-        return oeuvres.save(oeuvre);
+        Oeuvre saved = oeuvres.save(oeuvre);
+        String author = saved.getAuthor().getUsername();
+        String message = "Votre œuvre \"" + saved.getTitle() + "\" a été refusée. Motif : "
+                + saved.getRejectionReason();
+        notificationService.create(author, NotificationType.MODERATION, message);
+
+        return saved;
     }
 }

@@ -228,7 +228,11 @@ class ModerationServiceTest {
     void shouldRefusePendingWork() {
         Oeuvre oeuvre = new Oeuvre();
         oeuvre.setOeuvreId(1L);
+        oeuvre.setTitle("Œuvre refusée");
         oeuvre.setStatus(OeuvreStatus.pending);
+        User author = new User();
+        author.setUsername("alice");
+        oeuvre.setAuthor(author);
 
         RefuseWork request = new RefuseWork();
         request.setReason("La qualité de l'image est insuffisante.");
@@ -244,6 +248,11 @@ class ModerationServiceTest {
 
         verify(oeuvres).findById(1L);
         verify(oeuvres).save(oeuvre);
+        verify(notificationService).create(
+                "alice",
+                NotificationType.MODERATION,
+                "Votre œuvre \"Œuvre refusée\" a été refusée. Motif : La qualité de l'image est insuffisante."
+        );
     }
 
     @Test
