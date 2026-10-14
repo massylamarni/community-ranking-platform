@@ -6,7 +6,7 @@ CREATE TABLE vote_history (
     vote_id INT NOT NULL,
     oeuvre_id BIGINT NOT NULL,
     user_id INT NOT NULL,
-    value TINYINT NULL,
+    value INT NULL,
     event_at TIMESTAMP(6) NOT NULL,
     INDEX idx_vote_history_vote_event (vote_id, event_at, history_id),
     INDEX idx_vote_history_oeuvre_event (oeuvre_id, event_at)
