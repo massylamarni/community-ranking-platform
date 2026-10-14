@@ -18,6 +18,7 @@ import {
   BriefcaseBusiness,
   Shapes,
   ShieldCheck,
+  Trophy,
 } from "lucide-react";
 import { isAdmin, useAuth } from "@/hooks/use-auth";
 import { useCategory } from "@/contexts/categoryContext";
@@ -61,6 +62,11 @@ const data = {
           url: "/works/new",
         },
       ],
+    },
+    {
+      title: "Classements",
+      url: "/rankings",
+      icon: <Trophy />,
     },
   ],
 };

@@ -220,6 +220,16 @@ export interface RankingSnapshot {
   entries: RankingEntry[];
 }
 
+export interface GlobalRankingItem {
+  id: number;
+  position: number;
+  title: string;
+  author: string;
+  categories: string[];
+  score: number;
+  imageUrl?: string | null;
+}
+
 // ---- profiles -----------------------------------------------------------
 
 export interface GetActivity {
