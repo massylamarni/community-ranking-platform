@@ -24,6 +24,8 @@ tags:
     description: Global and per-category ranking operations.
   - name: uploads
     description: Public access to uploaded work images.
+  - name: notifications
+    description: In-app notifications for the authenticated user.
 
 paths:
   /auth/register:
@@ -318,7 +320,6 @@ paths:
       operationId: createWork
       tags: [works]
       summary: Create a work
-      description: Admins may optionally provide category IDs to assign categories immediately. Category IDs must exist and be unique. Non-admin users cannot assign categories during creation.
       requestBody:
         required: true
         content:
@@ -327,7 +328,7 @@ paths:
           multipart/form-data:
             schema: { $ref: "#/components/schemas/CreateWorkMultipart" }
       responses:
-        "200":
+        "200":    
           description: Created work response DTO
           content:
             application/json:
@@ -435,6 +436,97 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "422": { $ref: "#/components/responses/ValidationError422" }
 
+
+
+
+  /votes/work/{id}:
+    post:
+      operationId: createVote
+      tags: [ votes ]
+      summary: Create a vote for a work
+      description: >
+        Allows the authenticated user to cast a positive or negative vote
+        for a work. A user can have only one active vote per work.
+        A user cannot vote for their own work.
+      parameters:
+        - $ref: "#/components/parameters/WorkId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/VoteRequest" }
+      responses:
+        "201":
+          description: Vote successfully created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VoteResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "409": { $ref: "#/components/responses/Conflict" }
+
+    patch:
+      operationId: updateVote
+      tags: [ votes ]
+      summary: Modify a vote for a work
+      description: >
+        Allows the authenticated user to change their existing vote
+        from positive to negative or from negative to positive.
+      parameters:
+        - $ref: "#/components/parameters/WorkId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/VoteRequest" }
+      responses:
+        "200":
+          description: Vote successfully modified
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VoteResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+    delete:
+      operationId: deleteVote
+      tags: [ votes ]
+      summary: Delete a vote for a work
+      description: >
+        Allows the authenticated user to remove their active vote
+        from a work.
+      parameters:
+        - $ref: "#/components/parameters/WorkId"
+      responses:
+        "204":
+          description: Vote successfully deleted
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /votes/work/me:
+    get:
+      operationId: getMyVotes
+      tags: [ votes ]
+      summary: Get the authenticated user's votes
+      description: >
+        Returns all works voted on by the authenticated user,
+        together with the user's vote for each work.
+      responses:
+        "200":
+          description: List of works voted on by the authenticated user
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/UserVoteResponse"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+
+
   /moderation/works:
     get:
       operationId: getPendingWorks
@@ -459,6 +551,10 @@ paths:
       operationId: acceptWork
       tags: [moderation]
       summary: Accept a pending work (admin only)
+      description: >
+        Changes the work status to `approved`.
+        Triggers a `MODERATION` in-app notification to the author with the message
+        `Votre œuvre "<title>" a été acceptée.` (NOTIF-001).
       parameters:
         - $ref: "#/components/parameters/ModerationWorkId"
       responses:
@@ -639,6 +735,45 @@ paths:
               schema: { type: string, format: binary }
         "404": { description: Image not found }
 
+  /notifications:
+    get:
+      operationId: getMyNotifications
+      tags: [notifications]
+      summary: List notifications for the authenticated user
+      responses:
+        "200":
+          description: Notifications retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/NotificationResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /notifications/{id}/read:
+    patch:
+      operationId: markNotificationAsRead
+      tags: [notifications]
+      summary: Mark a single notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int32 }
+      responses:
+        "204": { description: Notification marked as read }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /notifications/read-all:
+    patch:
+      operationId: markAllNotificationsAsRead
+      tags: [notifications]
+      summary: Mark all notifications of the authenticated user as read
+      responses:
+        "204": { description: All notifications marked as read }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
 components:
   securitySchemes:
     sessionCookie:
@@ -726,6 +861,9 @@ components:
       content:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
+
+
+
 
   schemas:
     Error:
@@ -849,7 +987,6 @@ components:
           title,
           description,
           status,
-          reason,
           author,
           imageUrl,
           categories,
@@ -860,9 +997,6 @@ components:
         title: { type: string }
         description: { type: string }
         status: { $ref: "#/components/schemas/WorkStatus" }
-        reason:
-          type: [string, "null"]
-          description: Reason provided by an admin when rejecting the work; null otherwise.
         author: { type: string }
         imageUrl: { type: [string, "null"] }
         categories:
@@ -891,11 +1025,6 @@ components:
         description: { type: string, minLength: 1 }
         imageUrl: { type: [string, "null"], maxLength: 255 }
         image: { type: string, format: binary }
-        categoryIds:
-          type: array
-          description: Optional category IDs to assign immediately; admins only.
-          uniqueItems: true
-          items: { type: integer, format: int32 }
 
     SubmitWork:
       type: object
@@ -911,6 +1040,11 @@ components:
       properties:
         title: { type: [string, "null"], maxLength: 150 }
         description: { type: [string, "null"] }
+        categoryIds:
+          type: array
+          description: Replaces the work's categories when provided; an empty array removes all categories.
+          uniqueItems: true
+          items: { type: integer, format: int32 }
 
     RefuseWork:
       type: object
@@ -936,6 +1070,55 @@ components:
         first: { type: boolean }
         empty: { type: boolean }
       additionalProperties: true
+
+    VoteType:
+      type: string
+      enum:
+        - positive
+        - negative
+
+    VoteRequest:
+      type: object
+      required:
+        - type
+      properties:
+        type:
+          $ref: "#/components/schemas/VoteType"
+
+    VoteResponse:
+      type: object
+      required:
+        - id
+        - workId
+        - userId
+        - type
+      properties:
+        id:
+          type: integer
+          format: int64
+        workId:
+          type: integer
+          format: int64
+        userId:
+          type: integer
+          format: int32
+        type:
+          $ref: "#/components/schemas/VoteType"
+
+    UserVoteResponse:
+      type: object
+      required:
+        - workId
+        - workTitle
+        - vote
+      properties:
+        workId:
+          type: integer
+          format: int64
+        workTitle:
+          type: string
+        vote:
+          $ref: "#/components/schemas/VoteType"
 
     RankingItemResponse:
       type: object
@@ -969,3 +1152,15 @@ components:
         first: { type: boolean }
         empty: { type: boolean }
       additionalProperties: true
+
+    NotificationResponse:
+      type: object
+      required: [id, type, message, createdAt, read]
+      properties:
+        id: { type: integer, format: int32 }
+        type:
+          type: string
+          enum: [MODERATION, SYSTEM]
+        message: { type: string }
+        createdAt: { type: string, format: date-time }
+        read: { type: boolean }

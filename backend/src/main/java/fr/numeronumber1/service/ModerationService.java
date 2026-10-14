@@ -3,6 +3,7 @@ package fr.numeronumber1.service;
 import fr.numeronumber1.dto.request.RefuseWork;
 import fr.numeronumber1.exception.ResourceNotFoundException;
 import fr.numeronumber1.model.Oeuvre;
+import fr.numeronumber1.model.enums.NotificationType;
 import fr.numeronumber1.model.enums.OeuvreStatus;
 import fr.numeronumber1.repository.OeuvreRepository;
 import org.springframework.data.domain.Page;
@@ -14,9 +15,11 @@ import org.springframework.transaction.annotation.Transactional;
 public class ModerationService {
 
         private final OeuvreRepository oeuvres;
+        private final NotificationService notificationService;
 
-        public ModerationService(OeuvreRepository oeuvres) {
+        public ModerationService(OeuvreRepository oeuvres, NotificationService notificationService) {
             this.oeuvres = oeuvres;
+            this.notificationService = notificationService;
         }
 
         public Page<Oeuvre> getPendingWorks(Pageable pageable) {
@@ -38,7 +41,13 @@ public class ModerationService {
         oeuvre.setStatus(OeuvreStatus.approved);
         oeuvre.setRejectionReason(null);
 
-        return oeuvres.save(oeuvre);
+        Oeuvre saved = oeuvres.save(oeuvre);
+
+        String author = saved.getAuthor().getUsername();
+        String message = "Votre œuvre \"" + saved.getTitle() + "\" a été acceptée.";
+        notificationService.create(author, NotificationType.MODERATION, message);
+
+        return saved;
     }
 
     @Transactional
@@ -56,6 +65,12 @@ public class ModerationService {
         oeuvre.setStatus(OeuvreStatus.rejected);
         oeuvre.setRejectionReason(request.getReason().trim());
 
-        return oeuvres.save(oeuvre);
+        Oeuvre saved = oeuvres.save(oeuvre);
+        String author = saved.getAuthor().getUsername();
+        String message = "Votre œuvre \"" + saved.getTitle() + "\" a été refusée. Motif : "
+                + saved.getRejectionReason();
+        notificationService.create(author, NotificationType.MODERATION, message);
+
+        return saved;
     }
 }

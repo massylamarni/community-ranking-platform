@@ -3,5 +3,16 @@ package fr.numeronumber1.repository;
 import fr.numeronumber1.model.Vote;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface VoteRepository extends JpaRepository<Vote, Long> {
+import java.util.List;
+import java.util.Optional;
+
+public interface VoteRepository extends JpaRepository<Vote, Integer> {
+
+    Optional<Vote> findByOeuvreOeuvreIdAndUserUserId(Long oeuvreId, Integer userId);
+
+    List<Vote> findByUserUserId(Integer userId);
+
+    List<Vote> findByOeuvreOeuvreId(Long oeuvreId);
+
+    long countByOeuvreOeuvreIdAndValue(Long oeuvreId, byte value);
 }

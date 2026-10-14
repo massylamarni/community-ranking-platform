@@ -35,7 +35,7 @@ describe("worksRepository.create", () => {
         imageUrl: null,
       },
     });
-    expect(result.author).toEqual({ username: "alice" });
+    expect(result.author).toEqual("alice");
     expect(result.status).toBe("created");
   });
 });

@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -13,6 +14,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 
 import fr.numeronumber1.model.Category;
@@ -60,6 +62,13 @@ public class CategorySteps {
     @Autowired
     private AuthSteps authSteps;
 
+    @Given("aucune œuvre n'est associée à cette catégorie")
+    public void aucune_oeuvre_associee_a_categorie() {
+        Category category = categories.findById(scenarioContext.getCategoryId()).orElseThrow();
+        assertTrue(category.getOeuvreCategories().isEmpty(),
+                "La catégorie doit être vide avant sa suppression");
+    }
+
     @Given("la catégorie {string} n'existe pas")
     public void categorie_n_existe_pas(String categoryName) {
         scenarioContext.setCategoryName(categoryName);
@@ -87,19 +96,63 @@ public class CategorySteps {
         assertTrue(category.getCategoryId() != null);
     }
 
+    @When("l'administrateur supprime la catégorie {string}")
+    public void administrateur_supprime_categorie(String categoryName) {
+        assertEquals(categoryName, scenarioContext.getCategoryName());
+    }
+
     @When("l'administrateur supprime la catégorie")
-    public void administrateur_supprime_categorie() {
-        // TODO: implémenter la suppression de catégorie
+    public void administrateur_supprime_categorie_sans_nom() throws Exception {
+        supprimerCategorieSelectionnee();
+    }
+
+    @When("il confirme la suppression")
+    public void confirme_suppression_categorie() throws Exception {
+        MvcResult result = mockMvc.perform(delete("/categories/{id}", scenarioContext.getCategoryId())
+                .session(scenarioContext.getSession())).andReturn();
+        scenarioContext.setResponseStatus(result.getResponse().getStatus());
+        scenarioContext.setResponseBody(result.getResponse().getContentAsString());
+    }
+
+    @When("il tente de supprimer la catégorie")
+    public void utilisateur_tente_supprimer_categorie() throws Exception {
+        MvcResult result = mockMvc.perform(delete("/categories/{id}", scenarioContext.getCategoryId())
+                .session(scenarioContext.getSession())).andReturn();
+        scenarioContext.setResponseStatus(result.getResponse().getStatus());
+        scenarioContext.setResponseBody(result.getResponse().getContentAsString());
     }
 
     @Then("la catégorie {string} n'existe plus")
-    public void categorie_n_existe_plus(String categoryName) {
-        // TODO: vérifier la suppression de catégorie
+    public void categorie_n_existe_plus(String categoryName) throws Exception {
+        assertEquals(204, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
+        assertTrue(categories.findByName(categoryName).isEmpty(),
+                "La catégorie supprimée est toujours en base: " + categoryName);
+    }
+
+    @Then("elle n'apparaît plus dans la liste des catégories")
+    public void categorie_absente_de_liste() throws Exception {
+        MvcResult result = mockMvc.perform(get("/categories")).andReturn();
+        assertEquals(200, result.getResponse().getStatus(), result.getResponse().getContentAsString());
+        JsonNode response = objectMapper.readTree(result.getResponse().getContentAsString());
+        for (JsonNode category : response) {
+            assertFalse(category.path("name").asText().equals(scenarioContext.getCategoryName()),
+                    result.getResponse().getContentAsString());
+        }
     }
 
     @Then("elle ne peut plus être sélectionnée pour une nouvelle œuvre")
-    public void categorie_indisponible_pour_nouvelle_oeuvre() {
-        // TODO: vérifier que la catégorie ne peut plus être sélectionnée
+    public void categorie_indisponible_pour_nouvelle_oeuvre() throws Exception {
+        MvcResult result = mockMvc.perform(get("/categories/{id}", scenarioContext.getCategoryId())).andReturn();
+        assertEquals(404, result.getResponse().getStatus(), result.getResponse().getContentAsString());
+        assertTrue(categories.findById(scenarioContext.getCategoryId()).isEmpty(),
+                "La catégorie supprimée doit être indisponible");
+    }
+
+    @Then("la catégorie n'est pas supprimée")
+    public void categorie_pas_supprimee() {
+        assertEquals(403, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
+        assertTrue(categories.findById(scenarioContext.getCategoryId()).isPresent(),
+                "La catégorie doit rester présente après une suppression refusée");
     }
 
     @When("il saisit le nom de catégorie {string}")
@@ -148,6 +201,13 @@ public class CategorySteps {
             request.session(scenarioContext.getSession());
         }
         MvcResult result = mockMvc.perform(request).andReturn();
+        scenarioContext.setResponseStatus(result.getResponse().getStatus());
+        scenarioContext.setResponseBody(result.getResponse().getContentAsString());
+    }
+
+    private void supprimerCategorieSelectionnee() throws Exception {
+        MvcResult result = mockMvc.perform(delete("/categories/{id}", scenarioContext.getCategoryId())
+                .session(scenarioContext.getSession())).andReturn();
         scenarioContext.setResponseStatus(result.getResponse().getStatus());
         scenarioContext.setResponseBody(result.getResponse().getContentAsString());
     }

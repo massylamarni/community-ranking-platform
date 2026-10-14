@@ -21,7 +21,6 @@ export function WorkList({
   }
 
   if (works.length === 0) return <CategoryHasNoWork />;
-  console.log(works);
 
   return (
     <WorksContainer>
@@ -29,7 +28,7 @@ export function WorkList({
         <WorkItem
           key={w.id}
           work={w}
-          setWork={w.author.username === username ? undefined : handleSetWork}
+          setWork={w.author === username ? undefined : handleSetWork}
           setSelectedWork={setSelectedWork}
         />
       ))}

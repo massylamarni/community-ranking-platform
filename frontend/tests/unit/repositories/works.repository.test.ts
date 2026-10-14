@@ -21,7 +21,7 @@ describe("normalizeWorkResponse", () => {
       title: "The Left Hand of Darkness",
       description: "A science-fiction novel",
       status: "approved",
-      author: { username: "ursula" },
+      author: "ursula",
       imageUrl: null,
       categories: ["Science-fiction"],
       totalVotes: 7,

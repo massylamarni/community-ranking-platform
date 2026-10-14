@@ -133,13 +133,12 @@ export interface Work {
   title: string;
   description: string;
   imageUrl: string | null;
-  author: { username: string };
+  author: string;
   categories: string[];
   status: WorkStatus;
   reason?: string;
   score?: number;
   totalVotes: number;
-  currentUserVote?: 1 | -1 | null;
 }
 
 export interface CreateWorkPayload {
@@ -177,6 +176,14 @@ export interface RefuseWorkPayload {
 
 export interface VoteForWorkPayload {
   value: 1 | -1 | null;
+}
+
+export interface VoteForWorkReponse {
+  id: string;
+  userId: string;
+  value: 1 | -1;
+  createdAt: string;
+  oeuvre: Work;
 }
 
 // ---- comments -----------------------------------------------------------
@@ -222,6 +229,16 @@ export interface RankingSnapshot {
   period: string;
   periodStart: string;
   entries: RankingEntry[];
+}
+
+export interface GlobalRankingItem {
+  id: number;
+  position: number;
+  title: string;
+  author: string;
+  categories: string[];
+  score: number;
+  imageUrl?: string | null;
 }
 
 // ---- profiles -----------------------------------------------------------

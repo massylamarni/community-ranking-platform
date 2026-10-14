@@ -220,9 +220,11 @@ public class OeuvreSteps {
 
     @When("l'utilisateur tente de proposer une œuvre")
     public void utilisateur_tente_de_proposer_oeuvre() throws Exception {
+        String title = uniqueTitle("proposition anonyme");
+        scenarioContext.setWorkTitle(title);
         perform(post("/works")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(Map.of("title", uniqueTitle("proposition anonyme"),
+                .content(objectMapper.writeValueAsString(Map.of("title", title,
                         "description", "Description de proposition"))));
     }
 
@@ -244,6 +246,10 @@ public class OeuvreSteps {
     @Then("la proposition de l'œuvre est refusée")
     public void proposition_oeuvre_refusee() {
         assertEquals(401, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
+        assertTrue(scenarioContext.getSession() == null,
+                "La proposition anonyme ne doit pas utiliser une session authentifiée");
+        assertFalse(oeuvres.existsByTitle(scenarioContext.getWorkTitle()),
+                "Une œuvre ne doit pas être créée lorsque la requête est anonyme");
     }
 
     @When("l'utilisateur modifie la proposition")
