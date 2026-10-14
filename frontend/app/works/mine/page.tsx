@@ -209,7 +209,7 @@ export default function MyWorks() {
   }, [list, router, user, userLoading]);
 
   const ownedWorks = useMemo(
-    () => works.filter((work) => work.author.username === user?.username),
+    () => works.filter((work) => work.author === user?.username),
     [works, user?.username],
   );
 

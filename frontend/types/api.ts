@@ -132,12 +132,11 @@ export interface Work {
   title: string;
   description: string;
   imageUrl: string | null;
-  author: { username: string };
+  author: string;
   categories: string[];
   status: WorkStatus;
   score?: number;
   totalVotes: number;
-  currentUserVote?: 1 | -1 | null;
 }
 
 export interface CreateWorkPayload {
@@ -173,6 +172,14 @@ export interface RefuseWorkPayload {
 
 export interface VoteForWorkPayload {
   value: 1 | -1 | null;
+}
+
+export interface VoteForWorkReponse {
+  id: string;
+  userId: string;
+  value: 1 | -1;
+  createdAt: string;
+  oeuvre: Work;
 }
 
 // ---- comments -----------------------------------------------------------

@@ -13,7 +13,7 @@ function normalizeWorkResponse(response: WorkResponse): Work {
     title: response.title,
     description: response.description,
     status: response.status,
-    author: { username: response.author },
+    author: response.author,
     imageUrl: response.imageUrl,
     categories: response.categories,
     totalVotes: response.totalVotes,

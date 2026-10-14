@@ -33,7 +33,7 @@ export default function AuthorWorkGuard({
     };
   }, [id, get]);
 
-  const isAuthor = !!user && !!work && user.username === work.author.username;
+  const isAuthor = !!user && !!work && user.username === work.author;
   if (loading) return <LoadingGuard />;
   if (!work) return <WorkNotFoundGuard />;
   if (!isAuthor) return <AuthorGuard />;

@@ -67,7 +67,7 @@ export default function CategoryView({
   }
 
   const isAuthor =
-    !!user && !!selectedWork && user.username === selectedWork.author.username;
+    !!user && !!selectedWork && user.username === selectedWork.author;
 
   if (loading) return <LoadingGuard />;
   if (notFound) return <CategoryNotFoundGuard />;

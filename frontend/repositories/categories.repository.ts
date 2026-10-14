@@ -36,7 +36,7 @@ function normalizeCategoryWork(entity: CategoryWorkEntity): Work {
     title: entity.title,
     description: entity.description,
     imageUrl: entity.imageUrl,
-    author: { username: author },
+    author: author,
     categories: (entity.oeuvreCategories ?? [])
       .map(relationCategoryName)
       .filter((name): name is string => name !== null),
@@ -98,7 +98,6 @@ export const categoriesRepository = {
       pageSize: response.size,
       total: response.totalElements,
     };
-    console.log(workPage);
     return workPage;
   },
 };
