@@ -41,7 +41,7 @@ const DEFAULT_WORK: Work = {
 export type WorkFormData = {
   title: string;
   description: string;
-  image: File | null;
+  image?: File | null;
   categoryIds?: number[];
 };
 
@@ -68,6 +68,7 @@ export function WorkEdit({
     work?.categories ?? [],
   );
   const [image, setImage] = useState<File | null>(null);
+  const [loadingDelete, setLoadingDelete] = useState(false);
   const [loading, setLoading] = useState(false);
   const [categoryError, setCategoryError] = useState("");
   const asAdmin = isAdmin(user);
@@ -266,15 +267,15 @@ export function WorkEdit({
               <Button
                 type="button"
                 variant="destructive"
-                onClick={() => setLoading(true)}
+                onClick={() => setLoadingDelete(true)}
               >
                 Supprimer l&apos;œuvre
               </Button>
             </CardFooter>
           </Card>
           <ConfirmDialog
-            open={!!loading}
-            onOpenChange={(isOpen) => !isOpen && setLoading(false)}
+            open={!!loadingDelete}
+            onOpenChange={(isOpen) => !isOpen && setLoadingDelete(false)}
             title="Supprimer la catégorie ?"
             description={
               <>

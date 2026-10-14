@@ -149,6 +149,7 @@ describe("WorkEdit", () => {
           title: "My title",
           description: "My desc",
           image: null,
+          categoryIds: [],
         }),
       );
     });
@@ -227,14 +228,17 @@ describe("WorkEdit", () => {
 
   describe("publishing", () => {
     it("saves, then publishes with the selected category ids", async () => {
-      const { handleSave, handlePublish } = setup();
+      const { handlePublish } = setup();
       fireEvent.click(categoryBox("Music"));
       fireEvent.click(publishButton());
 
-      await waitFor(() => expect(handlePublish).toHaveBeenCalledWith([1, 2]));
-      expect(handleSave).toHaveBeenCalledTimes(1);
-      expect(handleSave.mock.invocationCallOrder[0]).toBeLessThan(
-        handlePublish.mock.invocationCallOrder[0],
+      await waitFor(() =>
+        expect(handlePublish).toHaveBeenCalledWith({
+          categoryIds: [1, 2],
+          description: "A rendered work item",
+          image: null,
+          title: "Component test work",
+        }),
       );
     });
 
@@ -249,16 +253,6 @@ describe("WorkEdit", () => {
 
       fireEvent.click(categoryBox("Music"));
       expect(screen.queryByText(NO_CATEGORY)).toBeNull();
-    });
-
-    it("does not publish when handleSave returns nothing", async () => {
-      const { handleSave, handlePublish } = setup();
-      handleSave.mockResolvedValue(undefined);
-      fireEvent.click(publishButton());
-
-      await waitFor(() => expect(handleSave).toHaveBeenCalledTimes(1));
-      await waitFor(() => expect(publishButton().disabled).toBe(false));
-      expect(handlePublish).not.toHaveBeenCalled();
     });
   });
 

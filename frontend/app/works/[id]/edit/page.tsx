@@ -66,7 +66,7 @@ function EditWorkForm({
     setErrors(null);
     try {
       await remove(work.id);
-      router.push("/works");
+      router.push("/works/mine");
     } catch (err) {
       setErrors(err as ApiErrorBody);
     }
