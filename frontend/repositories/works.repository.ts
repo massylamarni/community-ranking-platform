@@ -33,7 +33,7 @@ function createFormData(payload: CreateWorkPayload): FormData {
   form.set("description", payload.description);
   if (payload.categoryIds) {
     for (const id of payload.categoryIds) {
-      form.append("categoryIds", id);
+      form.append("categoryIds", typeof id === "string" ? id : String(id));
     }
   }
   if (payload.imageUrl != null) form.set("imageUrl", payload.imageUrl);

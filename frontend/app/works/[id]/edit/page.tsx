@@ -29,12 +29,8 @@ function EditWorkForm({
 }) {
   const router = useRouter();
   const { submit, update, uploadImage, remove } = useWorks();
-  const { categories, list } = useCategory();
+  const { categories } = useCategory();
   const [errors, setErrors] = useState<ApiErrorBody | null>(initialErrors);
-
-  useEffect(() => {
-    list();
-  }, [list]);
 
   async function handleSave(data: WorkFormData) {
     setErrors(null);
@@ -51,10 +47,16 @@ function EditWorkForm({
     }
   }
 
-  async function handlePublish(categoryIds: number[]) {
+  async function handlePublish(data: WorkFormData) {
     setErrors(null);
     try {
-      await submit(work.id, { categoryIds });
+      await submit(work.id, {
+        title: data.title,
+        description: data.description,
+        categoryIds: data.categoryIds ?? [0],
+      });
+      if (data.image) await uploadImage(work.id, data.image);
+      router.push("/works/mine");
     } catch (err) {
       setErrors(err as ApiErrorBody);
     }
@@ -64,7 +66,7 @@ function EditWorkForm({
     setErrors(null);
     try {
       await remove(work.id);
-      router.push("/works");
+      router.push("/works/mine");
     } catch (err) {
       setErrors(err as ApiErrorBody);
     }

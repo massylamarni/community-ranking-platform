@@ -1,5 +1,6 @@
 import React from "react";
 import type { Work } from "@/types/api";
+import { WorkFormData } from "@/app/works/_components/workEdit";
 
 export const mockCategoryView = jest.fn();
 
@@ -82,7 +83,7 @@ type WorkEditProps = {
     description: string;
     image: File | null;
   }) => Promise<unknown>;
-  handlePublish: (categoryIds: number[]) => Promise<void>;
+  handlePublish: (data: WorkFormData) => Promise<void>;
   handleRemove: () => Promise<void>;
 };
 

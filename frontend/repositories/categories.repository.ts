@@ -2,50 +2,27 @@ import { request } from "@/lib/http";
 import type {
   Category,
   CategoryEntityResponse,
-  CategoryWorkEntity,
+  Work,
   CreateCategoryPayload,
   SpringPage,
-  Work,
   WorkPage,
 } from "@/types/api";
 
 function normalizeCategory(entity: CategoryEntityResponse): Category {
-  return { id: entity.categoryId, name: entity.name };
+  return { id: entity.id, name: entity.name };
 }
 
-function relationCategoryName(
-  relation: Record<string, unknown>,
-): string | null {
-  if (typeof relation.name === "string") return relation.name;
-  const category = relation.category;
-  if (category && typeof category === "object" && "name" in category) {
-    const name = category.name;
-    if (typeof name === "string") return name;
-  }
-  return null;
-}
-
-function normalizeCategoryWork(entity: CategoryWorkEntity): Work {
-  const author =
-    typeof entity.author === "string"
-      ? entity.author
-      : (entity.author?.username ?? "unknown");
-  const votes = entity.votes ?? [];
+function normalizeCategoryWork(entity: Work): Work {
   return {
     id: entity.id,
     title: entity.title,
     description: entity.description,
     imageUrl: entity.imageUrl,
-    author: author,
-    categories: (entity.oeuvreCategories ?? [])
-      .map(relationCategoryName)
-      .filter((name): name is string => name !== null),
+    author: entity.author,
+    categories: entity.categories ?? [],
     status: entity.status,
-    totalVotes: votes.length,
-    score: votes.reduce((score, vote) => {
-      const value = vote.value;
-      return score + (typeof value === "number" ? value : 0);
-    }, 0),
+    totalVotes: entity.totalVotes,
+    score: entity.score,
   };
 }
 
@@ -88,7 +65,7 @@ export const categoriesRepository = {
   },
 
   async worksOf(categoryId: number, page = 1, pageSize = 20) {
-    const response = await request<SpringPage<CategoryWorkEntity>>(
+    const response = await request<SpringPage<Work>>(
       `/categories/${categoryId}/works`,
       { query: { page: Math.max(0, page - 1), size: pageSize } },
     );

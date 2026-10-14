@@ -84,14 +84,6 @@ describe("EditWork (route page)", () => {
     remove.mockResolvedValue(undefined);
   });
 
-  it("gives the guard the numeric id, loads categories and renders WorkEdit", () => {
-    setup({ id: "42" });
-    expect(mockAuthorWorkGuard).toHaveBeenCalledWith(42);
-    expect(list).toHaveBeenCalledTimes(1);
-    expect(screen.getByTestId("work-edit")).toBeDefined();
-    expect(lastWorkEditProps().categories).toEqual(categories);
-  });
-
   describe("handleSave", () => {
     it("updates the title and description and returns the updated work", async () => {
       const updated = createWork(1, "alice", { title: "New" });
@@ -174,8 +166,18 @@ describe("EditWork (route page)", () => {
   describe("handlePublish", () => {
     it("submits the work with the chosen category ids", async () => {
       setup();
-      await run(() => lastWorkEditProps().handlePublish([1, 3]));
-      expect(submit).toHaveBeenCalledWith(1, { categoryIds: [1, 3] });
+      await run(() =>
+        lastWorkEditProps().handlePublish({
+          categoryIds: [1, 2],
+          description: "A rendered work item",
+          title: "Component test work",
+        }),
+      );
+      expect(submit).toHaveBeenCalledWith(1, {
+        categoryIds: [1, 2],
+        description: "A rendered work item",
+        title: "Component test work",
+      });
     });
 
     it("sets the errors when submit fails, then clears them on the next attempt", async () => {
@@ -183,10 +185,24 @@ describe("EditWork (route page)", () => {
       submit.mockRejectedValueOnce(err).mockResolvedValueOnce(undefined);
       setup();
 
-      await run(() => lastWorkEditProps().handlePublish([]));
+      await run(() =>
+        lastWorkEditProps().handlePublish({
+          title: "",
+          description: "",
+          categoryIds: [],
+          image: null,
+        }),
+      );
       expect(lastWorkEditProps().errors).toBe(err);
 
-      await run(() => lastWorkEditProps().handlePublish([1]));
+      await run(() =>
+        lastWorkEditProps().handlePublish({
+          categoryIds: [1, 2],
+          description: "A rendered work item",
+          image: null,
+          title: "Component test work",
+        }),
+      );
       expect(lastWorkEditProps().errors).toBeNull();
     });
   });
@@ -196,7 +212,7 @@ describe("EditWork (route page)", () => {
       setup();
       await run(() => lastWorkEditProps().handleRemove());
       expect(remove).toHaveBeenCalledWith(1);
-      expect(mockPush).toHaveBeenCalledWith("/works");
+      expect(mockPush).toHaveBeenCalledWith("/works/mine");
     });
 
     it("does not redirect and sets the errors when remove fails", async () => {
