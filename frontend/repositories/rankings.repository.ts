@@ -58,7 +58,7 @@ function normalizeRankingResponse(res: unknown): GlobalRankingItem[] {
         id: work?.id ?? index + 1,
         position: typeof entry.rank === "number" ? entry.rank : index + 1,
         title: work?.title ?? "Sans titre",
-        author: work?.author?.username ?? "Anonyme",
+        author: work?.author ?? "Anonyme",
         categories: Array.isArray(work?.categories) ? work.categories : [],
         score,
         imageUrl: work?.imageUrl ?? null,

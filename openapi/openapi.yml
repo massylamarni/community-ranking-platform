@@ -44,7 +44,8 @@ paths:
           description: Account created
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/AuthenticationUser" }
+              schema:
+                { $ref: "#/components/schemas/AuthenticationUserResponse" }
         "400": { $ref: "#/components/responses/ValidationError400" }
         "409": { $ref: "#/components/responses/Conflict" }
 
@@ -64,7 +65,8 @@ paths:
           description: Authenticated
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/AuthenticationUser" }
+              schema:
+                { $ref: "#/components/schemas/AuthenticationUserResponse" }
         "400": { $ref: "#/components/responses/ValidationError400" }
         "401": { $ref: "#/components/responses/Unauthorized" }
 
@@ -328,7 +330,7 @@ paths:
           multipart/form-data:
             schema: { $ref: "#/components/schemas/CreateWorkMultipart" }
       responses:
-        "200":    
+        "200":
           description: Created work response DTO
           content:
             application/json:
@@ -436,13 +438,10 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "422": { $ref: "#/components/responses/ValidationError422" }
 
-
-
-
   /votes/work/{id}:
     post:
       operationId: createVote
-      tags: [ votes ]
+      tags: [votes]
       summary: Create a vote for a work
       description: >
         Allows the authenticated user to cast a positive or negative vote
@@ -469,7 +468,7 @@ paths:
 
     patch:
       operationId: updateVote
-      tags: [ votes ]
+      tags: [votes]
       summary: Modify a vote for a work
       description: >
         Allows the authenticated user to change their existing vote
@@ -493,7 +492,7 @@ paths:
 
     delete:
       operationId: deleteVote
-      tags: [ votes ]
+      tags: [votes]
       summary: Delete a vote for a work
       description: >
         Allows the authenticated user to remove their active vote
@@ -509,7 +508,7 @@ paths:
   /votes/work/me:
     get:
       operationId: getMyVotes
-      tags: [ votes ]
+      tags: [votes]
       summary: Get the authenticated user's votes
       description: >
         Returns all works voted on by the authenticated user,
@@ -524,8 +523,6 @@ paths:
                 items:
                   $ref: "#/components/schemas/UserVoteResponse"
         "401": { $ref: "#/components/responses/Unauthorized" }
-
-
 
   /moderation/works:
     get:
@@ -862,9 +859,6 @@ components:
         application/json:
           schema: { $ref: "#/components/schemas/Error" }
 
-
-
-
   schemas:
     Error:
       type: object
@@ -884,7 +878,7 @@ components:
       type: string
       enum: [created, pending, approved, rejected]
 
-    AuthenticationUser:
+    AuthenticationUserResponse:
       type: object
       required: [userId, username]
       properties:

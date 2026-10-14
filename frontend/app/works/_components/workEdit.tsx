@@ -36,7 +36,6 @@ const DEFAULT_WORK: Work = {
   reason: "",
   score: 0,
   totalVotes: 0,
-  currentUserVote: null,
 };
 
 export type WorkFormData = {
