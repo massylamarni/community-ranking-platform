@@ -191,11 +191,34 @@ export type CommentPage = Page<Comment>;
 
 // ---- rankings -----------------------------------------------------------
 
-export type RankingPeriod = "day" | "week" | "month" | "all";
+export type RankingPeriod = "day" | "week" | "month" | "year" | "all";
 
 export interface RankingEntry {
-  rank: number;
-  work: Work;
+  id: number;
+  position: number;
+  title: string;
+  description: string;
+  author: string;
+  categories: string[];
+  score: number;
+  imageUrl?: string | null;
+}
+
+export type RankingPage = Page<RankingEntry>;
+
+export interface RankingListQuery {
+  categoryId?: number;
+  period?: RankingPeriod;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface RankingArchiveListQuery {
+  periodType?: RankingPeriod;
+  periodStart?: string;
+  categoryId?: number;
+  page?: number;
+  pageSize?: number;
 }
 
 export interface GetRankings {
@@ -208,16 +231,6 @@ export interface RankingSnapshot {
   period: string;
   periodStart: string;
   entries: RankingEntry[];
-}
-
-export interface GlobalRankingItem {
-  id: number;
-  position: number;
-  title: string;
-  author: string;
-  categories: string[];
-  score: number;
-  imageUrl?: string | null;
 }
 
 // ---- profiles -----------------------------------------------------------
