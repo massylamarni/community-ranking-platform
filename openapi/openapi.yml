@@ -322,6 +322,7 @@ paths:
       operationId: createWork
       tags: [works]
       summary: Create a work
+      description: Admins may optionally provide category IDs to assign categories immediately. Category IDs must exist and be unique. Non-admin users cannot assign categories during creation.
       requestBody:
         required: true
         content:
@@ -438,25 +439,28 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "422": { $ref: "#/components/responses/ValidationError422" }
 
-  /votes/work/{id}:
-    post:
-      operationId: createVote
-      tags: [votes]
-      summary: Create a vote for a work
+  /works/{workId}/vote:
+    put:
+      operationId: castOrUpdateVote
+      tags: [works]
+      summary: Create, update, or remove the authenticated user's vote
       description: >
-        Allows the authenticated user to cast a positive or negative vote
-        for a work. A user can have only one active vote per work.
-        A user cannot vote for their own work.
+        Creates or changes the authenticated user's vote for a work.
+        Set value to null (or omit it) to remove the user's vote.
+        Users cannot vote for their own work.
       parameters:
-        - $ref: "#/components/parameters/WorkId"
+        - name: workId
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
       requestBody:
         required: true
         content:
           application/json:
             schema: { $ref: "#/components/schemas/VoteRequest" }
       responses:
-        "201":
-          description: Vote successfully created
+        "200":
+          description: Vote created, updated, or removed
           content:
             application/json:
               schema: { $ref: "#/components/schemas/VoteResponse" }
@@ -464,65 +468,46 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
-        "409": { $ref: "#/components/responses/Conflict" }
 
-    patch:
-      operationId: updateVote
-      tags: [votes]
-      summary: Modify a vote for a work
-      description: >
-        Allows the authenticated user to change their existing vote
-        from positive to negative or from negative to positive.
-      parameters:
-        - $ref: "#/components/parameters/WorkId"
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: "#/components/schemas/VoteRequest" }
-      responses:
-        "200":
-          description: Vote successfully modified
-          content:
-            application/json:
-              schema: { $ref: "#/components/schemas/VoteResponse" }
-        "400": { $ref: "#/components/responses/BadRequest" }
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "404": { $ref: "#/components/responses/NotFound" }
-
-    delete:
-      operationId: deleteVote
-      tags: [votes]
-      summary: Delete a vote for a work
-      description: >
-        Allows the authenticated user to remove their active vote
-        from a work.
-      parameters:
-        - $ref: "#/components/parameters/WorkId"
-      responses:
-        "204":
-          description: Vote successfully deleted
-        "401": { $ref: "#/components/responses/Unauthorized" }
-        "404": { $ref: "#/components/responses/NotFound" }
-
-  /votes/work/me:
     get:
-      operationId: getMyVotes
-      tags: [votes]
-      summary: Get the authenticated user's votes
-      description: >
-        Returns all works voted on by the authenticated user,
-        together with the user's vote for each work.
+      operationId: getMyVoteForWork
+      tags: [works]
+      summary: Get the authenticated user's vote for a work
+      parameters:
+        - name: workId
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
       responses:
         "200":
-          description: List of works voted on by the authenticated user
+          description: The user's vote, or null if they have not voted
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  $ref: "#/components/schemas/UserVoteResponse"
+                oneOf:
+                  - $ref: "#/components/schemas/VoteResponse"
+                  - type: "null"
         "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /works/{workId}/votes:
+    get:
+      operationId: getVotesForWork
+      tags: [works]
+      summary: Get vote details for a work
+      parameters:
+        - name: workId
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        "200":
+          description: The work and its vote entries
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OeuvreVoteResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   /moderation/works:
     get:
@@ -981,22 +966,28 @@ components:
           title,
           description,
           status,
+          reason,
           author,
           imageUrl,
           categories,
           totalVotes,
+          score,
         ]
       properties:
         id: { type: integer, format: int64 }
         title: { type: string }
         description: { type: string }
         status: { $ref: "#/components/schemas/WorkStatus" }
+        reason:
+          type: [string, "null"]
+          description: Reason provided by an admin when rejecting the work; null otherwise.
         author: { type: string }
         imageUrl: { type: [string, "null"] }
         categories:
           type: array
           items: { type: string }
         totalVotes: { type: integer, format: int32 }
+        score: { type: integer, format: int32 }
 
     CreateWorkJson:
       type: object
@@ -1019,6 +1010,11 @@ components:
         description: { type: string, minLength: 1 }
         imageUrl: { type: [string, "null"], maxLength: 255 }
         image: { type: string, format: binary }
+        categoryIds:
+          type: array
+          description: Optional category IDs to assign immediately; admins only.
+          uniqueItems: true
+          items: { type: integer, format: int32 }
 
     SubmitWork:
       type: object
@@ -1065,54 +1061,41 @@ components:
         empty: { type: boolean }
       additionalProperties: true
 
-    VoteType:
-      type: string
-      enum:
-        - positive
-        - negative
-
     VoteRequest:
       type: object
-      required:
-        - type
       properties:
-        type:
-          $ref: "#/components/schemas/VoteType"
+        value:
+          type: [integer, "null"]
+          enum: [-1, 1, null]
+          description: 1 for positive, -1 for negative, null (or omitted) to remove the vote.
 
     VoteResponse:
       type: object
-      required:
-        - id
-        - workId
-        - userId
-        - type
+      required: [id, userId, value, createdAt, oeuvre]
       properties:
-        id:
-          type: integer
-          format: int64
-        workId:
-          type: integer
-          format: int64
-        userId:
-          type: integer
-          format: int32
-        type:
-          $ref: "#/components/schemas/VoteType"
+        id: { type: [integer, "null"], format: int32 }
+        userId: { type: integer, format: int32 }
+        value: { type: [integer, "null"], enum: [-1, 1, null] }
+        createdAt: { type: string, format: date-time }
+        oeuvre: { $ref: "#/components/schemas/OeuvreResponse" }
 
-    UserVoteResponse:
+    VoteItemResponse:
       type: object
-      required:
-        - workId
-        - workTitle
-        - vote
+      required: [id, userId, value, createdAt]
       properties:
-        workId:
-          type: integer
-          format: int64
-        workTitle:
-          type: string
-        vote:
-          $ref: "#/components/schemas/VoteType"
+        id: { type: integer, format: int32 }
+        userId: { type: integer, format: int32 }
+        value: { type: integer, enum: [-1, 1] }
+        createdAt: { type: string, format: date-time }
+
+    OeuvreVoteResponse:
+      type: object
+      required: [oeuvre, votes]
+      properties:
+        oeuvre: { $ref: "#/components/schemas/OeuvreResponse" }
+        votes:
+          type: array
+          items: { $ref: "#/components/schemas/VoteItemResponse" }
 
     RankingItemResponse:
       type: object

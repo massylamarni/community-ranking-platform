@@ -1,5 +1,6 @@
 package fr.numeronumber1.steps;
 
+import fr.numeronumber1.dto.request.VoteRequest;
 import fr.numeronumber1.model.Oeuvre;
 import fr.numeronumber1.model.User;
 import fr.numeronumber1.model.Vote;
@@ -7,27 +8,24 @@ import fr.numeronumber1.model.enums.OeuvreStatus;
 import fr.numeronumber1.repository.OeuvreRepository;
 import fr.numeronumber1.repository.UserRepository;
 import fr.numeronumber1.repository.VoteRepository;
-
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.time.LocalDateTime;
-import java.util.Map;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 public class VoteSteps {
 
@@ -47,24 +45,18 @@ public class VoteSteps {
     private JsonMapper objectMapper;
 
     @Autowired
-    private fr.numeronumber1.steps.AcceptanceScenarioContext scenarioContext;
+    private AcceptanceScenarioContext scenarioContext;
 
     @Autowired
-    private fr.numeronumber1.steps.AuthSteps authSteps;
+    private AuthSteps authSteps;
 
     private Long oeuvreId;
-    private Integer voteCountBefore;
-    private int initialScore;
+    private long voteCountBefore;
     private byte currentVoteValue;
 
     @Given("une œuvre qui n'appartient pas à l'utilisateur")
     public void oeuvre_n_appartient_pas_a_utilisateur() {
-        User author = createUser("vote-author-" + UUID.randomUUID());
-
-        Oeuvre oeuvre = createWork(author);
-        this.oeuvreId = oeuvre.getOeuvreId();
-
-        scenarioContext.setOeuvreId(oeuvreId);
+        setOeuvre(createWork(createUser("vote-author-" + UUID.randomUUID())));
     }
 
     @Given("l'utilisateur possède déjà un vote actif sur cette œuvre")
@@ -75,56 +67,51 @@ public class VoteSteps {
 
     @When("l'utilisateur attribue un vote positif à l'œuvre")
     public void utilisateur_attribue_vote_positif() throws Exception {
-        envoyerVote("positive");
+        envoyerVote(1);
     }
 
     @Then("le vote positif est enregistré")
-    public void vote_positif_enregistre() {
-        assertEquals(201, scenarioContext.getResponseStatus(),
-                scenarioContext.getResponseBody());
-
+    public void vote_positif_enregistre() throws Exception {
+        assertVoteResponse(1);
         Vote vote = findCurrentUserVote();
-
         assertEquals((byte) 1, vote.getValue());
         assertEquals(1, vote.getOeuvre().getScore());
+        assertVoteSummary(1, 1);
     }
 
     @When("l'utilisateur attribue un vote négatif à l'œuvre")
     public void utilisateur_attribue_vote_negatif() throws Exception {
-        envoyerVote("negative");
+        envoyerVote(-1);
     }
 
     @Then("le vote négatif est enregistré")
-    public void vote_negatif_enregistre() {
-        assertEquals(201, scenarioContext.getResponseStatus(),
-                scenarioContext.getResponseBody());
-
+    public void vote_negatif_enregistre() throws Exception {
+        assertVoteResponse(-1);
         Vote vote = findCurrentUserVote();
-
         assertEquals((byte) -1, vote.getValue());
         assertEquals(-1, vote.getOeuvre().getScore());
+        assertVoteSummary(-1, 1);
     }
 
     @When("l'utilisateur tente d'attribuer un nouveau vote à cette œuvre")
     public void utilisateur_tente_nouveau_vote() throws Exception {
         voteCountBefore = votes.findByOeuvreOeuvreIdAndUserUserId(
-                oeuvreId, currentUser().getUserId()).isPresent() ? 1 : 0;
-
-        envoyerVote("positive");
+                requireOeuvreId(), currentUser().getUserId()).isPresent() ? 1 : 0;
+        envoyerVote(1);
     }
 
     @Then("le système ne crée pas un second vote actif")
-    public void systeme_ne_cree_pas_second_vote() {
-        assertNotEquals(201, scenarioContext.getResponseStatus(),
+    public void systeme_ne_cree_pas_second_vote() throws Exception {
+        assertEquals(200, scenarioContext.getResponseStatus(),
                 scenarioContext.getResponseBody());
+        assertEquals(1, responseBody().path("value").asInt());
     }
 
     @Then("un seul vote reste actif pour cet utilisateur sur cette œuvre")
     public void un_seul_vote_reste_actif() {
         assertEquals(1, votes.findByOeuvreOeuvreIdAndUserUserId(
-                oeuvreId, currentUser().getUserId()).stream().count());
-
-        assertEquals(voteCountBefore, 1);
+                requireOeuvreId(), currentUser().getUserId()).stream().count());
+        assertEquals(1, voteCountBefore);
     }
 
     @Given("l'utilisateur a attribué un vote positif à une œuvre")
@@ -135,18 +122,15 @@ public class VoteSteps {
 
     @When("l'utilisateur modifie son vote en vote négatif")
     public void utilisateur_modifie_vote_en_negatif() throws Exception {
-        envoyerModificationVote("negative");
+        envoyerVote(-1);
     }
 
     @Then("le vote de l'utilisateur devient négatif")
-    public void vote_utilisateur_devient_negatif() {
-        assertEquals(200, scenarioContext.getResponseStatus(),
-                scenarioContext.getResponseBody());
-
-        Vote vote = findCurrentUserVote();
-
-        assertEquals((byte) -1, vote.getValue());
-        assertEquals(-1, vote.getOeuvre().getScore());
+    public void vote_utilisateur_devient_negatif() throws Exception {
+        assertVoteResponse(-1);
+        assertEquals((byte) -1, findCurrentUserVote().getValue());
+        assertEquals(-1, currentWork().getScore());
+        assertVoteSummary(-1, 1);
     }
 
     @Given("l'utilisateur a attribué un vote négatif à une œuvre")
@@ -157,18 +141,15 @@ public class VoteSteps {
 
     @When("l'utilisateur modifie son vote en vote positif")
     public void utilisateur_modifie_vote_en_positif() throws Exception {
-        envoyerModificationVote("positive");
+        envoyerVote(1);
     }
 
     @Then("le vote de l'utilisateur devient positif")
-    public void vote_utilisateur_devient_positif() {
-        assertEquals(200, scenarioContext.getResponseStatus(),
-                scenarioContext.getResponseBody());
-
-        Vote vote = findCurrentUserVote();
-
-        assertEquals((byte) 1, vote.getValue());
-        assertEquals(1, vote.getOeuvre().getScore());
+    public void vote_utilisateur_devient_positif() throws Exception {
+        assertVoteResponse(1);
+        assertEquals((byte) 1, findCurrentUserVote().getValue());
+        assertEquals(1, currentWork().getScore());
+        assertVoteSummary(1, 1);
     }
 
     @Given("l'utilisateur possède un vote actif sur une œuvre")
@@ -179,43 +160,38 @@ public class VoteSteps {
 
     @When("l'utilisateur retire son vote")
     public void utilisateur_retire_vote() throws Exception {
-        MockHttpServletRequestBuilder request = delete(
-                "/votes/work/{id}", oeuvreId);
-
-        MvcResult result = mockMvc.perform(withSession(request)).andReturn();
-        capture(result);
+        envoyerVote(null);
     }
 
     @Then("le vote de l'utilisateur est supprimé")
-    public void vote_utilisateur_supprime() {
-        assertEquals(204, scenarioContext.getResponseStatus(),
+    public void vote_utilisateur_supprime() throws Exception {
+        assertEquals(200, scenarioContext.getResponseStatus(),
                 scenarioContext.getResponseBody());
-
+        assertTrue(responseBody().path("value").isNull());
         assertTrue(votes.findByOeuvreOeuvreIdAndUserUserId(
-                oeuvreId, currentUser().getUserId()).isEmpty());
-
-        assertEquals(0, oeuvres.findById(oeuvreId).orElseThrow().getScore());
+                requireOeuvreId(), currentUser().getUserId()).isEmpty());
+        assertEquals(0, currentWork().getScore());
+        assertVoteSummary(0, 0);
     }
 
     @When("l'utilisateur tente d'attribuer un vote positif à son œuvre")
     public void tente_vote_positif_sur_oeuvre_personnelle() throws Exception {
         ensureOwnWorkExists();
-        envoyerVote("positive");
-    }
-
-    @Then("le vote est refusé")
-    public void vote_est_refuse() {
-        assertNotEquals(201, scenarioContext.getResponseStatus(),
-                scenarioContext.getResponseBody());
-
-        assertTrue(votes.findByOeuvreOeuvreIdAndUserUserId(
-                oeuvreId, currentUser().getUserId()).isEmpty());
+        envoyerVote(1);
     }
 
     @When("l'utilisateur tente d'attribuer un vote négatif à son œuvre")
     public void tente_vote_negatif_sur_oeuvre_personnelle() throws Exception {
         ensureOwnWorkExists();
-        envoyerVote("negative");
+        envoyerVote(-1);
+    }
+
+    @Then("le vote est refusé")
+    public void vote_est_refuse() {
+        assertEquals(403, scenarioContext.getResponseStatus(),
+                scenarioContext.getResponseBody());
+        assertTrue(votes.findByOeuvreOeuvreIdAndUserUserId(
+                requireOeuvreId(), currentUser().getUserId()).isEmpty());
     }
 
     @Given("une œuvre possède {int} votes positifs")
@@ -231,37 +207,31 @@ public class VoteSteps {
     }
 
     @When("le score de l'œuvre est calculé")
-    public void score_oeuvre_calcule() {
-        Oeuvre oeuvre = oeuvres.findById(oeuvreId).orElseThrow();
-
-        long positive = votes.countByOeuvreOeuvreIdAndValue(
-                oeuvreId, (byte) 1);
-
-        long negative = votes.countByOeuvreOeuvreIdAndValue(
-                oeuvreId, (byte) -1);
-
-        oeuvre.setScore((int) (positive - negative));
-        oeuvres.save(oeuvre);
+    public void score_oeuvre_calcule() throws Exception {
+        authSteps.authenticateAs("cucumber-vote-score-user", false);
+        envoyerVote(null);
     }
 
     @Then("le score de l'œuvre est égal à {int}")
-    public void score_oeuvre_est_egal(int expectedScore) {
-        Oeuvre oeuvre = oeuvres.findById(oeuvreId).orElseThrow();
-
-        assertEquals(expectedScore, oeuvre.getScore());
+    public void score_oeuvre_est_egal(int expectedScore) throws Exception {
+        assertEquals(200, scenarioContext.getResponseStatus(),
+                scenarioContext.getResponseBody());
+        assertEquals(expectedScore, currentWork().getScore());
+        assertEquals(expectedScore, responseBody().path("oeuvre").path("score").asInt());
     }
 
     @When("l'utilisateur consulte l'œuvre")
     public void utilisateur_consulte_oeuvre_pour_vote() throws Exception {
-        Vote vote = votes.findByOeuvreOeuvreIdAndUserUserId(
-                oeuvreId, currentUser().getUserId()).orElse(null);
-
-        currentVoteValue = vote == null ? 0 : vote.getValue();
-
-        MockHttpServletRequestBuilder request = get("/works/{id}", oeuvreId);
-
-        MvcResult result = mockMvc.perform(withSession(request)).andReturn();
+        MvcResult result = mockMvc.perform(withSession(
+                get("/works/{workId}/vote", requireOeuvreId()))).andReturn();
         capture(result);
+        assertEquals(200, scenarioContext.getResponseStatus(),
+                scenarioContext.getResponseBody());
+
+        String body = scenarioContext.getResponseBody();
+        currentVoteValue = body.isBlank() || objectMapper.readTree(body).isNull()
+                ? 0
+                : (byte) objectMapper.readTree(body).path("value").asInt();
     }
 
     @Then("l'interface indique que le vote positif est actuellement sélectionné")
@@ -277,9 +247,8 @@ public class VoteSteps {
     @Given("l'utilisateur n'a pas voté pour une œuvre")
     public void utilisateur_n_a_pas_vote() {
         ensureWorkExists();
-
         assertTrue(votes.findByOeuvreOeuvreIdAndUserUserId(
-                oeuvreId, currentUser().getUserId()).isEmpty());
+                requireOeuvreId(), currentUser().getUserId()).isEmpty());
     }
 
     @Then("aucun vote n'est indiqué comme actuellement sélectionné")
@@ -287,38 +256,43 @@ public class VoteSteps {
         assertEquals(0, currentVoteValue);
     }
 
-    private void envoyerVote(String type) throws Exception {
-        Map<String, String> body = Map.of("type", type);
-
-        MockHttpServletRequestBuilder request = post(
-                "/votes/work/{id}", oeuvreId)
+    private void envoyerVote(Integer value) throws Exception {
+        MockHttpServletRequestBuilder request = put(
+                "/works/{workId}/vote", requireOeuvreId())
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(body));
-
+                .content(objectMapper.writeValueAsString(new VoteRequest(value)));
         capture(mockMvc.perform(withSession(request)).andReturn());
     }
 
-    private void envoyerModificationVote(String type) throws Exception {
-        Map<String, String> body = Map.of("type", type);
+    private void assertVoteResponse(int expectedValue) throws Exception {
+        assertEquals(200, scenarioContext.getResponseStatus(),
+                scenarioContext.getResponseBody());
+        assertEquals(expectedValue, responseBody().path("value").asInt());
+        assertEquals(expectedValue,
+                responseBody().path("oeuvre").path("score").asInt());
+    }
 
-        MockHttpServletRequestBuilder request = patch(
-                "/votes/work/{id}", oeuvreId)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(body));
+    private void assertVoteSummary(int expectedScore, int expectedVotes)
+            throws Exception {
+        MvcResult result = mockMvc.perform(
+                get("/works/{workId}/votes", requireOeuvreId())).andReturn();
+        capture(result);
 
-        capture(mockMvc.perform(withSession(request)).andReturn());
+        assertEquals(200, scenarioContext.getResponseStatus(),
+                scenarioContext.getResponseBody());
+        JsonNode summary = responseBody();
+        assertEquals(expectedScore, summary.path("oeuvre").path("score").asInt());
+        assertEquals(expectedVotes, summary.path("votes").size());
+    }
+
+    private JsonNode responseBody() throws Exception {
+        return objectMapper.readTree(scenarioContext.getResponseBody());
     }
 
     private MockHttpServletRequestBuilder withSession(
             MockHttpServletRequestBuilder request) {
-
         MockHttpSession session = scenarioContext.getSession();
-
-        if (session != null) {
-            request.session(session);
-        }
-
-        return request;
+        return session == null ? request : request.session(session);
     }
 
     private void capture(MvcResult result) throws Exception {
@@ -339,7 +313,6 @@ public class VoteSteps {
         user.setPasswordHash("fixture-password");
         user.setAdmin(false);
         user.setCreatedAt(LocalDateTime.now());
-
         return users.save(user);
     }
 
@@ -350,81 +323,84 @@ public class VoteSteps {
         oeuvre.setAuthor(author);
         oeuvre.setStatus(OeuvreStatus.approved);
         oeuvre.setScore(0);
-
         return oeuvres.save(oeuvre);
     }
 
-    private void ensureWorkExists() {
-        if (oeuvreId != null) {
-            return;
-        }
-
-        Oeuvre oeuvre = createWork(
-                createUser("vote-author-" + UUID.randomUUID()));
-
+    private void setOeuvre(Oeuvre oeuvre) {
         oeuvreId = oeuvre.getOeuvreId();
         scenarioContext.setOeuvreId(oeuvreId);
     }
 
+    private void ensureWorkExists() {
+        if (oeuvreId == null && scenarioContext.getOeuvreId() != null) {
+            oeuvreId = scenarioContext.getOeuvreId();
+        }
+        if (oeuvreId == null) {
+            setOeuvre(createWork(
+                    createUser("vote-author-" + UUID.randomUUID())));
+        }
+    }
+
     private void ensureOwnWorkExists() {
-        User user = currentUser();
+        ensureWorkExists();
+        Oeuvre work = currentWork();
+        if (!work.getAuthor().getUserId().equals(currentUser().getUserId())) {
+            setOeuvre(createWork(currentUser()));
+        }
+    }
 
-        Oeuvre oeuvre = createWork(user);
+    private Long requireOeuvreId() {
+        ensureWorkExists();
+        return oeuvreId;
+    }
 
-        oeuvreId = oeuvre.getOeuvreId();
-        scenarioContext.setOeuvreId(oeuvreId);
+    private Oeuvre currentWork() {
+        return oeuvres.findById(requireOeuvreId()).orElseThrow();
     }
 
     private void createVoteForCurrentUser(byte value) {
         User user = currentUser();
-
+        Long workId = requireOeuvreId();
         if (votes.findByOeuvreOeuvreIdAndUserUserId(
-                oeuvreId, user.getUserId()).isPresent()) {
+                workId, user.getUserId()).isPresent()) {
             return;
         }
 
         Vote vote = new Vote();
-        vote.setOeuvre(oeuvres.findById(oeuvreId).orElseThrow());
+        vote.setOeuvre(currentWork());
         vote.setUser(user);
         vote.setValue(value);
         vote.setCreatedAt(LocalDateTime.now());
-
         votes.save(vote);
-        recalculateScore();
+        recalculateFixtureScore();
     }
 
     private void createVotesForOtherUsers(byte value, int count) {
+        requireOeuvreId();
         for (int i = 0; i < count; i++) {
             User user = createUser("vote-fixture-" + UUID.randomUUID());
-
             Vote vote = new Vote();
-            vote.setOeuvre(oeuvres.findById(oeuvreId).orElseThrow());
+            vote.setOeuvre(currentWork());
             vote.setUser(user);
             vote.setValue(value);
             vote.setCreatedAt(LocalDateTime.now());
-
             votes.save(vote);
         }
-
-        recalculateScore();
     }
 
     private Vote findCurrentUserVote() {
         return votes.findByOeuvreOeuvreIdAndUserUserId(
-                oeuvreId, currentUser().getUserId()).orElseThrow(
+                requireOeuvreId(), currentUser().getUserId()).orElseThrow(
                 () -> new AssertionError("Vote introuvable"));
     }
 
-    private void recalculateScore() {
-        Oeuvre oeuvre = oeuvres.findById(oeuvreId).orElseThrow();
-
+    private void recalculateFixtureScore() {
+        Oeuvre work = currentWork();
         long positive = votes.countByOeuvreOeuvreIdAndValue(
                 oeuvreId, (byte) 1);
-
         long negative = votes.countByOeuvreOeuvreIdAndValue(
                 oeuvreId, (byte) -1);
-
-        oeuvre.setScore((int) (positive - negative));
-        oeuvres.save(oeuvre);
+        work.setScore((int) (positive - negative));
+        oeuvres.save(work);
     }
 }

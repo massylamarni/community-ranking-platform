@@ -78,6 +78,7 @@ public class VoteService {
             }
         } else if (existingVote.isPresent()) {
             vote = existingVote.get();
+            vote.setCreatedAt(LocalDateTime.now());
 
             if (vote.getValue() != value.byteValue()) {
                 vote.setValue(value.byteValue());
