@@ -55,6 +55,7 @@ function EditWorkForm({
     setErrors(null);
     try {
       await submit(work.id, { categoryIds });
+      router.push("/works/mine");
     } catch (err) {
       setErrors(err as ApiErrorBody);
     }
