@@ -137,7 +137,6 @@ export interface Work {
   status: WorkStatus;
   score?: number;
   totalVotes: number;
-  currentUserVote?: 1 | -1 | null;
 }
 
 export interface CreateWorkPayload {

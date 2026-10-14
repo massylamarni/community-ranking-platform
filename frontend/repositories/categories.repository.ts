@@ -98,7 +98,6 @@ export const categoriesRepository = {
       pageSize: response.size,
       total: response.totalElements,
     };
-    console.log(workPage);
     return workPage;
   },
 };

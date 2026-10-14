@@ -18,17 +18,16 @@ jest.mock("@/repositories", () => ({
 
 const voteMock = jest.mocked(votesRepository.vote);
 
-function votableWork(currentUserVote: 1 | -1 | null): VoteForWorkReponse {
+function votableWork(value: 1 | -1 | null): VoteForWorkReponse {
   return {
     id: "26",
     userId: "2",
-    value: 1,
+    value: value ?? 1,
     createdAt: "2026-10-13T11:16:35.608248623",
     oeuvre: {
       ...createWork(),
-      score: currentUserVote ?? 0,
-      totalVotes: currentUserVote === null ? 0 : 1,
-      currentUserVote,
+      score: value ?? 0,
+      totalVotes: value === null ? 0 : 1,
     },
   };
 }
@@ -74,38 +73,48 @@ describe("WorkItem", () => {
       render(<WorkItem work={voteReponse.oeuvre} setWork={setWork} />);
       fireEvent.click(voteButtons().up);
 
-      await waitFor(() => expect(setWork).toHaveBeenCalledWith(updated));
+      await waitFor(() => expect(setWork).toHaveBeenCalledWith(updated.oeuvre));
       expect(voteMock).toHaveBeenCalledWith(voteReponse.oeuvre.id, {
         value: 1,
       });
     });
 
     it("sends null when the active vote is clicked again", async () => {
-      const voteReponse = votableWork(1);
+      const work = votableWork(null).oeuvre;
       const setWork = jest.fn();
-      voteMock.mockResolvedValue(votableWork(null));
+      voteMock
+        .mockResolvedValueOnce(votableWork(1))
+        .mockResolvedValueOnce(votableWork(null));
 
-      render(<WorkItem work={voteReponse.oeuvre} setWork={setWork} />);
+      render(<WorkItem work={work} setWork={setWork} />);
+
       fireEvent.click(voteButtons().up);
+      await waitFor(() => expect(setWork).toHaveBeenCalledTimes(1));
 
-      await waitFor(() => expect(setWork).toHaveBeenCalled());
-      expect(voteMock).toHaveBeenCalledWith(voteReponse.oeuvre.id, {
-        value: null,
-      });
+      fireEvent.click(voteButtons().up);
+      await waitFor(() => expect(setWork).toHaveBeenCalledTimes(2));
+
+      expect(voteMock).toHaveBeenNthCalledWith(1, work.id, { value: 1 });
+      expect(voteMock).toHaveBeenNthCalledWith(2, work.id, { value: null });
     });
 
     it("switches the vote when the opposite button is clicked", async () => {
-      const voteReponse = votableWork(1);
+      const work = votableWork(null).oeuvre;
       const setWork = jest.fn();
-      voteMock.mockResolvedValue(votableWork(-1));
+      voteMock
+        .mockResolvedValueOnce(votableWork(1))
+        .mockResolvedValueOnce(votableWork(-1));
 
-      render(<WorkItem work={voteReponse.oeuvre} setWork={setWork} />);
+      render(<WorkItem work={work} setWork={setWork} />);
+
+      fireEvent.click(voteButtons().up);
+      await waitFor(() => expect(setWork).toHaveBeenCalledTimes(1));
+
       fireEvent.click(voteButtons().down);
+      await waitFor(() => expect(setWork).toHaveBeenCalledTimes(2));
 
-      await waitFor(() => expect(setWork).toHaveBeenCalled());
-      expect(voteMock).toHaveBeenCalledWith(voteReponse.oeuvre.id, {
-        value: -1,
-      });
+      expect(voteMock).toHaveBeenNthCalledWith(1, work.id, { value: 1 });
+      expect(voteMock).toHaveBeenNthCalledWith(2, work.id, { value: -1 });
     });
 
     it("does not update the work when the request fails", async () => {
