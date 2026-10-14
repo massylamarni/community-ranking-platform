@@ -29,12 +29,8 @@ function EditWorkForm({
 }) {
   const router = useRouter();
   const { submit, update, uploadImage, remove } = useWorks();
-  const { categories, list } = useCategory();
+  const { categories } = useCategory();
   const [errors, setErrors] = useState<ApiErrorBody | null>(initialErrors);
-
-  useEffect(() => {
-    list();
-  }, [list]);
 
   async function handleSave(data: WorkFormData) {
     setErrors(null);
