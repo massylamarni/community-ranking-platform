@@ -10,6 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import fr.numeronumber1.model.Oeuvre;
+import fr.numeronumber1.model.VoteHistory;
 import fr.numeronumber1.model.enums.OeuvreStatus;
 
 public interface OeuvreRepository extends JpaRepository<Oeuvre, Long>, JpaSpecificationExecutor<Oeuvre> {
@@ -50,11 +51,13 @@ public interface OeuvreRepository extends JpaRepository<Oeuvre, Long>, JpaSpecif
             @Param("startDate") LocalDateTime startDate,
             Pageable pageable);
 
-    @Query(value = "SELECT o, COALESCE(SUM(CASE WHEN v.createdAt >= :startDate AND v.createdAt < :endDate THEN v.value ELSE 0 END), 0) " +
-                   "FROM Oeuvre o LEFT JOIN o.votes v " +
+    @Query(value = "SELECT o, COALESCE(SUM(CASE WHEN vh.eventAt >= :startDate AND vh.value IS NOT NULL THEN vh.value ELSE 0 END), 0) " +
+                   "FROM Oeuvre o LEFT JOIN o.voteHistory vh ON vh.eventAt < :endDate " +
+                   "AND NOT EXISTS (SELECT newer.historyId FROM VoteHistory newer WHERE newer.voteId = vh.voteId AND newer.eventAt < :endDate " +
+                   "AND (newer.eventAt > vh.eventAt OR (newer.eventAt = vh.eventAt AND newer.historyId > vh.historyId))) " +
                    "WHERE o.status = :status " +
                    "GROUP BY o " +
-                   "ORDER BY COALESCE(SUM(CASE WHEN v.createdAt >= :startDate AND v.createdAt < :endDate THEN v.value ELSE 0 END), 0) DESC",
+                   "ORDER BY COALESCE(SUM(CASE WHEN vh.eventAt >= :startDate AND vh.value IS NOT NULL THEN vh.value ELSE 0 END), 0) DESC",
            countQuery = "SELECT count(o) FROM Oeuvre o WHERE o.status = :status")
     Page<Object[]> findRankingBetweenDates(
             @Param("status") OeuvreStatus status,
@@ -62,11 +65,13 @@ public interface OeuvreRepository extends JpaRepository<Oeuvre, Long>, JpaSpecif
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable);
 
-    @Query(value = "SELECT o, COALESCE(SUM(CASE WHEN v.createdAt >= :startDate AND v.createdAt < :endDate THEN v.value ELSE 0 END), 0) " +
-                   "FROM Oeuvre o JOIN o.oeuvreCategories oc LEFT JOIN o.votes v " +
+    @Query(value = "SELECT o, COALESCE(SUM(CASE WHEN vh.eventAt >= :startDate AND vh.value IS NOT NULL THEN vh.value ELSE 0 END), 0) " +
+                   "FROM Oeuvre o JOIN o.oeuvreCategories oc LEFT JOIN o.voteHistory vh ON vh.eventAt < :endDate " +
+                   "AND NOT EXISTS (SELECT newer.historyId FROM VoteHistory newer WHERE newer.voteId = vh.voteId AND newer.eventAt < :endDate " +
+                   "AND (newer.eventAt > vh.eventAt OR (newer.eventAt = vh.eventAt AND newer.historyId > vh.historyId))) " +
                    "WHERE o.status = :status AND oc.category.categoryId = :categoryId " +
                    "GROUP BY o " +
-                   "ORDER BY COALESCE(SUM(CASE WHEN v.createdAt >= :startDate AND v.createdAt < :endDate THEN v.value ELSE 0 END), 0) DESC",
+                   "ORDER BY COALESCE(SUM(CASE WHEN vh.eventAt >= :startDate AND vh.value IS NOT NULL THEN vh.value ELSE 0 END), 0) DESC",
            countQuery = "SELECT count(o) FROM Oeuvre o JOIN o.oeuvreCategories oc WHERE o.status = :status AND oc.category.categoryId = :categoryId")
     Page<Object[]> findRankingBetweenDatesAndCategory(
             @Param("status") OeuvreStatus status,
@@ -75,4 +80,3 @@ public interface OeuvreRepository extends JpaRepository<Oeuvre, Long>, JpaSpecif
             @Param("endDate") LocalDateTime endDate,
             Pageable pageable);
 }
-

@@ -68,6 +68,9 @@ public class Oeuvre {
     @OneToMany(mappedBy = "oeuvre")
     private List<Ranking> rankings = new ArrayList<>();
 
+    @OneToMany(mappedBy = "oeuvre")
+    private List<VoteHistory> voteHistory = new ArrayList<>();
+
     @PrePersist
     void onCreate() {
         createdAt = LocalDateTime.now();

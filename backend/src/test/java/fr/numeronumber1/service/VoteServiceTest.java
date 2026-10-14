@@ -8,8 +8,10 @@ import fr.numeronumber1.exception.UnauthorizedActionException;
 import fr.numeronumber1.model.Oeuvre;
 import fr.numeronumber1.model.User;
 import fr.numeronumber1.model.Vote;
+import fr.numeronumber1.model.VoteHistory;
 import fr.numeronumber1.repository.OeuvreRepository;
 import fr.numeronumber1.repository.VoteRepository;
+import fr.numeronumber1.repository.VoteHistoryRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,6 +32,9 @@ class VoteServiceTest {
 
     @Mock
     private VoteRepository voteRepository;
+
+    @Mock
+    private VoteHistoryRepository voteHistoryRepository;
 
     @Mock
     private OeuvreRepository oeuvreRepository;
@@ -101,6 +106,10 @@ class VoteServiceTest {
                 vote.getOeuvre() == oeuvre
                         && vote.getUser() == user
                         && vote.getValue() == 1));
+        verify(voteHistoryRepository).save(argThat(event ->
+                event.getOeuvre() == oeuvre
+                        && event.getUserId().equals(user.getUserId())
+                        && event.getValue().equals(1)));
         verify(oeuvreRepository).save(oeuvre);
     }
 
@@ -124,6 +133,8 @@ class VoteServiceTest {
     @Test
     void shouldChangeExistingVoteAndRecalculateScore() {
         Vote existingVote = createVote((byte) 1);
+        LocalDateTime originalCreatedAt = LocalDateTime.now().minusDays(1);
+        existingVote.setCreatedAt(originalCreatedAt);
         mockExistingWork();
         when(voteRepository.findByOeuvreOeuvreIdAndUserUserId(1L, 10))
                 .thenReturn(Optional.of(existingVote));
@@ -134,14 +145,19 @@ class VoteServiceTest {
 
         assertEquals((byte) -1, response.value());
         assertEquals((byte) -1, existingVote.getValue());
+        assertTrue(existingVote.getCreatedAt().isAfter(originalCreatedAt));
         assertEquals(-1, oeuvre.getScore());
         verify(voteRepository).save(existingVote);
+        verify(voteHistoryRepository).save(argThat(event ->
+                event.getVoteId().equals(existingVote.getVoteId())
+                        && event.getValue().equals(-1)));
         verify(voteRepository, never()).delete(any(Vote.class));
     }
 
     @Test
     void shouldKeepAnUnchangedVoteWithoutCreatingAnother() {
         Vote existingVote = createVote((byte) 1);
+        LocalDateTime originalCreatedAt = existingVote.getCreatedAt();
         mockExistingWork();
         when(voteRepository.findByOeuvreOeuvreIdAndUserUserId(1L, 10))
                 .thenReturn(Optional.of(existingVote));
@@ -150,6 +166,7 @@ class VoteServiceTest {
         VoteResponse response = voteService.vote(1L, request(1), user);
 
         assertEquals((byte) 1, response.value());
+        assertEquals(originalCreatedAt, existingVote.getCreatedAt());
         assertEquals(1, oeuvre.getScore());
         verify(voteRepository, never()).save(any(Vote.class));
         verify(voteRepository, never()).delete(any(Vote.class));
@@ -448,6 +465,9 @@ class VoteServiceTest {
         assertEquals(0, oeuvre.getScore());
 
         verify(voteRepository).delete(existingVote);
+        verify(voteHistoryRepository).save(argThat(event ->
+                event.getVoteId().equals(existingVote.getVoteId())
+                        && event.getValue() == null));
         verify(oeuvreRepository).save(oeuvre);
     }
 
