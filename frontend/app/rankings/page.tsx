@@ -1,13 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import Link from "next/link";
-import { AlertCircle, RefreshCw, Trophy } from "lucide-react";
-
+import { useEffect, useState } from "react";
+import {
+  type ColumnDef,
+  flexRender,
+  rowPaginationFeature,
+  tableFeatures,
+  useTable,
+} from "@tanstack/react-table";
+import { AlertCircle, RefreshCw } from "lucide-react";
+import { cn } from "cn";
 import { rankingsRepository } from "@/repositories/rankings.repository";
-import type { GlobalRankingItem } from "@/types/api";
-
+import type { RankingEntry, RankingPage } from "@/types/api";
 import LoadingGuard from "@/components/guards/loadingGuard";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,142 +25,283 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from "@/components/ui/item";
+import { Label } from "@/components/ui/label";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import RankingHasNoWork from "./_components/rankingHasNoWork";
+
+type CellMeta = { className?: string };
+
+const features = tableFeatures({ rowPaginationFeature });
+
+const PAGE_SIZE = 10;
+
+const columns: ColumnDef<typeof features, RankingEntry>[] = [
+  {
+    accessorKey: "position",
+    header: "Position",
+    meta: { className: "w-24 text-center" } as CellMeta,
+    cell: ({ row }) => (
+      <Badge variant="secondary">#{row.original.position}</Badge>
+    ),
+  },
+  {
+    accessorKey: "title",
+    header: "Œuvre",
+    meta: { className: "whitespace-normal" } as CellMeta,
+    cell: ({ row }) => {
+      const entry = row.original;
+      return (
+        <Item className="p-0" size="sm">
+          <ItemContent>
+            <ItemTitle>
+              <Button
+                variant="link"
+                className="h-auto p-0"
+                nativeButton={false}
+                render={<Link href={`/works/${entry.id}`}>{entry.title}</Link>}
+              />
+            </ItemTitle>
+            <ItemDescription>par {entry.author}</ItemDescription>
+          </ItemContent>
+        </Item>
+      );
+    },
+  },
+  {
+    id: "categories",
+    header: "Catégories",
+    accessorFn: (entry) => entry.categories.join(" "),
+    meta: { className: "w-70 hidden md:table-cell" } as CellMeta,
+    cell: ({ row }) =>
+      row.original.categories.length ? (
+        <ScrollArea>
+          {row.original.categories.map((category) => (
+            <Badge key={category} variant="outline">
+              {category}
+            </Badge>
+          ))}
+        </ScrollArea>
+      ) : (
+        <Badge variant="ghost">Général</Badge>
+      ),
+  },
+  {
+    accessorKey: "score",
+    header: "Score",
+    meta: { className: "w-24 text-center tabular-nums" } as CellMeta,
+  },
+];
 
 export default function RankingsPage() {
-  const [items, setItems] = useState<GlobalRankingItem[]>([]);
+  const [ranking, setRanking] = useState<RankingPage | null>(null);
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: PAGE_SIZE,
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  async function loadRankings() {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await rankingsRepository.getGlobal();
-      setItems(data);
-    } catch {
-      setError(
-        "Impossible de charger le classement global. Veuillez vérifier votre connexion ou réessayer.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }
+  const { pageIndex } = pagination;
 
   useEffect(() => {
-    loadRankings();
-  }, []);
+    let cancelled = false;
+    // eslint-disable-next-line
+    setLoading(true);
+    setError(null);
 
-  if (loading) {
-    return <LoadingGuard />;
-  }
+    rankingsRepository
+      .listGlobal(pageIndex + 1, PAGE_SIZE)
+      .then((data) => {
+        if (!cancelled) setRanking(data);
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setError(
+            "Impossible de charger le classement global. Veuillez vérifier votre connexion ou réessayer.",
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [pageIndex, reloadKey]);
+
+  const table = useTable({
+    features,
+    data: ranking?.items ?? [],
+    columns,
+    manualPagination: true,
+    rowCount: ranking?.total ?? 0,
+    state: { pagination },
+    onPaginationChange: setPagination,
+  });
+
+  if (loading && !ranking) return <LoadingGuard />;
 
   if (error) {
     return (
-      <div className="w-full max-w-4xl py-12 flex flex-col items-center justify-center gap-4 text-center">
-        <div className="flex items-center gap-2 text-destructive font-medium">
-          <AlertCircle className="w-5 h-5 shrink-0" />
-          <span>{error}</span>
-        </div>
-        <Button onClick={loadRankings} variant="outline" className="gap-2">
-          <RefreshCw className="w-4 h-4" />
-          Réessayer
-        </Button>
-      </div>
+      <Alert variant="destructive" className="w-full max-w-4xl">
+        <AlertCircle />
+        <AlertTitle>Erreur de chargement</AlertTitle>
+        <AlertDescription>
+          <p>{error}</p>
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-2"
+            onClick={() => setReloadKey((key) => key + 1)}
+          >
+            <RefreshCw />
+            Réessayer
+          </Button>
+        </AlertDescription>
+      </Alert>
     );
   }
 
-  if (items.length === 0) {
-    return (
-      <Empty className="w-full max-w-4xl my-8">
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <Trophy className="w-6 h-6 text-muted-foreground" />
-          </EmptyMedia>
-          <EmptyTitle>Aucune œuvre classée</EmptyTitle>
-          <EmptyDescription>
-            Aucune œuvre publiée n'est disponible dans le classement global pour le moment.
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    );
-  }
+  if (!ranking || ranking.total === 0) return <RankingHasNoWork />;
+
+  const rows = table.getRowModel().rows;
+  const pageCount = Math.max(1, table.getPageCount());
+  const firstResult = pageIndex * PAGE_SIZE + 1;
+  const lastResult = Math.min((pageIndex + 1) * PAGE_SIZE, ranking.total);
 
   return (
-    <div className="w-full max-w-4xl flex flex-col gap-6 py-6">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center gap-2">
-            <Trophy className="w-6 h-6 text-primary" />
-            <CardTitle>Classement global</CardTitle>
-          </div>
-          <CardDescription>
-            Découvrez les meilleures œuvres publiées toutes catégories confondues, triées par score.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b bg-muted/40 text-muted-foreground">
-                <tr>
-                  <th className="h-10 px-6 text-left font-medium w-24">Position</th>
-                  <th className="h-10 px-4 text-left font-medium">Œuvre</th>
-                  <th className="h-10 px-4 text-left font-medium">Catégorie</th>
-                  <th className="h-10 px-6 text-right font-medium w-28">Score</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y">
-                {items.map((item) => (
-                  <tr
-                    key={item.id}
-                    className="hover:bg-muted/50 transition-colors"
-                  >
-                    <td className="px-6 py-4 font-semibold text-foreground">
-                      <span className="inline-flex items-center justify-center rounded-full text-xs font-bold px-2.5 py-0.5 bg-muted">
-                        #{item.position}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4">
-                      <Link
-                        href={`/works/${item.id}`}
-                        className="font-medium hover:underline text-foreground block"
-                      >
-                        {item.title}
-                      </Link>
-                      {item.author && (
-                        <span className="text-xs text-muted-foreground">
-                          par {item.author}
-                        </span>
+    <Card className="min-w-0 w-full max-w-4xl">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          Classement global
+        </CardTitle>
+        <CardDescription>
+          Découvrez les meilleures œuvres publiées toutes catégories confondues,
+          triées par score.
+        </CardDescription>
+      </CardHeader>
+
+      <CardContent className="min-w-0 max-w-none flex flex-col gap-4">
+        <div
+          className={cn("border rounded-md", loading && "opacity-60")}
+          aria-busy={loading}
+        >
+          <Table className="table-fixed">
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <TableHead
+                      key={header.id}
+                      className={
+                        (header.column.columnDef.meta as CellMeta | undefined)
+                          ?.className
+                      }
+                    >
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
                       )}
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex flex-wrap gap-1">
-                        {item.categories.length > 0 ? (
-                          item.categories.map((cat, idx) => (
-                            <Badge key={idx} variant="outline" className="text-xs">
-                              {cat}
-                            </Badge>
-                          ))
-                        ) : (
-                          <span className="text-xs text-muted-foreground">Général</span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 text-right font-bold text-foreground">
-                      {item.score}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </TableHead>
+                  ))}
+                </TableRow>
+              ))}
+            </TableHeader>
+            <TableBody>
+              {rows.map((row) => (
+                <TableRow key={row.id}>
+                  {row.getAllCells().map((cell) => (
+                    <TableCell
+                      key={cell.id}
+                      className={
+                        (cell.column.columnDef.meta as CellMeta | undefined)
+                          ?.className
+                      }
+                    >
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext(),
+                      )}
+                    </TableCell>
+                  ))}
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+
+        {ranking.total > PAGE_SIZE && (
+          <div className="flex justify-between">
+            <Label className="pl-1">
+              Affichage de {firstResult} à {lastResult} sur {ranking.total}
+            </Label>
+
+            <Pagination className="mx-0 w-auto">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    href="#"
+                    text="Précédent"
+                    aria-disabled={!table.getCanPreviousPage()}
+                    className={cn(
+                      !table.getCanPreviousPage() &&
+                        "pointer-events-none opacity-50",
+                    )}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      table.previousPage();
+                    }}
+                  />
+                </PaginationItem>
+
+                <PaginationItem>
+                  <Label>
+                    Page {pageIndex + 1} sur {pageCount}
+                  </Label>
+                </PaginationItem>
+
+                <PaginationItem>
+                  <PaginationNext
+                    href="#"
+                    text="Suivant"
+                    aria-disabled={!table.getCanNextPage()}
+                    className={cn(
+                      !table.getCanNextPage() &&
+                        "pointer-events-none opacity-50",
+                    )}
+                    onClick={(event) => {
+                      event.preventDefault();
+                      table.nextPage();
+                    }}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
           </div>
-        </CardContent>
-      </Card>
-    </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
