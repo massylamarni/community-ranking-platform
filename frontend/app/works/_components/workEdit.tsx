@@ -42,7 +42,7 @@ export type WorkFormData = {
   title: string;
   description: string;
   image: File | null;
-  categoryIds?: string[];
+  categoryIds?: number[];
 };
 
 export function WorkEdit({
@@ -57,7 +57,7 @@ export function WorkEdit({
   categories: Category[] | null;
   errors: ApiErrorBody | null;
   handleSave: (data: WorkFormData) => Promise<Work | void>;
-  handlePublish?: (categoryIds: number[]) => Promise<void>;
+  handlePublish?: (data: WorkFormData) => Promise<void>;
   handleRemove?: () => Promise<void>;
 }) {
   const { user } = useAuth();
@@ -68,10 +68,13 @@ export function WorkEdit({
     work?.categories ?? [],
   );
   const [image, setImage] = useState<File | null>(null);
-  const [pendingDelete, setPendingDelete] = useState(false);
-  const [deleting, setDeleting] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [categoryError, setCategoryError] = useState("");
   const asAdmin = isAdmin(user);
+
+  const categoryIds = (categories ?? [])
+    .filter((category) => selectedCategories.includes(category.name))
+    .map((category) => category.id);
 
   function toggleSubmitCategory(name: string) {
     setCategoryError("");
@@ -84,43 +87,38 @@ export function WorkEdit({
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
-    setDeleting(true);
+    if (!handleSave) return;
+    setLoading(true);
     try {
       await handleSave({
         title: newWork.title,
         description: newWork.description,
         image,
-        categoryIds: selectedCategories,
+        categoryIds,
       });
-      setPendingDelete(false);
     } finally {
-      setDeleting(false);
+      setLoading(false);
     }
   }
 
   async function onPublish() {
     if (!handlePublish) return;
-    const categoryIds = (categories ?? [])
-      .filter((category) => selectedCategories.includes(category.name))
-      .map((category) => category.id);
     if (categoryIds.length === 0) {
       setCategoryError(
         "Sélectionnez au moins une catégorie pour publier l'œuvre.",
       );
       return;
     }
-    setDeleting(true);
+    setLoading(true);
     try {
-      const saved = await handleSave({
+      await handlePublish({
         title: newWork.title,
         description: newWork.description,
         image,
-        categoryIds: selectedCategories,
+        categoryIds,
       });
-      if (!saved) return;
-      await handlePublish(categoryIds);
     } finally {
-      setDeleting(false);
+      setLoading(false);
     }
   }
 
@@ -238,7 +236,7 @@ export function WorkEdit({
           <Button
             type="submit"
             variant={isEdit ? "secondary" : "default"}
-            disabled={!canEdit || deleting}
+            disabled={!canEdit || loading}
           >
             {asAdmin
               ? "Publier"
@@ -247,7 +245,7 @@ export function WorkEdit({
                 : "Créer le brouillon"}
           </Button>
           {canPublish && handlePublish && (
-            <Button type="button" onClick={onPublish} disabled={deleting}>
+            <Button type="button" onClick={onPublish} disabled={loading}>
               Publier
             </Button>
           )}
@@ -268,15 +266,15 @@ export function WorkEdit({
               <Button
                 type="button"
                 variant="destructive"
-                onClick={() => setPendingDelete(true)}
+                onClick={() => setLoading(true)}
               >
                 Supprimer l&apos;œuvre
               </Button>
             </CardFooter>
           </Card>
           <ConfirmDialog
-            open={!!pendingDelete}
-            onOpenChange={(isOpen) => !isOpen && setPendingDelete(false)}
+            open={!!loading}
+            onOpenChange={(isOpen) => !isOpen && setLoading(false)}
             title="Supprimer la catégorie ?"
             description={
               <>
@@ -285,7 +283,7 @@ export function WorkEdit({
               </>
             }
             onConfirm={handleRemove}
-            loading={deleting}
+            loading={loading}
             error={errors}
           />
         </>

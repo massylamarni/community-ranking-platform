@@ -130,17 +130,19 @@ export interface CreateWorkPayload {
   description: string;
   image?: File | null;
   imageUrl?: string | null;
-  categoryIds?: string[];
+  categoryIds?: string[] | number[];
 }
 
 export interface SubmitWorkPayload {
+  title?: string | null;
+  description?: string | null;
   categoryIds: number[];
 }
 
 export interface UpdateWorkPayload {
   title?: string | null;
   description?: string | null;
-  categoryIds?: string[] | null;
+  categoryIds?: number[] | null;
 }
 
 export interface RefuseWorkPayload {

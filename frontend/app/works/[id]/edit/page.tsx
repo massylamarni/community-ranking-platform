@@ -51,10 +51,15 @@ function EditWorkForm({
     }
   }
 
-  async function handlePublish(categoryIds: number[]) {
+  async function handlePublish(data: WorkFormData) {
     setErrors(null);
     try {
-      await submit(work.id, { categoryIds });
+      await submit(work.id, {
+        title: data.title,
+        description: data.description,
+        categoryIds: data.categoryIds ?? [0],
+      });
+      if (data.image) await uploadImage(work.id, data.image);
       router.push("/works/mine");
     } catch (err) {
       setErrors(err as ApiErrorBody);
