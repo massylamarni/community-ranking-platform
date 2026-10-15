@@ -6,9 +6,13 @@ export const notificationsRepository = {
     return request<Notification[]>("/notifications");
   },
 
-  markAsRead(notificationId: string) {
+  markAsRead(notificationId: number) {
     return request<void>(`/notifications/${notificationId}/read`, {
-      method: "POST",
+      method: "PATCH",
     });
+  },
+
+  markAllAsRead() {
+    return request<void>("/notifications/read-all", { method: "PATCH" });
   },
 };

@@ -18,6 +18,7 @@ import {
   BriefcaseBusiness,
   Shapes,
   ShieldCheck,
+  Bell,
   Trophy,
 } from "lucide-react";
 import { isAdmin, useAuth } from "@/hooks/use-auth";
@@ -67,6 +68,11 @@ const data = {
       title: "Classements",
       url: "/rankings",
       icon: <Trophy />,
+    },
+    {
+      title: "Notifications",
+      url: "/notifications",
+      icon: <Bell />,
     },
   ],
 };
