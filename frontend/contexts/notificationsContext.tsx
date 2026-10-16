@@ -17,9 +17,11 @@ interface NotificationsContextValue {
   unreadCount: number;
   loading: boolean;
   error: unknown;
+  actionError: unknown;
   refresh: () => Promise<void>;
   markAsRead: (id: number) => Promise<void>;
   markAllAsRead: () => Promise<void>;
+  clearActionError: () => void;
 }
 
 // The notifications are stored with the id of the user they belong to, so a
@@ -42,7 +44,7 @@ export function NotificationsProvider({
   const { user } = useAuth();
   const userId = user?.id ?? null;
   const [state, setState] = useState<NotificationsState | null>(null);
-
+  const [actionError, setActionError] = useState<unknown>(null);
   const load = useCallback(
     (id: number): Promise<NotificationsState> =>
       notificationsRepository
@@ -71,25 +73,46 @@ export function NotificationsProvider({
   }, [userId, load]);
 
   const markAsRead = useCallback(async (id: number) => {
-    await notificationsRepository.markAsRead(id);
-    setState(
-      (prev) =>
+    setActionError(null);
+
+    try {
+      await notificationsRepository.markAsRead(id);
+      setState((prev) =>
         prev && {
           ...prev,
-          items: prev.items.map((n) => (n.id === id ? { ...n, read: true } : n)),
+          items: prev.items.map((notification) =>
+            notification.id === id
+              ? { ...notification, read: true }
+              : notification,
+          ),
         },
-    );
+      );
+    } catch (error) {
+      setActionError(error);
+    }
   }, []);
 
   const markAllAsRead = useCallback(async () => {
-    await notificationsRepository.markAllAsRead();
-    setState(
-      (prev) =>
+    setActionError(null);
+
+    try {
+      await notificationsRepository.markAllAsRead();
+      setState((prev) =>
         prev && {
           ...prev,
-          items: prev.items.map((n) => ({ ...n, read: true })),
+          items: prev.items.map((notification) => ({
+            ...notification,
+            read: true,
+          })),
         },
-    );
+      );
+    } catch (error) {
+      setActionError(error);
+    }
+  }, []);
+
+  const clearActionError = useCallback(() => {
+    setActionError(null);
   }, []);
 
   const current = state && state.userId === userId ? state : null;
@@ -105,18 +128,22 @@ export function NotificationsProvider({
       unreadCount,
       loading: userId !== null && current === null,
       error: current?.error ?? null,
+      actionError,
       refresh,
       markAsRead,
       markAllAsRead,
+      clearActionError,
     }),
     [
       notifications,
       unreadCount,
       userId,
       current,
+      actionError,
       refresh,
       markAsRead,
       markAllAsRead,
+      clearActionError,
     ],
   );
 

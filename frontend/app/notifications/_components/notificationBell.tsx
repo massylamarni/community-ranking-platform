@@ -3,7 +3,6 @@
 import { useState } from "react";
 import { Bell, CheckCheck } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
-import { useNotificationActions } from "@/hooks/use-notification-actions";
 import { useNotifications } from "@/contexts/notificationsContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,10 +20,17 @@ const MAX_BADGE_COUNT = 9;
 
 export function NotificationBell() {
   const { user } = useAuth();
-  const { notifications, unreadCount, loading, error, refresh } =
-    useNotifications();
-  const { actionError, read, readAll, clearActionError } =
-    useNotificationActions();
+  const {
+    notifications,
+    unreadCount,
+    loading,
+    error,
+    actionError,
+    refresh,
+    markAsRead,
+    markAllAsRead,
+    clearActionError,
+  } = useNotifications();
   const [open, setOpen] = useState(false);
 
   if (!user) return null;
@@ -75,7 +81,7 @@ export function NotificationBell() {
             size="sm"
             className="min-w-0 shrink"
             disabled={unreadCount === 0}
-            onClick={() => void readAll()}
+            onClick={() => void markAllAsRead()}
           >
             <CheckCheck className="size-4" />
             Tout marquer comme lu
@@ -87,7 +93,7 @@ export function NotificationBell() {
             notifications={notifications}
             loading={loading}
             error={error}
-            onRead={read}
+            onRead={markAsRead}
           />
         </div>
         {actionError ? (
