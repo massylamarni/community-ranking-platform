@@ -1,6 +1,7 @@
 import { Megaphone, ShieldCheck, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import {
   Item,
   ItemActions,
@@ -43,7 +44,15 @@ export function NotificationItem({
   return (
     <Item
       variant={unread ? "muted" : "default"}
-      render={unread ? <button type="button" /> : undefined}
+      render={
+        unread ? (
+          <Button
+            type="button"
+            variant="ghost"
+            className="h-auto w-full justify-start rounded-none p-0"
+          />
+        ) : undefined
+      }
       onClick={unread ? () => onRead(notification.id) : undefined}
       className={cn(
         "rounded-none border-0 border-b border-border text-left last:border-b-0",
