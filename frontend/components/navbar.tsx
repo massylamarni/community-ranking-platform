@@ -13,6 +13,7 @@ import {
 import { Avatar, AvatarFallback } from "./ui/avatar";
 // import { Bell } from "lucide-react";
 // import { Separator } from "./ui/separator";
+import { NotificationBell } from "@/app/notifications/_components/notificationBell";
 import LoadingGuard from "./guards/loadingGuard";
 import { useRouter } from "next/navigation";
 
@@ -43,6 +44,7 @@ export function Navbar() {
               )}
             </Button>
             <Separator orientation="vertical" className="my-2" />*/}
+            <NotificationBell />
             <DropdownMenu>
               <DropdownMenuTrigger
                 className="cursor-pointer"

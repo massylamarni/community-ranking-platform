@@ -244,12 +244,11 @@ export interface GetActivity {
 // ---- notifications --------------------------------------------------------
 
 export type NotificationType =
-  | "work_accepted"
-  | "work_refused"
-  | "admin_action";
+  | "MODERATION"
+  | "SYSTEM";
 
 export interface Notification {
-  id: string;
+  id: number;
   type: NotificationType;
   message: string;
   read: boolean;
