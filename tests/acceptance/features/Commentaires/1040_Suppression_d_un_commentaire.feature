@@ -1,5 +1,6 @@
 # language: en
 
+@commentaires
 Feature: Suppression d'un commentaire
 
   Scenario: L'auteur supprime son propre commentaire
@@ -13,7 +14,6 @@ Feature: Suppression d'un commentaire
     When un administrateur supprime ce commentaire
     Then le commentaire n'est plus affiché sous l'œuvre
 
-@wip
   Scenario: Un utilisateur tiers ne peut pas supprimer le commentaire d'un autre
     Given un utilisateur authentifié a publié un commentaire
     When un autre utilisateur authentifié, ni auteur ni administrateur, tente de supprimer ce commentaire

@@ -1,5 +1,6 @@
 # language: en
 
+@commentaires
 Feature: Modification d'un commentaire
 
   Scenario: L'auteur modifie son propre commentaire
@@ -8,7 +9,6 @@ Feature: Modification d'un commentaire
     And il valide la modification
     Then le commentaire affiché sous l'œuvre est "Superbe travail, bravo !"
 
-@wip
   Scenario: Un autre utilisateur ne peut pas modifier ce commentaire
     Given un utilisateur authentifié a publié un commentaire
     When un autre utilisateur authentifié tente de modifier ce commentaire

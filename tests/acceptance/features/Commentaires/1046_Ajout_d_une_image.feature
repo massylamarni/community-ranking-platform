@@ -1,5 +1,6 @@
 # language: en
 
+@commentaires
 Feature: Ajout d'une image
 
   Scenario: Publication d'un commentaire avec une image associée

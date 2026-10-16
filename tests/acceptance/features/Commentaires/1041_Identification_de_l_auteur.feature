@@ -1,5 +1,6 @@
 # language: en
 
+@commentaires
 Feature: Identification de l'auteur
 
   Scenario: Affichage du pseudo de l'auteur sur son commentaire

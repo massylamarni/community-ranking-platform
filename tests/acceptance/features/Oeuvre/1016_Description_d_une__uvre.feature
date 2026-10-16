@@ -1,4 +1,5 @@
 # language: en
+@oeuvre
 Feature: Description d'une œuvre
 
   Scenario: Créer une œuvre avec une description

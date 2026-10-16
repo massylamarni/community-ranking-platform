@@ -19,6 +19,8 @@ public class AcceptanceScenarioContext {
     private String workDescription;
     private String imageFileName;
     private String imageUrl;
+    private Integer commentId;
+    private String commentContent;
     private int responseStatus;
     private String responseBody = "";
 
@@ -33,6 +35,8 @@ public class AcceptanceScenarioContext {
         workDescription = null;
         imageFileName = null;
         imageUrl = null;
+        commentId = null;
+        commentContent = null;
         responseStatus = 0;
         responseBody = "";
     }
@@ -57,6 +61,10 @@ public class AcceptanceScenarioContext {
     public void setImageFileName(String imageFileName) { this.imageFileName = imageFileName; }
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+    public Integer getCommentId() { return commentId; }
+    public void setCommentId(Integer commentId) { this.commentId = commentId; }
+    public String getCommentContent() { return commentContent; }
+    public void setCommentContent(String commentContent) { this.commentContent = commentContent; }
     public int getResponseStatus() { return responseStatus; }
     public void setResponseStatus(int responseStatus) { this.responseStatus = responseStatus; }
     public String getResponseBody() { return responseBody; }
