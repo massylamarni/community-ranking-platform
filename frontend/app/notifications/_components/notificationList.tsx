@@ -1,16 +1,11 @@
 "use client";
 
 import { useMemo } from "react";
-import { BellOff } from "lucide-react";
-import {
-  Empty,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ItemGroup } from "@/components/ui/item";
 import type { Notification } from "@/types/api";
+import NoNotification from "./noNotification";
+import { NotificationError } from "./notificationError";
 import { NotificationItem } from "./notificationItem";
 
 export function NotificationList({
@@ -45,38 +40,23 @@ export function NotificationList({
 
   if (error) {
     return (
-      <p role="alert" className="p-4 text-sm text-destructive">
-        {String(error)}
-      </p>
+      <div className="p-4">
+        <NotificationError error={error} />
+      </div>
     );
   }
 
-  if (newestFirst.length === 0) {
-    return (
-      <Empty className="w-full">
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <BellOff />
-          </EmptyMedia>
-          <EmptyTitle>Aucune notification</EmptyTitle>
-          <EmptyDescription>
-            Vous serez informé ici des événements qui vous concernent.
-          </EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    );
-  }
+  if (newestFirst.length === 0) return <NoNotification />;
 
   return (
-    <ul className="w-full">
+    <ItemGroup className="gap-0 overflow-hidden">
       {newestFirst.map((notification) => (
-        <li
+        <NotificationItem
           key={notification.id}
-          className="w-full border-b border-border last:border-b-0"
-        >
-          <NotificationItem notification={notification} onRead={onRead} />
-        </li>
+          notification={notification}
+          onRead={onRead}
+        />
       ))}
-    </ul>
+    </ItemGroup>
   );
 }

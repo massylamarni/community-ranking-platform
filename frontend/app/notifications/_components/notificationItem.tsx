@@ -1,5 +1,14 @@
 import { Megaphone, ShieldCheck, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemMedia,
+  ItemTitle,
+} from "@/components/ui/item";
 import type { Notification, NotificationType } from "@/types/api";
 
 const TYPE_CONFIG: Record<
@@ -29,68 +38,51 @@ export function NotificationItem({
 }) {
   const { label, icon: Icon } =
     TYPE_CONFIG[notification.type] ?? TYPE_CONFIG.SYSTEM;
+  const unread = !notification.read;
 
-const content = (
-  <>
-    <div
+  return (
+    <Item
+      variant={unread ? "muted" : "default"}
+      render={unread ? <button type="button" /> : undefined}
+      onClick={unread ? () => onRead(notification.id) : undefined}
       className={cn(
-        "mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full",
-        notification.read
-          ? "bg-muted text-muted-foreground"
-          : "bg-primary/10 text-primary",
+        "rounded-none border-0 border-b border-border text-left last:border-b-0",
+        unread && "cursor-pointer hover:bg-muted",
       )}
     >
-      <Icon className="size-4" aria-hidden="true" />
-    </div>
-
-    <div className="min-w-0 flex-1">
-      <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <span className="text-sm font-medium text-muted-foreground">
-          {label}
-        </span>
-
-        <time
-          dateTime={notification.createdAt}
-          className="text-xs text-muted-foreground"
-        >
-          {formatDate(notification.createdAt)}
-        </time>
-      </div>
-
-      <p
-        className={cn(
-          "mt-1 break-words text-sm leading-6",
-          !notification.read && "font-medium text-foreground",
-        )}
+      <ItemMedia
+        variant="icon"
+        className={unread ? "text-primary" : "text-muted-foreground"}
       >
-        {notification.message}
-      </p>
-    </div>
+        <Icon aria-hidden="true" />
+      </ItemMedia>
 
-    {!notification.read && (
-      <span
-        role="img"
-        aria-label="Non lue"
-        className="mt-1.5 size-2 shrink-0 rounded-full bg-primary"
-      />
-    )}
-  </>
-);
+      <ItemContent className="min-w-0">
+        <ItemTitle>
+          {label}
+          <time
+            dateTime={notification.createdAt}
+            className="text-xs font-normal text-muted-foreground"
+          >
+            {formatDate(notification.createdAt)}
+          </time>
+        </ItemTitle>
 
-const base = "flex w-full items-start gap-4 px-5 py-4 text-left transition-colors";
-  // Unread notifications are clickable (click = mark as read).
-  return notification.read ? (
-    <div className={base}>{content}</div>
-  ) : (
-    <button
-      type="button"
-      onClick={() => onRead(notification.id)}
-      className={cn(
-        base,
-        "bg-primary/[0.03] hover:bg-muted/70",
+        <ItemDescription
+          className={cn(
+            "line-clamp-none break-words",
+            unread && "font-medium text-foreground",
+          )}
+        >
+          {notification.message}
+        </ItemDescription>
+      </ItemContent>
+
+      {unread && (
+        <ItemActions>
+          <Badge variant="secondary">Non lue</Badge>
+        </ItemActions>
       )}
-    >
-      {content}
-    </button>
+    </Item>
   );
 }

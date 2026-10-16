@@ -3,58 +3,37 @@
 import { useState } from "react";
 import { Bell, CheckCheck } from "lucide-react";
 import { useAuth } from "@/hooks/use-auth";
+import { useNotificationActions } from "@/hooks/use-notification-actions";
 import { useNotifications } from "@/contexts/notificationsContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Separator } from "@/components/ui/separator";
+import { NotificationError } from "./notificationError";
 import { NotificationList } from "./notificationList";
 
 const MAX_BADGE_COUNT = 9;
 
 export function NotificationBell() {
   const { user } = useAuth();
-  const {
-    notifications,
-    unreadCount,
-    loading,
-    error,
-    refresh,
-    markAsRead,
-    markAllAsRead,
-  } = useNotifications();
+  const { notifications, unreadCount, loading, error, refresh } =
+    useNotifications();
+  const { actionError, read, readAll, clearActionError } =
+    useNotificationActions();
   const [open, setOpen] = useState(false);
-  const [actionError, setActionError] = useState<unknown>(null);
 
   if (!user) return null;
 
   function handleOpenChange(next: boolean) {
     setOpen(next);
     if (next) {
-      setActionError(null);
-      refresh();
-    }
-  }
-
-  async function handleRead(id: number) {
-    setActionError(null);
-    try {
-      await markAsRead(id);
-    } catch (err) {
-      setActionError(err);
-    }
-  }
-
-  async function handleReadAll() {
-    setActionError(null);
-    try {
-      await markAllAsRead();
-    } catch (err) {
-      setActionError(err);
+      clearActionError();
+      void refresh();
     }
   }
 
@@ -84,33 +63,37 @@ export function NotificationBell() {
           </Button>
         }
       />
-      <PopoverContent align="end" className="w-80 gap-0 p-0">
-        <div className="flex items-center justify-between px-4 py-3">
-          <h2 className="text-sm font-semibold">Notifications</h2>
+      <PopoverContent
+        align="end"
+        className="w-80 max-w-[calc(100vw-1rem)] gap-0 overflow-hidden p-0"
+      >
+        <div className="flex min-w-0 items-center justify-between gap-2 px-4 py-3">
+          <Label>Notifications</Label>
           <Button
             type="button"
             variant="ghost"
             size="sm"
+            className="min-w-0 shrink"
             disabled={unreadCount === 0}
-            onClick={handleReadAll}
+            onClick={() => void readAll()}
           >
             <CheckCheck className="size-4" />
             Tout marquer comme lu
           </Button>
         </div>
         <Separator />
-        <div className="max-h-80 overflow-y-auto">
+        <div className="min-w-0 max-h-80 overflow-x-hidden overflow-y-auto">
           <NotificationList
             notifications={notifications}
             loading={loading}
             error={error}
-            onRead={handleRead}
+            onRead={read}
           />
         </div>
         {actionError ? (
-          <p role="alert" className="px-4 py-2 text-sm text-destructive">
-            {String(actionError)}
-          </p>
+          <div className="p-2">
+            <NotificationError error={actionError} />
+          </div>
         ) : null}
       </PopoverContent>
     </Popover>
