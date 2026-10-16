@@ -49,7 +49,11 @@ public class SecurityConfig {
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             response.setContentType("application/json;charset=UTF-8");
-                            response.getWriter().write("{\"status\":401,\"error\":\"Non authentifié\"}");
+                            String error = request.getMethod().equals(HttpMethod.POST.name())
+                                    && request.getRequestURI().matches("/works/[^/]+/comments")
+                                            ? "Vous devez être connecté pour commenter."
+                                            : "Non authentifié";
+                            response.getWriter().write("{\"status\":401,\"error\":\"" + error + "\"}");
                         })
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             response.setStatus(HttpServletResponse.SC_FORBIDDEN);
@@ -69,6 +73,9 @@ public class SecurityConfig {
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/categories", "/categories/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/works", "/works/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/works/*/comments").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/comments/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/comments/**").authenticated()
                         .requestMatchers(HttpMethod.GET, "/rankings", "/rankings/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users", "/users/**").permitAll()
                         .requestMatchers("/moderation/**").hasRole("ADMIN")

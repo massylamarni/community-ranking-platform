@@ -1,5 +1,6 @@
 # language: en
 
+@commentaires
 Feature: Modération des commentaires
 
   Scenario: Suppression d'un commentaire non conforme par l'administrateur
@@ -9,7 +10,6 @@ Feature: Modération des commentaires
     And il le supprime dans le cadre de la modération
     Then le commentaire n'est plus affiché sous l'œuvre concernée
 
-@wip
   Scenario: Un utilisateur non administrateur ne peut pas modérer un commentaire
     Given un commentaire publié ne respecte pas les règles définies par le site
     When un utilisateur non administrateur tente de le supprimer au titre de la modération

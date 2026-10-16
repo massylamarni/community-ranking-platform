@@ -1,5 +1,6 @@
 # language: en
 
+@commentaires
 Feature: Commentaire sur une œuvre personnelle
 
   Scenario: Interdiction de publier un commentaire principal sur sa propre œuvre

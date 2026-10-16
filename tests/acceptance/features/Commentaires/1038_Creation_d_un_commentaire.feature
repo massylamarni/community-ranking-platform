@@ -1,13 +1,14 @@
 # language: en
 
+@commentaires
 Feature: Création d'un commentaire
 
-  Scenario: Publier un commentaire sur sa propre œuvre
-    Given un utilisateur authentifié consulte une œuvre qu'il a déposée
-    When il rédige le commentaire "Superbe travail"
-    And il valide la publication
-    Then le commentaire "Superbe travail" est enregistré
-    And il est affiché sous l'œuvre concernée avec son auteur
+  #Scenario: Publier un commentaire sur sa propre œuvre
+   # Given un utilisateur authentifié consulte une œuvre qu'il a déposée
+    #When il rédige le commentaire "Superbe travail"
+    #And il valide la publication
+    #Then le commentaire "Superbe travail" est enregistré
+    #And il est affiché sous l'œuvre concernée avec son auteur
 
   Scenario: Publier un commentaire sur une œuvre qu'il n'a pas déposée
     Given un utilisateur authentifié consulte une œuvre qu'il n'a pas déposée

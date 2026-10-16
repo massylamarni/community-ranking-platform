@@ -1,4 +1,5 @@
 # language: en
+@oeuvre
 Feature: Consultation d'une œuvre 
   Scenario: Un visiteur consulte une œuvre publiée 
     Given une œuvre publiée 

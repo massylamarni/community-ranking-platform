@@ -1,5 +1,6 @@
 # language: en
 
+@commentaires
 Feature: Affichage des commentaires
 
   Scenario: Affichage de l'ensemble des commentaires associés à une œuvre

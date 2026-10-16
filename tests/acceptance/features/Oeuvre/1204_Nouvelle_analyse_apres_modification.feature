@@ -1,4 +1,5 @@
 # language: en
+@oeuvre
 Feature: Nouvelle analyse après modification 
   Scenario: Soumettre une œuvre modifiée au filtrage 
     Given une œuvre existante 

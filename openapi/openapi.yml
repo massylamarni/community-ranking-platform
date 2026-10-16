@@ -18,6 +18,8 @@ tags:
     description: Category operations.
   - name: works
     description: Work creation, retrieval, submission, updates, and deletion.
+  - name: comments
+    description: Comment creation, retrieval, updates, and deletion.
   - name: moderation
     description: Administrator review of submitted works.
   - name: rankings
@@ -385,6 +387,112 @@ paths:
       responses:
         "204": { description: Work deleted; no response body }
         "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /works/{workId}/comments:
+    get:
+      operationId: getWorkComments
+      tags: [comments]
+      summary: List comments on a work
+      security: []
+      parameters:
+        - name: workId
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+        - name: page
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: pageSize
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, default: 20 }
+      responses:
+        "200":
+          description: Paginated comments with nested replies
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommentPageResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      operationId: createComment
+      tags: [comments]
+      summary: Create a comment on a work
+      description: Authenticated users may comment on another member's work or reply to an existing comment on the same work. Top-level comments on the author's own work are forbidden.
+      parameters:
+        - name: workId
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateComment" }
+          multipart/form-data:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content: { type: string, minLength: 1 }
+                parentCommentId:
+                  type: [integer, "null"]
+                  format: int32
+                  minimum: 1
+                image: { type: string, format: binary }
+      responses:
+        "201":
+          description: Comment created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommentResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationError422" }
+
+  /comments/{commentId}:
+    patch:
+      operationId: updateComment
+      tags: [comments]
+      summary: Update a comment (author only)
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          schema: { type: integer, format: int32 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateCommentRequest" }
+      responses:
+        "200":
+          description: Updated comment
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommentResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "422": { $ref: "#/components/responses/ValidationError422" }
+    delete:
+      operationId: deleteComment
+      tags: [comments]
+      summary: Delete a comment (author or admin)
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          schema: { type: integer, format: int32 }
+      responses:
+        "204": { description: Comment deleted; no response body }
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
@@ -1024,6 +1132,55 @@ components:
           type: array
           minItems: 1
           items: { type: integer, format: int32 }
+
+    CreateComment:
+      type: object
+      required: [content]
+      properties:
+        content: { type: string, minLength: 1 }
+        parentCommentId:
+          type: [integer, "null"]
+          format: int32
+          minimum: 1
+
+    CommentAuthor:
+      type: object
+      required: [username]
+      properties:
+        username: { type: string }
+
+    CommentResponse:
+      type: object
+      required: [id, oeuvreId, content, author, parentCommentId, replies, createdAt]
+      properties:
+        id: { type: string }
+        oeuvreId: { type: integer, format: int64 }
+        content: { type: string }
+        imageUrl: { type: [string, "null"] }
+        author: { $ref: "#/components/schemas/CommentAuthor" }
+        username: { type: string }
+        parentCommentId: { type: [string, "null"] }
+        replies:
+          type: array
+          items: { $ref: "#/components/schemas/CommentResponse" }
+        createdAt: { type: string, format: date-time }
+
+    CommentPageResponse:
+      type: object
+      required: [items, page, pageSize, total]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/CommentResponse" }
+        page: { type: integer, minimum: 1 }
+        pageSize: { type: integer, minimum: 1 }
+        total: { type: integer, format: int64 }
+
+    UpdateCommentRequest:
+      type: object
+      required: [content]
+      properties:
+        content: { type: string, minLength: 1 }
 
     UpdateWork:
       type: object
