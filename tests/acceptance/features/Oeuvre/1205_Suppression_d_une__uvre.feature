@@ -1,5 +1,4 @@
 # language: en
-@oeuvre
 Feature: Suppression d'une œuvre 
   Scenario: L'auteur supprime sa propre œuvre 
     Given un utilisateur authentifié 

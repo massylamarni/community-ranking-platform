@@ -630,6 +630,12 @@ public class AuthSteps {
         authenticateAs("cucumber-admin", true);
     }
 
+    @Given("je suis connecté en tant que {string}")
+    public void je_suis_connecte_en_tant_que(String requestedUsername) throws Exception {
+        boolean administrator = "Administrateur".equalsIgnoreCase(requestedUsername);
+        authenticateAs(administrator ? "cucumber-admin" : requestedUsername, administrator);
+    }
+
     @Given("un administrateur authentifié")
     public void administrateur_authentifie() throws Exception {
         authenticateAs("cucumber-admin", true);

@@ -1,5 +1,4 @@
 # language: en
-@oeuvre
 Feature: Image d'une œuvre
 
   Scenario: Créer une œuvre avec une image

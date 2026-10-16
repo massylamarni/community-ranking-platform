@@ -1,5 +1,4 @@
 # language: en
-@oeuvre
 Feature: Création d'une œuvre
 
   Scenario: Un utilisateur authentifié propose une œuvre

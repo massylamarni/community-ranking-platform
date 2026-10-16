@@ -1,5 +1,4 @@
 # language: en
-@oeuvre
 Feature: Modification d'une œuvre 
   Scenario: Modifier une œuvre dont on est l'auteur 
     Given un utilisateur authentifié 

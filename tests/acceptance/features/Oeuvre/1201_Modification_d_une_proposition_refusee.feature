@@ -1,5 +1,4 @@
 # language: en
-@oeuvre
 Feature: Modification d'une proposition refusée 
   Scenario: Modifier une proposition refusée 
     Given un utilisateur authentifié 
