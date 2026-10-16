@@ -22,8 +22,6 @@ tags:
     description: Comment creation, retrieval, updates, and deletion.
   - name: moderation
     description: Administrator review of submitted works.
-  - name: rankings
-    description: Global and per-category ranking operations.
   - name: uploads
     description: Public access to uploaded work images.
   - name: notifications
@@ -345,7 +343,6 @@ paths:
       operationId: createWork
       tags: [works]
       summary: Create a work
-      description: Admins may optionally provide category IDs to assign categories immediately. Category IDs must exist and be unique. Non-admin users cannot assign categories during creation.
       requestBody:
         required: true
         content:
@@ -1149,7 +1146,6 @@ components:
           title,
           description,
           status,
-          reason,
           author,
           imageUrl,
           categories,
@@ -1161,9 +1157,6 @@ components:
         title: { type: string }
         description: { type: string }
         status: { $ref: "#/components/schemas/WorkStatus" }
-        reason:
-          type: [string, "null"]
-          description: Reason provided by an admin when rejecting the work; null otherwise.
         author: { type: string }
         imageUrl: { type: [string, "null"] }
         categories:
@@ -1179,11 +1172,6 @@ components:
         title: { type: string, minLength: 1, maxLength: 150 }
         description: { type: string, minLength: 1 }
         imageUrl: { type: [string, "null"], maxLength: 255 }
-        categoryIds:
-          type: array
-          description: Optional category IDs to assign immediately; admins only.
-          uniqueItems: true
-          items: { type: integer, format: int32 }
 
     CreateWorkMultipart:
       type: object
@@ -1193,11 +1181,6 @@ components:
         description: { type: string, minLength: 1 }
         imageUrl: { type: [string, "null"], maxLength: 255 }
         image: { type: string, format: binary }
-        categoryIds:
-          type: array
-          description: Optional category IDs to assign immediately; admins only.
-          uniqueItems: true
-          items: { type: integer, format: int32 }
 
     SubmitWork:
       type: object

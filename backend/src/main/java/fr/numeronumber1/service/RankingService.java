@@ -11,12 +11,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import fr.numeronumber1.dto.response.RankingItemResponse;
-import fr.numeronumber1.model.Oeuvre;
-import fr.numeronumber1.model.enums.OeuvreStatus;
-import fr.numeronumber1.repository.OeuvreRepository;
 
 @Service
 public class RankingService {
@@ -87,5 +81,3 @@ public class RankingService {
         };
     }
 }
-
-

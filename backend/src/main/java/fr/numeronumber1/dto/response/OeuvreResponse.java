@@ -11,7 +11,6 @@ public class OeuvreResponse {
     private String title;
     private String description;
     private String status;
-    private String reason;
     private String author;
     private String imageUrl;
     private List<String> categories;
@@ -23,7 +22,6 @@ public class OeuvreResponse {
         this.title = o.getTitle();
         this.description = o.getDescription();
         this.status = o.getStatus().name();
-        this.reason = o.getRejectionReason();
         this.author = o.getAuthor().getUsername();
         this.imageUrl = o.getImageUrl();
         this.categories = o.getOeuvreCategories().stream()
@@ -38,7 +36,6 @@ public class OeuvreResponse {
     public String getTitle() { return title; }
     public String getDescription() { return description; }
     public String getStatus() { return status; }
-    public String getReason() { return reason; }
     public String getAuthor() { return author; }
     public String getImageUrl() { return imageUrl; }
     public List<String> getCategories() { return categories; }
