@@ -336,26 +336,6 @@ public class RankingSteps {
         voteRepository.save(vote);
     }
 
-    @Given("l'utilisateur consulte le classement d'une catégorie où l'œuvre {string} affiche un score de {int}")
-    public void classement_categorie_affiche_score(String title, int score) {
-        // TODO: préparer le classement et le score affiché
-    }
-
-    @When("un autre utilisateur attribue un vote positif à l'œuvre {string}")
-    public void autre_utilisateur_vote_positivement(String title) {
-        // TODO: préparer l'ajout d'un vote positif
-    }
-
-    @Then("le score de {string} affiché passe à {int}")
-    public void score_affiche_est_mis_a_jour(String title, int score) {
-        // TODO: vérifier la mise à jour du score
-    }
-
-    @Then("cette mise à jour s'affiche sans que l'utilisateur ait besoin de recharger la page")
-    public void mise_a_jour_sans_rechargement() {
-        // TODO: vérifier la mise à jour sans rechargement
-    }
-
     @Given("le classement hebdomadaire de la semaine précédente a été archivé avec le résultat {string}, {string}, {string}")
     public void classement_precedent_archive(String firstTitle, String secondTitle, String thirdTitle) {
         rankingRepository.deleteAll();
