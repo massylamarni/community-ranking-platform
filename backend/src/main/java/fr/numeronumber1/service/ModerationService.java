@@ -39,6 +39,7 @@ public class ModerationService {
         }
 
         oeuvre.setStatus(OeuvreStatus.approved);
+        oeuvre.setRejectionReason(null);
 
         Oeuvre saved = oeuvres.save(oeuvre);
 
@@ -62,6 +63,7 @@ public class ModerationService {
         }
 
         oeuvre.setStatus(OeuvreStatus.rejected);
+        oeuvre.setRejectionReason(request.getReason().trim());
 
         Oeuvre saved = oeuvres.save(oeuvre);
         String author = saved.getAuthor().getUsername();

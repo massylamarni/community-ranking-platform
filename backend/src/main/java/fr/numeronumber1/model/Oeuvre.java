@@ -36,6 +36,9 @@ public class Oeuvre {
     @Column(name = "image_url", length = 255)
     private String imageUrl;
 
+    @Column(name = "rejection_reason", columnDefinition = "TEXT")
+    private String rejectionReason;
+
     @ManyToOne(optional = false)
     @JoinColumn(name = "author_id", nullable = false)
     private User author;
@@ -43,6 +46,9 @@ public class Oeuvre {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 8)
     private OeuvreStatus status = OeuvreStatus.created;
+
+    @Column(nullable = false)
+    private int score;
 
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -108,6 +114,14 @@ public class Oeuvre {
         this.imageUrl = imageUrl;
     }
 
+    public String getRejectionReason() {
+        return rejectionReason;
+    }
+
+    public void setRejectionReason(String rejectionReason) {
+        this.rejectionReason = rejectionReason;
+    }
+
     public User getAuthor() {
         return author;
     }
@@ -122,6 +136,14 @@ public class Oeuvre {
 
     public void setStatus(OeuvreStatus status) {
         this.status = status;
+    }
+
+    public int getScore() {
+        return score;
+    }
+
+    public void setScore(int score) {
+        this.score = score;
     }
 
     public LocalDateTime getCreatedAt() {
