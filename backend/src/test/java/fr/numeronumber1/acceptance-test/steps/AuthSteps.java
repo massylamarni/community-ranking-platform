@@ -3,6 +3,7 @@ package fr.numeronumber1.steps;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -25,14 +26,19 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.ResultActions;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
 import fr.numeronumber1.model.Category;
+import fr.numeronumber1.model.Comment;
 import fr.numeronumber1.model.Oeuvre;
 import fr.numeronumber1.model.User;
+import fr.numeronumber1.model.enums.OeuvreStatus;
 import fr.numeronumber1.repository.CategoryRepository;
+import fr.numeronumber1.repository.CommentRepository;
 import fr.numeronumber1.repository.OeuvreRepository;
 import fr.numeronumber1.repository.UserRepository;
 import io.cucumber.java.After;
@@ -59,6 +65,9 @@ public class AuthSteps {
 
     @Autowired
     private OeuvreRepository oeuvres;
+
+    @Autowired
+    private CommentRepository comments;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -505,6 +514,12 @@ public class AuthSteps {
         assertEquals(200, responseStatus, responseBody);
     }
 
+    @Then("il est redirigé vers une page accessible aux visiteurs")
+    public void ressource_visiteur_accessible_apres_deconnexion() throws Exception {
+        capture(mockMvc.perform(get("/categories")));
+        assertEquals(200, responseStatus, responseBody);
+    }
+
     @Then("il est redirigé vers son espace utilisateur")
     public void redirige_vers_espace_utilisateur() throws Exception {
         var request = get("/auth/me");
@@ -615,6 +630,12 @@ public class AuthSteps {
         authenticateAs("cucumber-admin", true);
     }
 
+    @Given("je suis connecté en tant que {string}")
+    public void je_suis_connecte_en_tant_que(String requestedUsername) throws Exception {
+        boolean administrator = "Administrateur".equalsIgnoreCase(requestedUsername);
+        authenticateAs(administrator ? "cucumber-admin" : requestedUsername, administrator);
+    }
+
     @Given("un administrateur authentifié")
     public void administrateur_authentifie() throws Exception {
         authenticateAs("cucumber-admin", true);
@@ -627,7 +648,10 @@ public class AuthSteps {
 
     @Given("un utilisateur non authentifié")
     public void utilisateur_non_authentifie_sans_session() {
-        // TODO: préparer un utilisateur non authentifié
+        session = null;
+        scenarioContext.setSession(null);
+        scenarioContext.setUsername(null);
+        scenarioContext.setAdministrator(false);
     }
 
     @Given("un utilisateur non administrateur est authentifié")
@@ -641,13 +665,13 @@ public class AuthSteps {
     }
 
     @Given("un utilisateur authentifié a publié le commentaire {string}")
-    public void utilisateur_authentifie_a_publie_commentaire(String comment) {
-        // TODO: préparer un commentaire publié par l'utilisateur authentifié
+    public void utilisateur_authentifie_a_publie_commentaire(String content) throws Exception {
+        prepareAuthenticatedComment(content);
     }
 
     @Given("un utilisateur authentifié a publié un commentaire")
-    public void utilisateur_authentifie_a_publie_un_commentaire() {
-        // TODO: préparer un commentaire publié par l'utilisateur authentifié
+    public void utilisateur_authentifie_a_publie_un_commentaire() throws Exception {
+        prepareAuthenticatedComment("Commentaire publié pour le scénario");
     }
 
     @Given("un utilisateur authentifié consulte une œuvre qu'il a déposée")
@@ -676,13 +700,23 @@ public class AuthSteps {
     }
 
     @When("un autre utilisateur authentifié tente de modifier ce commentaire")
-    public void autre_utilisateur_authentifie_tente_modifier_commentaire() {
-        // TODO: préparer une modification par un autre utilisateur
+    public void autre_utilisateur_authentifie_tente_modifier_commentaire() throws Exception {
+        authenticateAs(uniqueUsername("comment-third-party"), false);
+        Integer commentId = requireScenarioCommentId();
+        capture(mockMvc.perform(patch("/comments/{commentId}", commentId)
+                .session(scenarioContext.getSession())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(
+                        Map.of("content", "Tentative de modification non autorisée")))));
     }
 
     @When("un autre utilisateur authentifié, ni auteur ni administrateur, tente de supprimer ce commentaire")
-    public void autre_utilisateur_non_auteur_non_administrateur_tente_supprimer_commentaire() {
-        // TODO: préparer une suppression par un utilisateur non autorisé
+    public void autre_utilisateur_non_auteur_non_administrateur_tente_supprimer_commentaire()
+            throws Exception {
+        authenticateAs(uniqueUsername("comment-third-party"), false);
+        Integer commentId = requireScenarioCommentId();
+        capture(mockMvc.perform(delete("/comments/{commentId}", commentId)
+                .session(scenarioContext.getSession())));
     }
 
     private void submitRegistration() throws Exception {
@@ -748,7 +782,7 @@ public class AuthSteps {
         scenarioContext.setResponseBody(responseBody);
     }
 
-    void authenticateAs(String requestedUsername, boolean administrator) throws Exception {
+    public void authenticateAs(String requestedUsername, boolean administrator) throws Exception {
         username = requestedUsername;
         email = requestedUsername + "@example.com";
         password = "oldPassword!";
@@ -758,6 +792,49 @@ public class AuthSteps {
         saveAccount(username, email, password, administrator);
         login(username, password);
         assertEquals(200, responseStatus, "La connexion de préparation doit réussir");
+    }
+
+    private void prepareAuthenticatedComment(String content) throws Exception {
+        authenticateAs(uniqueUsername("comment-author"), false);
+
+        User author = users.findByUsername(scenarioContext.getUsername())
+                .orElseThrow(() -> new AssertionError("L'auteur authentifié est introuvable"));
+        User workOwner = saveAccountAndFindUser(uniqueUsername("comment-work-owner"));
+
+        Oeuvre work = new Oeuvre();
+        work.setTitle("Œuvre du commentaire " + UUID.randomUUID());
+        work.setDescription("Œuvre préparée pour le test des permissions de commentaire");
+        work.setAuthor(workOwner);
+        work.setStatus(OeuvreStatus.approved);
+        Oeuvre savedWork = oeuvres.save(work);
+
+        Comment comment = new Comment();
+        comment.setOeuvre(savedWork);
+        comment.setUser(author);
+        comment.setContent(content);
+        comment.setCreatedAt(LocalDateTime.now());
+        Comment savedComment = comments.save(comment);
+
+        scenarioContext.setOeuvreId(savedWork.getOeuvreId());
+        scenarioContext.setWorkTitle(savedWork.getTitle());
+        scenarioContext.setCommentId(savedComment.getCommentId());
+        scenarioContext.setCommentContent(savedComment.getContent());
+    }
+
+    private User saveAccountAndFindUser(String requestedUsername) {
+        saveAccount(requestedUsername, requestedUsername + "@example.com", "oldPassword!");
+        return users.findByUsername(requestedUsername)
+                .orElseThrow(() -> new AssertionError("Le propriétaire de l'œuvre est introuvable"));
+    }
+
+    private Integer requireScenarioCommentId() {
+        Integer commentId = scenarioContext.getCommentId();
+        assertNotNull(commentId, "Le scénario doit préparer un commentaire avant l'action");
+        return commentId;
+    }
+
+    private String uniqueUsername(String prefix) {
+        return prefix + "-" + UUID.randomUUID().toString().replace("-", "").substring(0, 12);
     }
 
     private void saveAccount(String requestedUsername, String requestedEmail, String requestedPassword) {

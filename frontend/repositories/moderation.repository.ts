@@ -13,7 +13,7 @@ function normalizeWorkResponse(response: WorkResponse): Work {
     title: response.title,
     description: response.description,
     status: response.status,
-    author: { username: response.author },
+    author: response.author,
     imageUrl: response.imageUrl,
     categories: response.categories,
     totalVotes: response.totalVotes,
@@ -22,6 +22,7 @@ function normalizeWorkResponse(response: WorkResponse): Work {
 
 export const moderationRepository = {
   async pendingWorks(page = 1, pageSize = 20) {
+    // TODO
     const response = await request<SpringPage<WorkResponse>>(
       "/moderation/works",
       {

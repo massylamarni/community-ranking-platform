@@ -6,6 +6,29 @@ export interface ApiErrorBody {
   fields?: Record<string, string>;
 }
 
+export interface SpringPage<T> {
+  content: T[];
+  totalElements: number;
+  number: number;
+  size: number;
+  totalPages: number;
+  last: boolean;
+  first: boolean;
+  numberOfElements: number;
+  empty: boolean;
+  pageable?: Record<string, unknown>;
+  sort?: Record<string, unknown>;
+}
+
+export interface Page<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
+// ---- auth ---------------------------------------------------------------
+
 export type Role = "user" | "admin";
 
 export interface CurrentUser {
@@ -15,12 +38,10 @@ export interface CurrentUser {
   role: Role;
 }
 
-export interface AuthenticationUser {
+export interface AuthenticationUserResponse {
   userId: number;
   username: string;
 }
-
-// ---- auth ---------------------------------------------------------------
 
 export interface RegisterUserPayload {
   username: string;
@@ -36,7 +57,7 @@ export interface LoginUserPayload {
 export interface ChangePasswordPayload {
   oldPassword: string;
   newPassword: string;
-  confirmPassword: string;
+  confirmPassword: string; // TODO
 }
 
 export interface ForgotPasswordPayload {
@@ -46,7 +67,7 @@ export interface ForgotPasswordPayload {
 export interface ResetPasswordPayload {
   token: string;
   newPassword: string;
-  confirmPassword: string;
+  confirmPassword: string; // TODO
 }
 
 export interface OwnProfile {
@@ -73,71 +94,35 @@ export interface Category {
 }
 
 export interface CategoryEntityResponse {
-  categoryId: number;
+  id: number;
   name: string;
-  oeuvreCategories?: Array<Record<string, unknown>>;
-  [property: string]: unknown;
+  works: Work[];
 }
 
 export interface CreateCategoryPayload {
   name: string;
 }
 
-export interface CategoryWorkEntity {
-  oeuvreId: number;
-  title: string;
-  description: string;
-  imageUrl: string | null;
-  author?: string | { username?: string; [property: string]: unknown };
-  status: WorkStatus;
-  createdAt?: string;
-  updatedAt?: string | null;
-  oeuvreCategories?: Array<Record<string, unknown>>;
-  comments?: Array<Record<string, unknown>>;
-  votes?: Array<Record<string, unknown>>;
-  rankings?: Array<Record<string, unknown>>;
-}
-
-export interface SpringPage<T> {
-  content: T[];
-  totalElements: number;
-  number: number;
-  size: number;
-  totalPages: number;
-  last: boolean;
-  first: boolean;
-  numberOfElements: number;
-  empty: boolean;
-  pageable?: Record<string, unknown>;
-  sort?: Record<string, unknown>;
-}
-
 // ---- works ------------------------------------------------------------
 
 export type WorkStatus = "created" | "pending" | "approved" | "rejected";
 
-export interface WorkResponse {
-  id: number;
-  title: string;
-  description: string;
-  status: WorkStatus;
-  author: string;
-  imageUrl: string | null;
-  categories: string[];
-  totalVotes: number;
-}
+export type WorkResponse = Work;
 
 export interface Work {
+  // TODO
   id: number;
   title: string;
   description: string;
   imageUrl: string | null;
-  author: { username: string };
+  author: string;
   categories: string[];
   status: WorkStatus;
+  reason?: string;
   score?: number;
   totalVotes: number;
-  currentUserVote?: 1 | -1 | null;
+  createdAt?: string;
+  updatedAt?: string | null;
 }
 
 export interface CreateWorkPayload {
@@ -145,34 +130,39 @@ export interface CreateWorkPayload {
   description: string;
   image?: File | null;
   imageUrl?: string | null;
+  categoryIds?: string[] | number[];
 }
 
 export interface SubmitWorkPayload {
+  title?: string | null;
+  description?: string | null;
   categoryIds: number[];
 }
 
 export interface UpdateWorkPayload {
   title?: string | null;
   description?: string | null;
+  categoryIds?: number[] | null;
 }
-
-export interface Page<T> {
-  items: T[];
-  page: number;
-  pageSize: number;
-  total: number;
-}
-
-export type WorkPage = Page<Work>;
 
 export interface RefuseWorkPayload {
   reason?: string;
 }
 
+export type WorkPage = Page<Work>;
+
 // ---- votes ------------------------------------------------------------
 
 export interface VoteForWorkPayload {
   value: 1 | -1 | null;
+}
+
+export interface VoteForWorkReponse {
+  id: string;
+  userId: string;
+  value: 1 | -1;
+  createdAt: string;
+  oeuvre: Work;
 }
 
 // ---- comments -----------------------------------------------------------
@@ -201,11 +191,34 @@ export type CommentPage = Page<Comment>;
 
 // ---- rankings -----------------------------------------------------------
 
-export type RankingPeriod = "day" | "week" | "month" | "all";
+export type RankingPeriod = "day" | "week" | "month" | "year" | "all";
 
 export interface RankingEntry {
-  rank: number;
-  work: Work;
+  id: number;
+  position: number;
+  title: string;
+  description: string;
+  author: string;
+  categories: string[];
+  score: number;
+  imageUrl?: string | null;
+}
+
+export type RankingPage = Page<RankingEntry>;
+
+export interface RankingListQuery {
+  categoryId?: number;
+  period?: RankingPeriod;
+  page?: number;
+  pageSize?: number;
+}
+
+export interface RankingArchiveListQuery {
+  periodType?: RankingPeriod;
+  periodStart?: string;
+  categoryId?: number;
+  page?: number;
+  pageSize?: number;
 }
 
 export interface GetRankings {
@@ -231,14 +244,17 @@ export interface GetActivity {
 // ---- notifications --------------------------------------------------------
 
 export type NotificationType =
-  | "work_accepted"
-  | "work_refused"
-  | "admin_action";
+  | "MODERATION"
+  | "SYSTEM";
 
 export interface Notification {
-  id: string;
+  id: number;
   type: NotificationType;
   message: string;
   read: boolean;
   createdAt: string;
 }
+
+// ---- moderation --------------------------------------------------------
+
+export type ModerationAction = "accept" | "refuse";

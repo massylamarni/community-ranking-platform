@@ -13,12 +13,21 @@ import {
 import { Avatar, AvatarFallback } from "./ui/avatar";
 // import { Bell } from "lucide-react";
 // import { Separator } from "./ui/separator";
+import { NotificationBell } from "@/app/notifications/_components/notificationBell";
 import LoadingGuard from "./guards/loadingGuard";
+import { useRouter } from "next/navigation";
 
 export function Navbar() {
   const { user, userLoading, logout } = useAuth();
+  const router = useRouter();
 
   if (userLoading) return <LoadingGuard />;
+
+  const hadnleLogout = async () => {
+    await logout();
+    router.replace("/auth/login");
+    router.refresh();
+  };
 
   return (
     <nav className="flex items-center justify-end h-13 px-6 border-b sticky top-0 bg-background z-10">
@@ -35,6 +44,7 @@ export function Navbar() {
               )}
             </Button>
             <Separator orientation="vertical" className="my-2" />*/}
+            <NotificationBell />
             <DropdownMenu>
               <DropdownMenuTrigger
                 className="cursor-pointer"
@@ -57,7 +67,7 @@ export function Navbar() {
                   <DropdownMenuItem render={<Link href="/auth/profile" />}>
                     Profil
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={logout}>
+                  <DropdownMenuItem onClick={hadnleLogout}>
                     Se déconnecter
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
@@ -65,7 +75,13 @@ export function Navbar() {
             </DropdownMenu>
           </div>
         ) : (
-          <Button render={<Link href="/auth/login" />}>Se connecter</Button>
+          <Button
+            type="button"
+            nativeButton={false}
+            render={<Link href="/auth/login" />}
+          >
+            Se connecter
+          </Button>
         )}
       </div>
     </nav>

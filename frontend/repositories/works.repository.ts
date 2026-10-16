@@ -20,7 +20,7 @@ export function normalizeWorkResponse(response: WorkResponse): Work {
     title: response.title,
     description: response.description,
     status: response.status,
-    author: { username: response.author },
+    author: response.author,
     imageUrl: response.imageUrl,
     categories: response.categories,
     totalVotes: response.totalVotes,
@@ -31,6 +31,11 @@ function createFormData(payload: CreateWorkPayload): FormData {
   const form = new FormData();
   form.set("title", payload.title);
   form.set("description", payload.description);
+  if (payload.categoryIds) {
+    for (const id of payload.categoryIds) {
+      form.append("categoryIds", typeof id === "string" ? id : String(id));
+    }
+  }
   if (payload.imageUrl != null) form.set("imageUrl", payload.imageUrl);
   if (payload.image) form.set("image", payload.image);
   return form;
@@ -55,6 +60,7 @@ export const worksRepository = {
           title: payload.title,
           description: payload.description,
           imageUrl: payload.imageUrl,
+          categoryIds: payload.categoryIds,
         };
     const response = await request<WorkResponse>("/works", {
       method: "POST",

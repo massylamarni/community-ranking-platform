@@ -1,6 +1,6 @@
 import { request } from "@/lib/http";
 import type {
-  AuthenticationUser,
+  AuthenticationUserResponse,
   ChangePasswordPayload,
   CurrentUser,
   ForgotPasswordPayload,
@@ -13,14 +13,14 @@ import type {
 
 export const authRepository = {
   register(payload: RegisterUserPayload) {
-    return request<AuthenticationUser>("/auth/register", {
+    return request<AuthenticationUserResponse>("/auth/register", {
       method: "POST",
       body: payload,
     });
   },
 
   login(payload: LoginUserPayload) {
-    return request<AuthenticationUser>("/auth/login", {
+    return request<AuthenticationUserResponse>("/auth/login", {
       method: "POST",
       body: payload,
     });

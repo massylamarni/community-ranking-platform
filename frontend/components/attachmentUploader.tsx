@@ -114,7 +114,6 @@ export function AttachmentUploader({
 
       <AttachmentGroup className="w-full">
         {items.map((item) => {
-          console.log(item);
           const Icon = item.icon;
           return (
             <Attachment key={item.id} className="w-64">
