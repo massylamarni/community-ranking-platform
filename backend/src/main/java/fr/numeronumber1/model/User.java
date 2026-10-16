@@ -44,6 +44,8 @@ public class User {
     @OneToMany(mappedBy = "user")
     private List<Vote> votes = new ArrayList<>();
 
+
+
     public Integer getUserId() {
         return userId;
     }

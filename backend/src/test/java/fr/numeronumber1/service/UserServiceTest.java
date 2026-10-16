@@ -1,14 +1,17 @@
 package fr.numeronumber1.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Optional;
 
+import fr.numeronumber1.dto.response.PublicProfileResponse;
+import fr.numeronumber1.exception.ResourceNotFoundException;
+import fr.numeronumber1.repository.CommentRepository;
+import fr.numeronumber1.repository.OeuvreRepository;
+import fr.numeronumber1.repository.VoteRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +31,15 @@ class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private OeuvreRepository oeuvreRepository;
+
+    @Mock
+    private CommentRepository commentRepository;
+
+    @Mock
+    private VoteRepository voteRepository;
 
     @InjectMocks
     private UserService userService;
@@ -140,4 +152,65 @@ class UserServiceTest {
         assertThrows(EmailAlreadyExistsException.class,
                 () -> userService.updateProfile("alice", null, "bob@test.com"));
     }
+
+    @Test
+    void getPublicProfile_retourne_le_profil_public() {
+        when(userRepository.findById(1))
+                .thenReturn(Optional.of(alice));
+
+        when(commentRepository.findByUserUserIdOrderByCreatedAtDesc(1))
+                .thenReturn(List.of());
+
+        when(voteRepository.findByUserUserId(1))
+                .thenReturn(List.of());
+
+        PublicProfileResponse result =
+                userService.getPublicProfile(1);
+
+        assertNotNull(result);
+        assertEquals(1, result.userId());
+        assertEquals("alice", result.username());
+
+        assertNotNull(result.publishedWorks());
+        assertNotNull(result.comments());
+        assertNotNull(result.votedWorks());
+
+        assertTrue(result.publishedWorks().isEmpty());
+        assertTrue(result.comments().isEmpty());
+        assertTrue(result.votedWorks().isEmpty());
+    }
+
+    @Test
+    void getPublicProfile_lance_exception_si_utilisateur_introuvable() {
+        when(userRepository.findById(999))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> userService.getPublicProfile(999)
+        );
+    }
+
+    @Test
+    void getPublicProfile_ne_retourne_pas_email_ni_mot_de_passe() {
+        when(userRepository.findById(1))
+                .thenReturn(Optional.of(alice));
+
+        when(commentRepository.findByUserUserIdOrderByCreatedAtDesc(1))
+                .thenReturn(List.of());
+
+        when(voteRepository.findByUserUserId(1))
+                .thenReturn(List.of());
+
+        PublicProfileResponse result =
+                userService.getPublicProfile(1);
+
+        assertNotNull(result);
+        assertEquals("alice", result.username());
+
+        assertFalse(result.toString().contains("alice@test.com"));
+        assertFalse(result.toString().contains("passwordHash"));
+        assertFalse(result.toString().contains("hash"));
+    }
+
 }
