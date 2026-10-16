@@ -71,6 +71,16 @@ public class CommentSteps {
         rememberComment(comment);
     }
 
+    @Given("il a publié le commentaire {string}")
+    public void il_a_publie_le_commentaire(String content) throws Exception {
+        prepareCommentForCurrentUser(content);
+    }
+
+    @Given("il a publié un commentaire {string}")
+    public void il_a_publie_un_commentaire(String content) throws Exception {
+        prepareCommentForCurrentUser(content);
+    }
+
     @When("l'administrateur supprime le commentaire")
     public void administrateur_supprime_commentaire() throws Exception {
         ensureAuthenticatedUser(true);
@@ -98,6 +108,20 @@ public class CommentSteps {
         assertFalse(user.getComments().stream()
                         .anyMatch(comment -> comment.getCommentId().equals(requireCommentId())),
                 "Le commentaire supprimé ne doit plus apparaître sur le profil de " + username);
+    }
+
+    @Given("il consulte une œuvre qu'il a lui-même déposée")
+    public void il_consulte_oeuvre_qu_il_a_deposee() throws Exception {
+        User currentUser = ensureAuthenticatedUser(false);
+        ensureWorkOwnedByCurrentUser(currentUser);
+    }
+
+    @Given("il rédige un commentaire valide")
+    public void il_redige_un_commentaire_valide() throws Exception {
+        ensureAuthenticatedUser(false);
+        ensureWorkForAuthenticatedUser(false);
+        pendingContent = "Commentaire valide";
+        pendingImage = null;
     }
 
     @When("il rédige le commentaire {string}")
@@ -432,6 +456,11 @@ public class CommentSteps {
         assertTrue(responseBody().path("items").isArray(), scenarioContext.getResponseBody());
     }
 
+    @When("je consulte ce commentaire")
+    public void je_consulte_ce_commentaire() throws Exception {
+        administrateur_consulte_commentaire();
+    }
+
     @When("il le supprime dans le cadre de la modération")
     public void supprime_commentaire_pour_moderation() throws Exception {
         ensureAuthenticatedUser(true);
@@ -439,11 +468,26 @@ public class CommentSteps {
         deleteCurrentComment();
     }
 
+    @When("je le supprime dans le cadre de la modération")
+    public void je_le_supprime_dans_le_cadre_de_la_moderation() throws Exception {
+        supprime_commentaire_pour_moderation();
+    }
+
+    @When("je supprime ce commentaire")
+    public void je_supprime_ce_commentaire() throws Exception {
+        administrateur_supprime_ce_commentaire();
+    }
+
     @When("un utilisateur non administrateur tente de le supprimer au titre de la modération")
     public void utilisateur_non_admin_tente_suppression_moderation() throws Exception {
         ensureAuthenticatedUser(false);
         ensureCommentExistsForDeletion();
         deleteCurrentComment();
+    }
+
+    @When("l'utilisateur tente de le supprimer au titre de la modération")
+    public void utilisateur_tente_suppression_moderation() throws Exception {
+        utilisateur_non_admin_tente_suppression_moderation();
     }
 
     private User ensureAuthenticatedUser(boolean administrator) throws Exception {
@@ -500,6 +544,14 @@ public class CommentSteps {
             currentComment = saveComment(work, currentUser, "Superbe travail", null);
             rememberComment(currentComment);
         }
+    }
+
+    private void prepareCommentForCurrentUser(String content) throws Exception {
+        User author = ensureAuthenticatedUser(false);
+        Oeuvre work = workForScenario("Commentaire de " + author.getUsername(),
+                fixtureUser(uniqueUsername("comment-work-owner"), false));
+        rememberComment(saveComment(work, author, content, null));
+        expectedAuthor = author.getUsername();
     }
 
     private void ensureCommentExistsForDeletion() {

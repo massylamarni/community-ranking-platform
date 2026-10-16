@@ -1,5 +1,4 @@
 # language: en
-@oeuvre
 Feature: Proposition d'une œuvre 
   Scenario: Proposer une œuvre dans une catégorie 
     Given un utilisateur authentifié 

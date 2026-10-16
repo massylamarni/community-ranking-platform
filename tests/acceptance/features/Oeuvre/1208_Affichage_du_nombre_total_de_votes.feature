@@ -1,5 +1,4 @@
 # language: en
-@oeuvre
 Feature: Affichage du nombre total de votes 
   Scenario: Afficher le nombre total de votes d'une œuvre 
     Given une œuvre publiée 

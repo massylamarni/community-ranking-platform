@@ -1,5 +1,4 @@
 # language: en
-@oeuvre
 Feature: Titre d'une œuvre
 
   Scenario: Créer une œuvre avec un titre
