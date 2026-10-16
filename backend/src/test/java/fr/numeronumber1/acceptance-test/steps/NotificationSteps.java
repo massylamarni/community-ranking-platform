@@ -97,31 +97,6 @@ public class NotificationSteps {
         // TODO: vérifier la notification de refus
     }
 
-    @Given("un utilisateur possède un compte actif")
-    public void utilisateur_possede_compte_actif() {
-        // TODO: préparer un compte utilisateur actif
-    }
-
-    @When("un administrateur bloque son compte")
-    public void administrateur_bloque_compte() {
-        // TODO: préparer le blocage du compte
-    }
-
-    @Then("l'utilisateur est informé que son compte a été bloqué")
-    public void utilisateur_informe_blocage_compte() {
-        // TODO: vérifier la notification de blocage
-    }
-
-    @When("un administrateur supprime son compte")
-    public void administrateur_supprime_compte() {
-        // TODO: préparer la suppression du compte
-    }
-
-    @Then("l'utilisateur est informé que son compte a été supprimé")
-    public void utilisateur_informe_suppression_compte() {
-        // TODO: vérifier la notification de suppression
-    }
-
     @Given("un utilisateur possède un contenu")
     public void utilisateur_possede_contenu() {
         // TODO: préparer un contenu utilisateur
