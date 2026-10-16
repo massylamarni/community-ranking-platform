@@ -1,6 +1,5 @@
 # language: en
 Feature: Affichage des commentaires 
-  @wip
   Scenario: Afficher les commentaires associés à une œuvre
     Given une œuvre publiée 
     And des commentaires sont associés à cette œuvre 
