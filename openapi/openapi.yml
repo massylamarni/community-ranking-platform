@@ -438,7 +438,7 @@ paths:
               type: object
               required: [content]
               properties:
-                content: { type: string, minLength: 1 }
+                content: { type: string, minLength: 1, pattern: '\S' }
                 parentCommentId:
                   type: [integer, "null"]
                   format: int32
@@ -454,6 +454,7 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
+        "415": { $ref: "#/components/responses/UnsupportedMediaType" }
         "422": { $ref: "#/components/responses/ValidationError422" }
 
   /comments/{commentId}:
@@ -481,6 +482,7 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
+        "415": { $ref: "#/components/responses/UnsupportedMediaType" }
         "422": { $ref: "#/components/responses/ValidationError422" }
     delete:
       operationId: deleteComment
@@ -1137,7 +1139,7 @@ components:
       type: object
       required: [content]
       properties:
-        content: { type: string, minLength: 1 }
+        content: { type: string, minLength: 1, pattern: '\S' }
         parentCommentId:
           type: [integer, "null"]
           format: int32
@@ -1180,7 +1182,7 @@ components:
       type: object
       required: [content]
       properties:
-        content: { type: string, minLength: 1 }
+        content: { type: string, minLength: 1, pattern: '\S' }
 
     UpdateWork:
       type: object
