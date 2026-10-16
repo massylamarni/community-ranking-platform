@@ -18,10 +18,16 @@ tags:
     description: Category operations.
   - name: works
     description: Work creation, retrieval, submission, updates, and deletion.
+  - name: comments
+    description: Comment creation, retrieval, updates, and deletion.
   - name: moderation
     description: Administrator review of submitted works.
+  - name: rankings
+    description: Global and per-category ranking operations.
   - name: uploads
     description: Public access to uploaded work images.
+  - name: notifications
+    description: In-app notifications for the authenticated user.
 
 paths:
   /auth/register:
@@ -40,7 +46,8 @@ paths:
           description: Account created
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/AuthenticationUser" }
+              schema:
+                { $ref: "#/components/schemas/AuthenticationUserResponse" }
         "400": { $ref: "#/components/responses/ValidationError400" }
         "409": { $ref: "#/components/responses/Conflict" }
 
@@ -60,7 +67,8 @@ paths:
           description: Authenticated
           content:
             application/json:
-              schema: { $ref: "#/components/schemas/AuthenticationUser" }
+              schema:
+                { $ref: "#/components/schemas/AuthenticationUserResponse" }
         "400": { $ref: "#/components/responses/ValidationError400" }
         "401": { $ref: "#/components/responses/Unauthorized" }
 
@@ -165,6 +173,27 @@ paths:
         "401": { $ref: "#/components/responses/Unauthorized" }
         "409": { $ref: "#/components/responses/Conflict" }
         "422": { $ref: "#/components/responses/ValidationError422" }
+
+  /users/{userId}/public_profile:
+    parameters:
+      - name: userId
+        in: path
+        required: true
+        schema: { type: integer, format: int32, minimum: 1 }
+    get:
+      operationId: getPublicProfile
+      tags: [profile]
+      summary: Get a user's public profile
+      description: Returns the username and public activity. Email and other private account details are not included.
+      security: []
+      responses:
+        "200":
+          description: Public profile with approved works, comments, and voted works
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PublicProfile" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
 
   /categories:
     get:
@@ -316,6 +345,7 @@ paths:
       operationId: createWork
       tags: [works]
       summary: Create a work
+      description: Admins may optionally provide category IDs to assign categories immediately. Category IDs must exist and be unique. Non-admin users cannot assign categories during creation.
       requestBody:
         required: true
         content:
@@ -324,7 +354,7 @@ paths:
           multipart/form-data:
             schema: { $ref: "#/components/schemas/CreateWorkMultipart" }
       responses:
-        "200":    
+        "200":
           description: Created work response DTO
           content:
             application/json:
@@ -382,6 +412,114 @@ paths:
         "403": { $ref: "#/components/responses/Forbidden" }
         "404": { $ref: "#/components/responses/NotFound" }
 
+  /works/{workId}/comments:
+    get:
+      operationId: getWorkComments
+      tags: [comments]
+      summary: List comments on a work
+      security: []
+      parameters:
+        - name: workId
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+        - name: page
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, default: 1 }
+        - name: pageSize
+          in: query
+          required: false
+          schema: { type: integer, minimum: 1, default: 20 }
+      responses:
+        "200":
+          description: Paginated comments with nested replies
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommentPageResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "404": { $ref: "#/components/responses/NotFound" }
+    post:
+      operationId: createComment
+      tags: [comments]
+      summary: Create a comment on a work
+      description: Authenticated users may comment on another member's work or reply to an existing comment on the same work. Top-level comments on the author's own work are forbidden.
+      parameters:
+        - name: workId
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CreateComment" }
+          multipart/form-data:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content: { type: string, minLength: 1, pattern: '\S' }
+                parentCommentId:
+                  type: [integer, "null"]
+                  format: int32
+                  minimum: 1
+                image: { type: string, format: binary }
+      responses:
+        "201":
+          description: Comment created
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommentResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "415": { $ref: "#/components/responses/UnsupportedMediaType" }
+        "422": { $ref: "#/components/responses/ValidationError422" }
+
+  /comments/{commentId}:
+    patch:
+      operationId: updateComment
+      tags: [comments]
+      summary: Update a comment (author only)
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          schema: { type: integer, format: int32 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/UpdateCommentRequest" }
+      responses:
+        "200":
+          description: Updated comment
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CommentResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "415": { $ref: "#/components/responses/UnsupportedMediaType" }
+        "422": { $ref: "#/components/responses/ValidationError422" }
+    delete:
+      operationId: deleteComment
+      tags: [comments]
+      summary: Delete a comment (author or admin)
+      parameters:
+        - name: commentId
+          in: path
+          required: true
+          schema: { type: integer, format: int32 }
+      responses:
+        "204": { description: Comment deleted; no response body }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /works/{id}/image:
     post:
       operationId: uploadWorkImage
@@ -432,6 +570,76 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "422": { $ref: "#/components/responses/ValidationError422" }
 
+  /works/{workId}/vote:
+    put:
+      operationId: castOrUpdateVote
+      tags: [works]
+      summary: Create, update, or remove the authenticated user's vote
+      description: >
+        Creates or changes the authenticated user's vote for a work.
+        Set value to null (or omit it) to remove the user's vote.
+        Users cannot vote for their own work.
+      parameters:
+        - name: workId
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/VoteRequest" }
+      responses:
+        "200":
+          description: Vote created, updated, or removed
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/VoteResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+    get:
+      operationId: getMyVoteForWork
+      tags: [works]
+      summary: Get the authenticated user's vote for a work
+      parameters:
+        - name: workId
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        "200":
+          description: The user's vote, or null if they have not voted
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/VoteResponse"
+                  - type: "null"
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /works/{workId}/votes:
+    get:
+      operationId: getVotesForWork
+      tags: [works]
+      summary: Get vote details for a work
+      parameters:
+        - name: workId
+          in: path
+          required: true
+          schema: { type: integer, format: int64 }
+      responses:
+        "200":
+          description: The work and its vote entries
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/OeuvreVoteResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
   /moderation/works:
     get:
       operationId: getPendingWorks
@@ -456,6 +664,10 @@ paths:
       operationId: acceptWork
       tags: [moderation]
       summary: Accept a pending work (admin only)
+      description: >
+        Changes the work status to `approved`.
+        Triggers a `MODERATION` in-app notification to the author with the message
+        `Votre œuvre "<title>" a été acceptée.` (NOTIF-001).
       parameters:
         - $ref: "#/components/parameters/ModerationWorkId"
       responses:
@@ -493,6 +705,123 @@ paths:
         "404": { $ref: "#/components/responses/NotFound" }
         "422": { $ref: "#/components/responses/ValidationError422" }
 
+  /rankings:
+    get:
+      operationId: getRankings
+      tags: [rankings]
+      summary: Get rankings sorted by score, optionally filtered by category
+      description: Returns published works sorted by score in descending order. Can be filtered by category (by categoryId or category name). If no category parameter is specified, returns global ranking. Paginated.
+      security: []
+      parameters:
+        - name: categoryId
+          in: query
+          required: false
+          description: Category ID to filter by
+          schema:
+            type: integer
+            format: int32
+        - name: period
+          in: query
+          required: false
+          description: Time period window for vote aggregation ('day' / 'jour', 'week' / 'semaine', 'month' / 'mois', 'all')
+          schema:
+            type: string
+            enum: [day, week, month, all, jour, semaine, mois]
+            default: all
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Spring Data page containing RankingItemResponse DTOs
+          content:
+            application/json:
+              schema:
+                { $ref: "#/components/schemas/SpringPageRankingItemResponse" }
+
+  /rankings/global:
+    get:
+      operationId: getGlobalRanking
+      tags: [rankings]
+      summary: Get global ranking of published works sorted by score
+      description: Returns all published works across all categories, sorted by score (sum of votes) in descending order. Paginated.
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Spring Data page containing RankingItemResponse DTOs
+          content:
+            application/json:
+              schema:
+                { $ref: "#/components/schemas/SpringPageRankingItemResponse" }
+
+  /rankings/archives:
+    get:
+      operationId: getArchivedRankings
+      tags: [rankings]
+      summary: Browse archived rankings for past periods
+      description: Returns snapshots of past rankings for a given period (day, week, month, year) and start date. If periodStart is omitted, defaults to the most recent archived period. Paginated.
+      security: []
+      parameters:
+        - name: periodType
+          in: query
+          required: false
+          description: Type of ranking period (day, week, month, year)
+          schema:
+            type: string
+            enum: [day, week, month, year]
+            default: week
+        - name: periodStart
+          in: query
+          required: false
+          description: Start date of the archived period (YYYY-MM-DD)
+          schema:
+            type: string
+            format: date
+        - name: categoryId
+          in: query
+          required: false
+          description: Optional category ID to filter archived ranking
+          schema:
+            type: integer
+            format: int32
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/Size"
+      responses:
+        "200":
+          description: Archived ranking items
+          content:
+            application/json:
+              schema:
+                { $ref: "#/components/schemas/SpringPageRankingItemResponse" }
+
+  /rankings/archives/periods:
+    get:
+      operationId: getArchivedPeriods
+      tags: [rankings]
+      summary: List available archived period dates
+      description: Returns the list of distinct start dates for which ranking snapshots exist.
+      security: []
+      parameters:
+        - name: periodType
+          in: query
+          required: false
+          description: Optional filter by period type
+          schema:
+            type: string
+            enum: [day, week, month, year]
+      responses:
+        "200":
+          description: List of dates in YYYY-MM-DD format
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  format: date
+
   /uploads/works/{filename}:
     get:
       operationId: getWorkImage
@@ -518,6 +847,45 @@ paths:
             image/gif:
               schema: { type: string, format: binary }
         "404": { description: Image not found }
+
+  /notifications:
+    get:
+      operationId: getMyNotifications
+      tags: [notifications]
+      summary: List notifications for the authenticated user
+      responses:
+        "200":
+          description: Notifications retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/NotificationResponse" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /notifications/{id}/read:
+    patch:
+      operationId: markNotificationAsRead
+      tags: [notifications]
+      summary: Mark a single notification as read
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: integer, format: int32 }
+      responses:
+        "204": { description: Notification marked as read }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "404": { $ref: "#/components/responses/NotFound" }
+
+  /notifications/read-all:
+    patch:
+      operationId: markAllNotificationsAsRead
+      tags: [notifications]
+      summary: Mark all notifications of the authenticated user as read
+      responses:
+        "204": { description: All notifications marked as read }
+        "401": { $ref: "#/components/responses/Unauthorized" }
 
 components:
   securitySchemes:
@@ -626,7 +994,7 @@ components:
       type: string
       enum: [created, pending, approved, rejected]
 
-    AuthenticationUser:
+    AuthenticationUserResponse:
       type: object
       required: [userId, username]
       properties:
@@ -698,6 +1066,58 @@ components:
         username: { type: [string, "null"], minLength: 2, maxLength: 30 }
         email: { type: [string, "null"], format: email }
 
+    PublicProfile:
+      type: object
+      required: [userId, username, publishedWorks, comments, votedWorks]
+      properties:
+        userId: { type: integer, format: int32 }
+        username: { type: string }
+        publishedWorks:
+          type: array
+          description: The user's approved works.
+          items: { $ref: "#/components/schemas/PublicProfileWork" }
+        comments:
+          type: array
+          description: The user's comments on approved works.
+          items: { $ref: "#/components/schemas/PublicProfileComment" }
+        votedWorks:
+          type: array
+          description: The user's votes on approved works.
+          items: { $ref: "#/components/schemas/PublicProfileVotedWork" }
+
+    PublicProfileWork:
+      type: object
+      required: [oeuvreId, title, description, imageUrl, score, createdAt]
+      properties:
+        oeuvreId: { type: integer, format: int64 }
+        title: { type: string }
+        description: { type: [string, "null"] }
+        imageUrl: { type: [string, "null"] }
+        score: { type: integer, format: int32 }
+        createdAt: { type: string, format: date-time }
+
+    PublicProfileComment:
+      type: object
+      required: [commentId, content, imageUrl, createdAt, oeuvreId, oeuvreTitle, parentCommentId]
+      properties:
+        commentId: { type: integer, format: int32 }
+        content: { type: string }
+        imageUrl: { type: [string, "null"] }
+        createdAt: { type: string, format: date-time }
+        oeuvreId: { type: integer, format: int64 }
+        oeuvreTitle: { type: string }
+        parentCommentId: { type: [integer, "null"], format: int32 }
+
+    PublicProfileVotedWork:
+      type: object
+      required: [oeuvreId, title, imageUrl, score, voteValue]
+      properties:
+        oeuvreId: { type: integer, format: int64 }
+        title: { type: string }
+        imageUrl: { type: [string, "null"] }
+        score: { type: integer, format: int32 }
+        voteValue: { type: integer, enum: [-1, 1] }
+
     CategoryResponse:
       type: object
       required: [id, name]
@@ -729,22 +1149,28 @@ components:
           title,
           description,
           status,
+          reason,
           author,
           imageUrl,
           categories,
           totalVotes,
+          score,
         ]
       properties:
         id: { type: integer, format: int64 }
         title: { type: string }
         description: { type: string }
         status: { $ref: "#/components/schemas/WorkStatus" }
+        reason:
+          type: [string, "null"]
+          description: Reason provided by an admin when rejecting the work; null otherwise.
         author: { type: string }
         imageUrl: { type: [string, "null"] }
         categories:
           type: array
           items: { type: string }
         totalVotes: { type: integer, format: int32 }
+        score: { type: integer, format: int32 }
 
     CreateWorkJson:
       type: object
@@ -753,6 +1179,11 @@ components:
         title: { type: string, minLength: 1, maxLength: 150 }
         description: { type: string, minLength: 1 }
         imageUrl: { type: [string, "null"], maxLength: 255 }
+        categoryIds:
+          type: array
+          description: Optional category IDs to assign immediately; admins only.
+          uniqueItems: true
+          items: { type: integer, format: int32 }
 
     CreateWorkMultipart:
       type: object
@@ -762,6 +1193,11 @@ components:
         description: { type: string, minLength: 1 }
         imageUrl: { type: [string, "null"], maxLength: 255 }
         image: { type: string, format: binary }
+        categoryIds:
+          type: array
+          description: Optional category IDs to assign immediately; admins only.
+          uniqueItems: true
+          items: { type: integer, format: int32 }
 
     SubmitWork:
       type: object
@@ -772,11 +1208,65 @@ components:
           minItems: 1
           items: { type: integer, format: int32 }
 
+    CreateComment:
+      type: object
+      required: [content]
+      properties:
+        content: { type: string, minLength: 1, pattern: '\S' }
+        parentCommentId:
+          type: [integer, "null"]
+          format: int32
+          minimum: 1
+
+    CommentAuthor:
+      type: object
+      required: [username]
+      properties:
+        username: { type: string }
+
+    CommentResponse:
+      type: object
+      required: [id, oeuvreId, content, author, parentCommentId, replies, createdAt]
+      properties:
+        id: { type: string }
+        oeuvreId: { type: integer, format: int64 }
+        content: { type: string }
+        imageUrl: { type: [string, "null"] }
+        author: { $ref: "#/components/schemas/CommentAuthor" }
+        username: { type: string }
+        parentCommentId: { type: [string, "null"] }
+        replies:
+          type: array
+          items: { $ref: "#/components/schemas/CommentResponse" }
+        createdAt: { type: string, format: date-time }
+
+    CommentPageResponse:
+      type: object
+      required: [items, page, pageSize, total]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/CommentResponse" }
+        page: { type: integer, minimum: 1 }
+        pageSize: { type: integer, minimum: 1 }
+        total: { type: integer, format: int64 }
+
+    UpdateCommentRequest:
+      type: object
+      required: [content]
+      properties:
+        content: { type: string, minLength: 1, pattern: '\S' }
+
     UpdateWork:
       type: object
       properties:
         title: { type: [string, "null"], maxLength: 150 }
         description: { type: [string, "null"] }
+        categoryIds:
+          type: array
+          description: Replaces the work's categories when provided; an empty array removes all categories.
+          uniqueItems: true
+          items: { type: integer, format: int32 }
 
     RefuseWork:
       type: object
@@ -802,3 +1292,84 @@ components:
         first: { type: boolean }
         empty: { type: boolean }
       additionalProperties: true
+
+    VoteRequest:
+      type: object
+      properties:
+        value:
+          type: [integer, "null"]
+          enum: [-1, 1, null]
+          description: 1 for positive, -1 for negative, null (or omitted) to remove the vote.
+
+    VoteResponse:
+      type: object
+      required: [id, userId, value, createdAt, oeuvre]
+      properties:
+        id: { type: [integer, "null"], format: int32 }
+        userId: { type: integer, format: int32 }
+        value: { type: [integer, "null"], enum: [-1, 1, null] }
+        createdAt: { type: string, format: date-time }
+        oeuvre: { $ref: "#/components/schemas/OeuvreResponse" }
+
+    VoteItemResponse:
+      type: object
+      required: [id, userId, value, createdAt]
+      properties:
+        id: { type: integer, format: int32 }
+        userId: { type: integer, format: int32 }
+        value: { type: integer, enum: [-1, 1] }
+        createdAt: { type: string, format: date-time }
+
+    OeuvreVoteResponse:
+      type: object
+      required: [oeuvre, votes]
+      properties:
+        oeuvre: { $ref: "#/components/schemas/OeuvreResponse" }
+        votes:
+          type: array
+          items: { $ref: "#/components/schemas/VoteItemResponse" }
+
+    RankingItemResponse:
+      type: object
+      required: [id, title, author, categories, score, position]
+      properties:
+        id: { type: integer, format: int64 }
+        title: { type: string }
+        author: { type: string }
+        imageUrl: { type: [string, "null"] }
+        categories:
+          type: array
+          items: { type: string }
+        score: { type: integer, format: int32 }
+        position: { type: integer, format: int32 }
+
+    SpringPageRankingItemResponse:
+      type: object
+      description: Spring Data Page serialization containing RankingItemResponse DTOs.
+      properties:
+        content:
+          type: array
+          items: { $ref: "#/components/schemas/RankingItemResponse" }
+        pageable: { type: object, additionalProperties: true }
+        totalPages: { type: integer }
+        totalElements: { type: integer, format: int64 }
+        last: { type: boolean }
+        size: { type: integer }
+        number: { type: integer }
+        sort: { type: object, additionalProperties: true }
+        numberOfElements: { type: integer }
+        first: { type: boolean }
+        empty: { type: boolean }
+      additionalProperties: true
+
+    NotificationResponse:
+      type: object
+      required: [id, type, message, createdAt, read]
+      properties:
+        id: { type: integer, format: int32 }
+        type:
+          type: string
+          enum: [MODERATION, SYSTEM]
+        message: { type: string }
+        createdAt: { type: string, format: date-time }
+        read: { type: boolean }

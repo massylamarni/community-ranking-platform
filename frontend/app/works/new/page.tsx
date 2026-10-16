@@ -5,11 +5,14 @@ import { useRouter } from "next/navigation";
 import type { ApiErrorBody } from "@/types/api";
 import { WorkEdit, WorkFormData } from "../_components/workEdit";
 import { useWorks } from "@/hooks/use-work";
+import { useCategory } from "@/contexts/categoryContext";
 
 export default function NewWork() {
   const router = useRouter();
 
   const { create } = useWorks();
+  const { categories } = useCategory();
+
   const [errors, setErrors] = useState<ApiErrorBody | null>(null);
 
   async function handleCreate(data: WorkFormData) {
@@ -26,7 +29,7 @@ export default function NewWork() {
   return (
     <WorkEdit
       work={null}
-      categories={[]}
+      categories={categories}
       errors={errors}
       handleSave={handleCreate}
     />

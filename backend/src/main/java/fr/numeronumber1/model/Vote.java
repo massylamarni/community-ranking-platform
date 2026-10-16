@@ -30,7 +30,7 @@ public class Vote {
     @Column(nullable = false)
     private byte value;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
     public Integer getVoteId() {
@@ -72,6 +72,4 @@ public class Vote {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-
-         
 }

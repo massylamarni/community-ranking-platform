@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { MOCKING_ENABLED } from "@/lib/config";
 
+/*
 let startPromise: Promise<void> | null = null;
 
 function startMockWorker(): Promise<void> {
@@ -16,6 +17,7 @@ function startMockWorker(): Promise<void> {
   }
   return startPromise;
 }
+  */
 
 /**
  * Renders nothing until the mock Service Worker is ready, so no request
@@ -28,6 +30,7 @@ export function MockingGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (!MOCKING_ENABLED) return;
+    /*
     let cancelled = false;
     startMockWorker().then(() => {
       if (!cancelled) setReady(true);
@@ -35,6 +38,7 @@ export function MockingGate({ children }: { children: React.ReactNode }) {
     return () => {
       cancelled = true;
     };
+    */
   }, []);
 
   if (!ready) {

@@ -21,8 +21,8 @@ public class Ranking {
     @Column(name = "ranking_id")
     private Integer rankingId;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "category_id", nullable = false)
+    @ManyToOne
+    @JoinColumn(name = "category_id")
     private Category category;
 
     @Enumerated(EnumType.STRING)

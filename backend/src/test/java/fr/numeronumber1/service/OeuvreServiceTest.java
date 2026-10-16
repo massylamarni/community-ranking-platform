@@ -29,6 +29,7 @@ import fr.numeronumber1.exception.UnauthorizedActionException;
 import fr.numeronumber1.model.Category;
 import fr.numeronumber1.model.Oeuvre;
 import fr.numeronumber1.model.OeuvreCategory;
+import fr.numeronumber1.model.OeuvreCategoryId;
 import fr.numeronumber1.model.User;
 import fr.numeronumber1.model.enums.OeuvreStatus;
 import fr.numeronumber1.repository.CategoryRepository;
@@ -175,6 +176,59 @@ class OeuvreServiceTest {
     }
 
     @Test
+    void update_remplace_les_categories_selectionnees() {
+        Category categoryA = new Category();
+        categoryA.setCategoryId(1);
+        Category categoryB = new Category();
+        categoryB.setCategoryId(2);
+        Category categoryC = new Category();
+        categoryC.setCategoryId(3);
+        Category categoryD = new Category();
+        categoryD.setCategoryId(4);
+
+        List<OeuvreCategory> previousLinks = List.of(
+                oeuvreCategory(1, categoryA),
+                oeuvreCategory(2, categoryB),
+                oeuvreCategory(3, categoryC));
+        oeuvre.setOeuvreCategories(previousLinks);
+
+        UpdateOeuvreRequest req = new UpdateOeuvreRequest();
+        req.setCategoryIds(List.of(1, 4));
+
+        when(oeuvreRepository.findById(10L)).thenReturn(Optional.of(oeuvre));
+        when(categoryRepository.findAllById(List.of(1, 4))).thenReturn(List.of(categoryA, categoryD));
+        when(oeuvreRepository.save(any(Oeuvre.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Oeuvre result = oeuvreService.update(10L, req, author);
+
+        assertEquals(List.of(1, 4), result.getOeuvreCategories().stream()
+                .map(link -> link.getCategory().getCategoryId())
+                .toList());
+        verify(oeuvreCategoryRepository).deleteAll(List.of(previousLinks.get(1), previousLinks.get(2)));
+        verify(oeuvreCategoryRepository).saveAll(any());
+    }
+
+    @Test
+    void update_avec_categories_vides_supprime_toutes_les_categories() {
+        Category categoryA = new Category();
+        categoryA.setCategoryId(1);
+        List<OeuvreCategory> previousLinks = List.of(oeuvreCategory(1, categoryA));
+        oeuvre.setOeuvreCategories(previousLinks);
+
+        UpdateOeuvreRequest req = new UpdateOeuvreRequest();
+        req.setCategoryIds(List.of());
+
+        when(oeuvreRepository.findById(10L)).thenReturn(Optional.of(oeuvre));
+        when(oeuvreRepository.save(any(Oeuvre.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        Oeuvre result = oeuvreService.update(10L, req, author);
+
+        assertEquals(List.of(), result.getOeuvreCategories());
+        verify(oeuvreCategoryRepository).deleteAll(previousLinks);
+        verify(oeuvreCategoryRepository).saveAll(List.of());
+    }
+
+    @Test
     void update_echoue_si_pas_auteur() {
         UpdateOeuvreRequest req = new UpdateOeuvreRequest();
         req.setTitle("Titre modifié");
@@ -302,6 +356,12 @@ class OeuvreServiceTest {
         cat1.setCategoryId(1);
         Category cat2 = new Category();
         cat2.setCategoryId(2);
+        Category cat3 = new Category();
+        cat3.setCategoryId(3);
+        List<OeuvreCategory> previousLinks = List.of(
+                oeuvreCategory(1, cat1),
+                oeuvreCategory(3, cat3));
+        oeuvre.setOeuvreCategories(previousLinks);
 
         when(oeuvreRepository.findById(10L)).thenReturn(Optional.of(oeuvre));
         when(categoryRepository.findAllById(List.of(1, 2))).thenReturn(List.of(cat1, cat2));
@@ -310,7 +370,11 @@ class OeuvreServiceTest {
         Oeuvre result = oeuvreService.submit(10L, req, author);
 
         assertEquals(OeuvreStatus.pending, result.getStatus());
-        verify(oeuvreCategoryRepository, org.mockito.Mockito.times(2)).save(any(OeuvreCategory.class));
+        assertEquals(List.of(1, 2), result.getOeuvreCategories().stream()
+                .map(link -> link.getCategory().getCategoryId())
+                .toList());
+        verify(oeuvreCategoryRepository).deleteAll(List.of(previousLinks.get(1)));
+        verify(oeuvreCategoryRepository).saveAll(any());
         verify(oeuvreRepository).save(oeuvre);
     }
 
@@ -365,15 +429,24 @@ class OeuvreServiceTest {
         SubmitOeuvreRequest req = new SubmitOeuvreRequest();
         req.setCategoryIds(List.of(1, 2));
 
+        Category categoryA = new Category();
+        categoryA.setCategoryId(1);
+        Category categoryB = new Category();
+        categoryB.setCategoryId(2);
+
         when(oeuvreRepository.findById(10L)).thenReturn(Optional.of(oeuvre));
+        when(categoryRepository.findAllById(List.of(1, 2))).thenReturn(List.of(categoryA, categoryB));
         when(oeuvreRepository.save(any(Oeuvre.class))).thenAnswer(inv -> inv.getArgument(0));
 
         Oeuvre result = oeuvreService.submit(10L, req, author);
 
         assertEquals(OeuvreStatus.pending, result.getStatus());
+        assertEquals(List.of(1, 2), result.getOeuvreCategories().stream()
+                .map(link -> link.getCategory().getCategoryId())
+                .toList());
 
         verify(oeuvreRepository).save(oeuvre);
-        verify(oeuvreCategoryRepository, never()).save(any(OeuvreCategory.class));
+        verify(oeuvreCategoryRepository).saveAll(any());
     }
 
     @Test
@@ -424,6 +497,14 @@ class OeuvreServiceTest {
 
         Oeuvre resubmitted = oeuvreService.submit(10L, submitReq, author);
         assertEquals(OeuvreStatus.pending, resubmitted.getStatus());
+    }
+
+    private OeuvreCategory oeuvreCategory(int categoryId, Category category) {
+        OeuvreCategory link = new OeuvreCategory();
+        link.setId(new OeuvreCategoryId(10L, categoryId));
+        link.setOeuvre(oeuvre);
+        link.setCategory(category);
+        return link;
     }
 
     @Test
@@ -482,6 +563,62 @@ class OeuvreServiceTest {
         assertEquals(adminUser, result.getAuthor());
         assertEquals(OeuvreStatus.approved, result.getStatus());
         verify(oeuvreRepository).save(any(Oeuvre.class));
+    }
+
+    @Test
+    void create_par_administrateur_associe_categories_directement() {
+        Category category = new Category();
+        category.setCategoryId(1);
+        category.setName("Peinture");
+
+        CreateOeuvreRequest req = new CreateOeuvreRequest();
+        req.setTitle("Œuvre Admin catégorisée");
+        req.setDescription("Description Admin");
+        req.setCategoryIds(List.of(1));
+
+        when(oeuvreRepository.existsByTitle("Œuvre Admin catégorisée")).thenReturn(false);
+        when(categoryRepository.findAllById(List.of(1))).thenReturn(List.of(category));
+        when(oeuvreRepository.save(any(Oeuvre.class))).thenAnswer(invocation -> {
+            Oeuvre saved = invocation.getArgument(0);
+            saved.setOeuvreId(20L);
+            return saved;
+        });
+        when(oeuvreCategoryRepository.save(any(OeuvreCategory.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        Oeuvre result = oeuvreService.create(req, adminUser);
+
+        assertEquals(OeuvreStatus.approved, result.getStatus());
+        assertEquals(1, result.getOeuvreCategories().size());
+        assertEquals(category, result.getOeuvreCategories().get(0).getCategory());
+        verify(oeuvreCategoryRepository).save(any(OeuvreCategory.class));
+    }
+
+    @Test
+    void create_par_utilisateur_refuse_categories() {
+        CreateOeuvreRequest req = new CreateOeuvreRequest();
+        req.setTitle("Œuvre avec catégorie non autorisée");
+        req.setCategoryIds(List.of(1));
+
+        when(oeuvreRepository.existsByTitle("Œuvre avec catégorie non autorisée")).thenReturn(false);
+
+        assertThrows(UnauthorizedActionException.class, () -> oeuvreService.create(req, author));
+        verify(oeuvreRepository, never()).save(any(Oeuvre.class));
+        verify(oeuvreCategoryRepository, never()).save(any(OeuvreCategory.class));
+    }
+
+    @Test
+    void create_par_administrateur_echoue_si_categorie_introuvable() {
+        CreateOeuvreRequest req = new CreateOeuvreRequest();
+        req.setTitle("Œuvre catégorie inconnue");
+        req.setCategoryIds(List.of(99));
+
+        when(oeuvreRepository.existsByTitle("Œuvre catégorie inconnue")).thenReturn(false);
+        when(categoryRepository.findAllById(List.of(99))).thenReturn(List.of());
+
+        assertThrows(ResourceNotFoundException.class, () -> oeuvreService.create(req, adminUser));
+        verify(oeuvreRepository, never()).save(any(Oeuvre.class));
+        verify(oeuvreCategoryRepository, never()).save(any(OeuvreCategory.class));
     }
 
     @Test

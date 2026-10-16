@@ -18,6 +18,7 @@ workflow:
         - backend/**/*
         - frontend/**/*
         - infrastructure/**/*
+        - tests/**/*
         - .gitlab-ci.yml
     - when: never
 

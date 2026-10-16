@@ -39,6 +39,8 @@ import fr.numeronumber1.repository.OeuvreCategoryRepository;
 import fr.numeronumber1.repository.OeuvreRepository;
 import fr.numeronumber1.repository.UserRepository;
 import fr.numeronumber1.repository.VoteRepository;
+import fr.numeronumber1.steps.AcceptanceScenarioContext;
+import fr.numeronumber1.steps.AuthSteps;
 import io.cucumber.java.After;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
@@ -69,6 +71,7 @@ public class OeuvreSteps {
     private boolean expectCommentList;
     private boolean descriptionWasOmitted;
     private int expectedVoteCount;
+    private List<String> expectedCommentAuthors = List.of();
 
     @Given("une œuvre existe")
     public void oeuvre_existe() {
@@ -220,9 +223,11 @@ public class OeuvreSteps {
 
     @When("l'utilisateur tente de proposer une œuvre")
     public void utilisateur_tente_de_proposer_oeuvre() throws Exception {
+        String title = uniqueTitle("proposition anonyme");
+        scenarioContext.setWorkTitle(title);
         perform(post("/works")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(Map.of("title", uniqueTitle("proposition anonyme"),
+                .content(objectMapper.writeValueAsString(Map.of("title", title,
                         "description", "Description de proposition"))));
     }
 
@@ -244,6 +249,10 @@ public class OeuvreSteps {
     @Then("la proposition de l'œuvre est refusée")
     public void proposition_oeuvre_refusee() {
         assertEquals(401, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
+        assertTrue(scenarioContext.getSession() == null,
+                "La proposition anonyme ne doit pas utiliser une session authentifiée");
+        assertFalse(oeuvres.existsByTitle(scenarioContext.getWorkTitle()),
+                "Une œuvre ne doit pas être créée lorsque la requête est anonyme");
     }
 
     @When("l'utilisateur modifie la proposition")
@@ -394,9 +403,7 @@ public class OeuvreSteps {
     @When("un utilisateur consulte l'œuvre")
     public void utilisateur_consulte_oeuvre() throws Exception {
         if (expectCommentList) {
-            Integer categoryId = scenarioContext.getCategoryId();
-            assertNotNull(categoryId, "La lecture des commentaires exige une catégorie");
-            perform(get("/categories/{id}/works", categoryId).param("page", "0").param("size", "50"));
+            perform(get("/works/{id}/comments", requireOeuvreId()));
         } else {
             perform(get("/works/{id}", requireOeuvreId()));
         }
@@ -411,29 +418,40 @@ public class OeuvreSteps {
     @Given("des commentaires sont associés à cette œuvre")
     public void commentaires_associes_a_oeuvre() {
         Oeuvre work = oeuvres.findById(requireOeuvreId()).orElseThrow();
-        Comment comment = new Comment();
-        comment.setOeuvre(work);
-        comment.setUser(fixtureUser("cucumber-commenter", false));
-        comment.setContent("Commentaire de test visible");
-        comment.setCreatedAt(LocalDateTime.now());
-        comments.save(comment);
-        work.getComments().add(comment);
+        List<String> authors = new java.util.ArrayList<>();
+        for (int index = 1; index <= 3; index++) {
+            String username = "cucumber-commenter-" + index;
+            Comment comment = new Comment();
+            comment.setOeuvre(work);
+            comment.setUser(fixtureUser(username, false));
+            comment.setContent("Commentaire " + index + " de test visible");
+            comment.setCreatedAt(LocalDateTime.now().plusNanos(index));
+            comments.save(comment);
+            work.getComments().add(comment);
+            authors.add(username);
+        }
+        expectedCommentAuthors = List.copyOf(authors);
         expectCommentList = true;
     }
 
     @Then("les commentaires associés à l'œuvre sont affichés")
     public void commentaires_associes_affiches() throws Exception {
         assertEquals(200, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
-        JsonNode works = lastResponse().path("content");
-        boolean commentFound = false;
-        for (JsonNode work : works) {
-            if (work.path("oeuvreId").asLong() == requireOeuvreId()) {
-                for (JsonNode comment : work.path("comments")) {
-                    commentFound |= comment.path("content").asText().equals("Commentaire de test visible");
-                }
-            }
+        JsonNode items = lastResponse().path("items");
+        assertTrue(items.isArray(), scenarioContext.getResponseBody());
+        assertEquals(expectedCommentAuthors.size(), items.size(), scenarioContext.getResponseBody());
+        assertEquals(expectedCommentAuthors.size(), lastResponse().path("total").asInt(),
+                scenarioContext.getResponseBody());
+
+        List<String> actualAuthors = new java.util.ArrayList<>();
+        for (JsonNode comment : items) {
+            assertEquals(requireOeuvreId().longValue(), comment.path("oeuvreId").asLong(),
+                    scenarioContext.getResponseBody());
+            String username = comment.path("author").path("username").asText();
+            assertFalse(username.isBlank(), scenarioContext.getResponseBody());
+            actualAuthors.add(username);
         }
-        assertTrue(commentFound, scenarioContext.getResponseBody());
+        assertEquals(expectedCommentAuthors, actualAuthors, scenarioContext.getResponseBody());
     }
 
     @After

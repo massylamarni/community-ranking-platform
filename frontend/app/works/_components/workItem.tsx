@@ -9,11 +9,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-// import { votesRepository } from "@/repositories";
-import { ApiErrorBody, Work } from "@/types/api";
+import { votesRepository } from "@/repositories";
+import { ApiErrorBody, VoteForWorkReponse, Work } from "@/types/api";
 import { ArrowBigDown, ArrowBigUp } from "lucide-react";
 import Image from "next/image";
 import { ReactNode, useState } from "react";
+import WorkNotFoundGuard from "./guards/workNotFoundGuard";
 
 export function WorkItem({
   work,
@@ -29,22 +30,25 @@ export function WorkItem({
   statusChildren?: ReactNode;
 }) {
   const [errors, setErrors] = useState<ApiErrorBody | null>(null);
-  /*
-  async function handleVote(vt: { value: 1 | -1 | null }) {
+  const [vote, setVote] = useState<VoteForWorkReponse | null>(null);
+
+  async function handleVote(vt: 1 | -1) {
     if (!work || !setWork) return;
     setErrors(null);
 
+    const next = vote?.value === vt ? null : vt;
+
     try {
-      const updated = await votesRepository.vote(work.id, vt);
-      setWork(updated);
+      const updated = await votesRepository.vote(work.id, { value: next });
+      setWork(updated.oeuvre);
+      setVote(updated);
     } catch (err) {
       setErrors(err as ApiErrorBody);
     }
   }
-    */
-  const disableVote = true; //!setWork;
+  const disableVote = !setWork;
 
-  if (!work) return;
+  if (!work) return <WorkNotFoundGuard />;
   return (
     <Card className="max-w-3xl">
       <CardHeader
@@ -77,16 +81,16 @@ export function WorkItem({
           ) : (
             <ButtonGroup>
               <Button
-                variant={work.currentUserVote === 1 ? "default" : "outline"}
-                // onClick={() => handleVote({ value: 1 })}
+                variant={vote?.value === 1 ? "default" : "outline"}
+                onClick={() => handleVote(1)}
                 disabled={disableVote}
               >
                 <ArrowBigUp />
                 {work.totalVotes - (work.totalVotes - work.score) / 2}
               </Button>
               <Button
-                variant={work.currentUserVote === -1 ? "default" : "outline"}
-                // onClick={() => handleVote({ value: -1 })}
+                variant={vote?.value === -1 ? "default" : "outline"}
+                onClick={() => handleVote(-1)}
                 disabled={disableVote}
               >
                 <ArrowBigDown />
@@ -98,10 +102,10 @@ export function WorkItem({
         <div className="flex justify-center items-center gap-2 w-fit">
           <Avatar>
             <AvatarFallback>
-              {work.author.username.slice(0, 2).toUpperCase()}
+              {work.author.slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <div>{work.author.username}</div>
+          <div>{work.author}</div>
         </div>
         {statusChildren}
       </CardFooter>
