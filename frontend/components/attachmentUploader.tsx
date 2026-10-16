@@ -13,6 +13,7 @@ import {
   AttachmentAction,
 } from "@/components/ui/attachment";
 import Image from "next/image";
+import { Button } from "./ui/button";
 
 type Item = {
   id: string;
@@ -104,49 +105,51 @@ export function AttachmentUploader({
         className="hidden"
         onChange={(e) => handleFiles(e.target.files)}
       />
-      <button
+      <Button
         type="button"
+        variant="outline"
         onClick={() => inputRef.current?.click()}
-        className="rounded border px-3 py-1.5 text-sm"
       >
         Ajouter une pièce jointe
-      </button>
+      </Button>
 
-      <AttachmentGroup className="w-full">
-        {items.map((item) => {
-          const Icon = item.icon;
-          return (
-            <Attachment key={item.id} className="w-64">
-              {item.src ? (
-                <AttachmentMedia variant="image">
-                  <Image
-                    src={item.src}
-                    alt={item.name}
-                    fill
-                    className="object-cover"
-                  />
-                </AttachmentMedia>
-              ) : Icon ? (
-                <AttachmentMedia>
-                  <Icon />
-                </AttachmentMedia>
-              ) : null}
-              <AttachmentContent>
-                <AttachmentTitle>{item.name}</AttachmentTitle>
-                <AttachmentDescription>{item.meta}</AttachmentDescription>
-              </AttachmentContent>
-              <AttachmentActions>
-                <AttachmentAction
-                  aria-label={`Supprimer ${item.name}`}
-                  onClick={() => removeItem(item.id)}
-                >
-                  <XIcon />
-                </AttachmentAction>
-              </AttachmentActions>
-            </Attachment>
-          );
-        })}
-      </AttachmentGroup>
+      {items.length > 0 && (
+        <AttachmentGroup className="w-full">
+          {items.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Attachment key={item.id} className="w-64">
+                {item.src ? (
+                  <AttachmentMedia variant="image">
+                    <Image
+                      src={item.src}
+                      alt={item.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </AttachmentMedia>
+                ) : Icon ? (
+                  <AttachmentMedia>
+                    <Icon />
+                  </AttachmentMedia>
+                ) : null}
+                <AttachmentContent>
+                  <AttachmentTitle>{item.name}</AttachmentTitle>
+                  <AttachmentDescription>{item.meta}</AttachmentDescription>
+                </AttachmentContent>
+                <AttachmentActions>
+                  <AttachmentAction
+                    aria-label={`Supprimer ${item.name}`}
+                    onClick={() => removeItem(item.id)}
+                  >
+                    <XIcon />
+                  </AttachmentAction>
+                </AttachmentActions>
+              </Attachment>
+            );
+          })}
+        </AttachmentGroup>
+      )}
     </div>
   );
 }

@@ -168,18 +168,20 @@ export interface VoteForWorkReponse {
 // ---- comments -----------------------------------------------------------
 
 export interface Comment {
-  id: string;
+  id: number;
   content: string;
   imageUrl: string | null;
   author: { username: string };
+  username: string;
   parentCommentId: string | null;
+  oeuvreId: string;
   replies: Comment[];
   createdAt: string;
 }
 
 export interface CreateCommentPayload {
   content: string;
-  parentCommentId?: string | null;
+  parentCommentId?: number | null;
   image?: File | null;
 }
 
@@ -243,9 +245,7 @@ export interface GetActivity {
 
 // ---- notifications --------------------------------------------------------
 
-export type NotificationType =
-  | "MODERATION"
-  | "SYSTEM";
+export type NotificationType = "MODERATION" | "SYSTEM";
 
 export interface Notification {
   id: number;
