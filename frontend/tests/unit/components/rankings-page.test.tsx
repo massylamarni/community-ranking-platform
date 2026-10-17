@@ -81,7 +81,7 @@ describe("RankingsPage Component with Filters (CLAS-011, CLAS-012)", () => {
     expect(await screen.findByText("Classement global")).toBeDefined();
     expect(screen.getByLabelText("Catégorie")).toBeDefined();
     expect(screen.getByLabelText("Période")).toBeDefined();
-    expect(screen.getByRole("button", { name: /valider/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /filtrer/i })).toBeDefined();
 
     // Verify table items
     expect(await screen.findByText("Symphonie No 5")).toBeDefined();
@@ -116,7 +116,7 @@ describe("RankingsPage Component with Filters (CLAS-011, CLAS-012)", () => {
 
     await screen.findByText("Symphonie No 5");
 
-    const submitButton = screen.getByRole("button", { name: /valider/i });
+    const submitButton = screen.getByRole("button", { name: /filtrer/i });
     fireEvent.click(submitButton);
 
     // With defaults ('all'), navigating results in /rankings
@@ -139,7 +139,7 @@ describe("RankingsPage Component with Filters (CLAS-011, CLAS-012)", () => {
     // Filter controls should remain accessible
     expect(screen.getByLabelText("Catégorie")).toBeDefined();
     expect(screen.getByLabelText("Période")).toBeDefined();
-    expect(screen.getByRole("button", { name: /valider/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /filtrer/i })).toBeDefined();
   });
 
   it("renders error banner and retry button when fetching fails", async () => {

@@ -75,7 +75,7 @@ const data = {
           url: "/rankings",
         },
         {
-          title: "Anciens classements",
+          title: "Classements archivés",
           url: "/rankings/archives",
         },
       ],

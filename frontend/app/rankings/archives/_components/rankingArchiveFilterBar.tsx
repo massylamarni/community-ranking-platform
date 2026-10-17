@@ -150,10 +150,10 @@ export default function RankingArchiveFilterBar({
           type="submit"
           disabled={loading}
           className="gap-1.5"
-          aria-label="Valider les filtres"
+          aria-label="Filtrer"
         >
           <Filter className="size-4" />
-          Valider
+          Filtrer
         </Button>
 
         {hasActiveFilters && (

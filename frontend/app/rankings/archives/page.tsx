@@ -65,20 +65,6 @@ function computeClosureDate(dateStr?: string | null): string | null {
   }
 }
 
-function formatDate(dateStr?: string | null): string {
-  if (!dateStr) return "-";
-  if (dateStr.includes("/")) return dateStr;
-  try {
-    const [year, month, day] = dateStr.split("T")[0].split("-").map(Number);
-    if (!year || !month || !day) return dateStr;
-    const d = String(day).padStart(2, "0");
-    const m = String(month).padStart(2, "0");
-    return `${d}/${m}/${year}`;
-  } catch {
-    return dateStr;
-  }
-}
-
 function RankingArchivesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -262,37 +248,6 @@ function RankingArchivesContent() {
         },
       },
       {
-        id: "date",
-        header: "Date",
-        meta: {
-          className:
-            "w-32 text-left px-4 tabular-nums text-sm text-muted-foreground whitespace-nowrap",
-        } as CellMeta,
-        cell: ({ row }) => {
-          const raw =
-            (
-              row.original as unknown as {
-                date?: string;
-                closureDate?: string;
-                createdAt?: string;
-              }
-            ).date ??
-            (
-              row.original as unknown as {
-                date?: string;
-                closureDate?: string;
-                createdAt?: string;
-              }
-            ).closureDate ??
-            closureDate;
-          return (
-            <span>
-              {raw ? (raw.includes("/") ? raw : formatDate(raw)) : "-"}
-            </span>
-          );
-        },
-      },
-      {
         accessorKey: "score",
         header: "Score final",
         meta: {
@@ -305,7 +260,7 @@ function RankingArchivesContent() {
         ),
       },
     ],
-    [closureDate],
+    [],
   );
 
   const table = useTable({
@@ -320,8 +275,8 @@ function RankingArchivesContent() {
 
   const activeCategoryObj = categories.find((c) => c.id === resolvedCategoryId);
   const cardTitle = activeCategoryObj
-    ? `Anciens classements : ${activeCategoryObj.name}`
-    : "Anciens classements";
+    ? `Classements archivés : ${activeCategoryObj.name}`
+    : "Classements archivés";
 
   const rows = table.getRowModel().rows;
   const pageCount = Math.max(1, table.getPageCount());
@@ -332,7 +287,7 @@ function RankingArchivesContent() {
 
   const loading = rankingsLoading;
   const errorMessage = rankingsError
-    ? "Impossible de charger les anciens classements. Veuillez vérifier votre connexion ou réessayer."
+    ? "Impossible de charger les classements archivés. Veuillez vérifier votre connexion ou réessayer."
     : null;
 
   return (
@@ -353,8 +308,7 @@ function RankingArchivesContent() {
           )}
         </div>
         <CardDescription>
-          Consultez les résultats finaux des classements hebdomadaires clôturés
-          {closureDate ? ` (date de fin : ${closureDate})` : ""}.
+          Consultez les résultats finaux des classements hebdomadaires clôturés.
         </CardDescription>
       </CardHeader>
 

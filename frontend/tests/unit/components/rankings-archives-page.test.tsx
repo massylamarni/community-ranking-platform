@@ -105,7 +105,7 @@ describe("RankingArchivesPage Component", () => {
   it("renders page title, closure date in header, category control, and table headers matching rankings UI", async () => {
     render(<RankingArchivesPage />);
 
-    expect(await screen.findByText("Anciens classements")).toBeDefined();
+    expect(await screen.findByText("Classements archivés")).toBeDefined();
 
     // Verify closure date (date de fin) is displayed in the dashboard header (2026-09-28 + 6 days = 04/10/2026)
     expect(await screen.findByText("Date de fin : 04/10/2026")).toBeDefined();
@@ -115,10 +115,10 @@ describe("RankingArchivesPage Component", () => {
     expect(screen.queryByLabelText("Période clôturée")).toBeNull();
     expect(screen.queryByLabelText("Trier par")).toBeNull();
 
-    // Period selector and Category filter with Valider button are present
+    // Period selector and Category filter with Filtrer button are present
     expect(screen.getByLabelText("Période archivée")).toBeDefined();
     expect(screen.getByLabelText("Catégorie")).toBeDefined();
-    expect(screen.getByRole("button", { name: /valider/i })).toBeDefined();
+    expect(screen.getByRole("button", { name: /filtrer/i })).toBeDefined();
 
     // Verify archived works are displayed matching rankings UI
     expect(await screen.findByText("Fragments d'Acier")).toBeDefined();
@@ -126,15 +126,14 @@ describe("RankingArchivesPage Component", () => {
     expect(screen.getByText("Le Cri Silencieux")).toBeDefined();
     expect(screen.getByText("Urbanisme Poétique")).toBeDefined();
 
-    // Table headers match rankings view & screenshot
+    // Table headers match rankings view
     expect(screen.getByText("Position")).toBeDefined();
     expect(screen.getByText("Œuvre")).toBeDefined();
     expect(screen.getByText("Catégories")).toBeDefined();
-    expect(screen.getByText("Date")).toBeDefined();
+    expect(screen.queryByText("Date")).toBeNull();
     expect(screen.getByText("Score final")).toBeDefined();
 
     expect(screen.getByText("30")).toBeDefined();
-    expect(screen.getAllByText("04/10/2026").length).toBeGreaterThanOrEqual(1);
   });
 
   it("always queries archives by recently ended date without client-side re-sorting", async () => {
@@ -172,7 +171,7 @@ describe("RankingArchivesPage Component", () => {
     });
 
     expect(
-      await screen.findByText("Anciens classements : Musique"),
+      await screen.findByText("Classements archivés : Musique"),
     ).toBeDefined();
   });
 
@@ -185,7 +184,7 @@ describe("RankingArchivesPage Component", () => {
 
     await screen.findByText("Fragments d'Acier");
 
-    const submitButton = screen.getByRole("button", { name: /valider/i });
+    const submitButton = screen.getByRole("button", { name: /filtrer/i });
     fireEvent.click(submitButton);
 
     expect(mockPush).toHaveBeenCalledWith("/rankings/archives?category=1");
@@ -216,7 +215,7 @@ describe("RankingArchivesPage Component", () => {
     render(<RankingArchivesPage />);
 
     expect(
-      await screen.findByText(/impossible de charger les anciens classements/i),
+      await screen.findByText(/impossible de charger les classements archivés/i),
     ).toBeDefined();
 
     const retryButton = screen.getByRole("button", { name: /réessayer/i });
