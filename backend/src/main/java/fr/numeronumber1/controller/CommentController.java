@@ -60,10 +60,25 @@ public class CommentController {
         return create(workId, request, authentication);
     }
 
-    @PatchMapping("/comments/{commentId}")
-    public ResponseEntity<CommentResponse> updateComment(
+    @PatchMapping(value = "/comments/{commentId}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<CommentResponse> updateJsonComment(
             @PathVariable Integer commentId,
             @Valid @RequestBody UpdateCommentRequest request,
+            Authentication authentication) {
+        return update(commentId, request, authentication);
+    }
+
+    @PatchMapping(value = "/comments/{commentId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<CommentResponse> updateMultipartComment(
+            @PathVariable Integer commentId,
+            @Valid @ModelAttribute UpdateCommentRequest request,
+            Authentication authentication) {
+        return update(commentId, request, authentication);
+    }
+
+    private ResponseEntity<CommentResponse> update(
+            Integer commentId,
+            UpdateCommentRequest request,
             Authentication authentication) {
         User currentUser = userService.findByUsername(authentication.getName());
         return ResponseEntity.ok(commentService.updateComment(commentId, request, currentUser));

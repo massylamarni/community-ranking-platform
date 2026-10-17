@@ -24,6 +24,13 @@ type Item = {
   file?: File;
 };
 
+let fallbackId = 0;
+
+function createItemId() {
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  return `${Date.now().toString(36)}-${(++fallbackId).toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
+
 function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
@@ -52,7 +59,7 @@ export function AttachmentUploader({
     initialAttachment
       ? [
           {
-            id: crypto.randomUUID(),
+            id: createItemId(),
             name: initialAttachment.name,
             meta: "Actuel",
             src: initialAttachment.url,
@@ -68,7 +75,7 @@ export function AttachmentUploader({
     const newItems: Item[] = Array.from(fileList).map((file) => {
       const isImage = file.type.startsWith("image/");
       return {
-        id: crypto.randomUUID(),
+        id: createItemId(),
         name: file.name,
         meta: `${file.type.split("/")[1]?.toUpperCase() ?? "FILE"} · ${formatBytes(file.size)}`,
         src: isImage ? URL.createObjectURL(file) : undefined,

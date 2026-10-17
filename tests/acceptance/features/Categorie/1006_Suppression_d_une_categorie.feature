@@ -10,7 +10,6 @@ Feature: Suppression d'une catégorie
     Then la catégorie "Science-fiction" n'existe plus
     And elle n'apparaît plus dans la liste des catégories
 
-
   Scenario: Un utilisateur non administrateur ne peut pas supprimer une catégorie
     Given un utilisateur non administrateur est authentifié
     And la catégorie "Science-fiction" existe

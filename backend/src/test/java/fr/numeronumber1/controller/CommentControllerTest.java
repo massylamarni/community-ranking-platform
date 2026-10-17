@@ -157,6 +157,36 @@ class CommentControllerTest {
 
     @Test
     @WithMockUser(username = "alice")
+    void updateMultipartCommentPassesImageAndReturnsUpdatedImageUrl() throws Exception {
+        User author = user("alice", 1);
+        Comment updated = comment(1, "Contenu modifié", author, work(10L), null);
+        updated.setImageUrl("/uploads/comments/updated.png");
+        when(userService.findByUsername("alice")).thenReturn(author);
+        when(commentService.updateComment(eq(1), any(UpdateCommentRequest.class), eq(author)))
+                .thenReturn(new CommentResponse(updated));
+        MockMultipartFile image = new MockMultipartFile(
+                "image", "updated.png", "image/png", new byte[] {1, 2, 3});
+
+        mockMvc.perform(multipart("/comments/1")
+                        .file(image)
+                        .param("content", "Contenu modifié")
+                        .with(request -> {
+                            request.setMethod("PATCH");
+                            return request;
+                        }))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").value("Contenu modifié"))
+                .andExpect(jsonPath("$.imageUrl").value("/uploads/comments/updated.png"));
+
+        ArgumentCaptor<UpdateCommentRequest> requestCaptor =
+                ArgumentCaptor.forClass(UpdateCommentRequest.class);
+        verify(commentService).updateComment(eq(1), requestCaptor.capture(), eq(author));
+        org.junit.jupiter.api.Assertions.assertEquals(
+                "updated.png", requestCaptor.getValue().getImage().getOriginalFilename());
+    }
+
+    @Test
+    @WithMockUser(username = "alice")
     void updateCommentRejectsMalformedJson() throws Exception {
         mockMvc.perform(patch("/comments/1")
                         .contentType(MediaType.APPLICATION_JSON)
