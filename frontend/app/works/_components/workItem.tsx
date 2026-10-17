@@ -78,9 +78,9 @@ export function WorkItem({
               className="object-contain"
             />
           </div>
-          {children}
         </CardContent>
       )}
+      {children && <CardContent>{children}</CardContent>}
       <CardFooter className="flex justify-between">
         <div className="flex gap-3">
           {work.score === undefined ? (
@@ -91,6 +91,7 @@ export function WorkItem({
                 variant={vote?.value === 1 ? "default" : "outline"}
                 onClick={() => handleVote(1)}
                 disabled={disableVote}
+                aria-label="Upvote"
               >
                 <ArrowBigUp />
                 {work.totalVotes - (work.totalVotes - work.score) / 2}
@@ -99,6 +100,7 @@ export function WorkItem({
                 variant={vote?.value === -1 ? "default" : "outline"}
                 onClick={() => handleVote(-1)}
                 disabled={disableVote}
+                aria-label="Downvote"
               >
                 <ArrowBigDown />
                 {(work.totalVotes - work.score) / 2}
