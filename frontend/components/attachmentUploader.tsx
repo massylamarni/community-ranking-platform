@@ -22,6 +22,7 @@ type Item = {
   src?: string;
   icon?: React.ComponentType;
   file?: File;
+  isInitial?: boolean;
 };
 
 let fallbackId = 0;
@@ -47,11 +48,13 @@ function iconFor(file: File) {
 export function AttachmentUploader({
   onFileSelect,
   initialAttachment,
+  allowRemoveInitial = true,
   type = "file",
   accept = "image/*,.pdf,.csv,.tsx",
 }: {
   onFileSelect: (file: File | null) => void;
   initialAttachment?: { name: string; url: string };
+  allowRemoveInitial?: boolean;
   type?: string;
   accept?: string;
 }) {
@@ -63,6 +66,7 @@ export function AttachmentUploader({
             name: initialAttachment.name,
             meta: "Actuel",
             src: initialAttachment.url,
+            isInitial: true,
           },
         ]
       : [],
@@ -144,14 +148,16 @@ export function AttachmentUploader({
                   <AttachmentTitle>{item.name}</AttachmentTitle>
                   <AttachmentDescription>{item.meta}</AttachmentDescription>
                 </AttachmentContent>
-                <AttachmentActions>
-                  <AttachmentAction
-                    aria-label={`Supprimer ${item.name}`}
-                    onClick={() => removeItem(item.id)}
-                  >
-                    <XIcon />
-                  </AttachmentAction>
-                </AttachmentActions>
+                {(!item.isInitial || allowRemoveInitial) && (
+                  <AttachmentActions>
+                    <AttachmentAction
+                      aria-label={`Supprimer ${item.name}`}
+                      onClick={() => removeItem(item.id)}
+                    >
+                      <XIcon />
+                    </AttachmentAction>
+                  </AttachmentActions>
+                )}
               </Attachment>
             );
           })}

@@ -33,7 +33,7 @@ export const commentsRepository = {
   update(commentId: number, payload: UpdateCommentPayload) {
     return request<Comment>(`/comments/${commentId}`, {
       method: "PATCH",
-      body: payload,
+      body: toFormData(payload),
     });
   },
 

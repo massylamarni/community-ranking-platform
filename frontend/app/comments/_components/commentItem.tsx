@@ -20,7 +20,11 @@ export interface CommentActions {
     parentId: number,
     payload: Omit<CreateCommentPayload, "parentCommentId">,
   ) => Promise<void>;
-  update: (commentId: number, content: string) => Promise<void>;
+  update: (
+    commentId: number,
+    content: string,
+    image: File | null,
+  ) => Promise<void>;
   remove: (commentId: number) => Promise<void>;
 }
 
@@ -73,11 +77,12 @@ export function CommentItem({
           {editing ? (
             <CommentForm
               initialContent={comment.content}
+              initialImageUrl={comment.imageUrl}
               submitLabel="Save"
-              allowImage={false}
+              allowImage={true}
               onCancel={() => setEditing(false)}
-              onSubmit={async (content) => {
-                await actions.update(comment.id, content);
+              onSubmit={async (content, image) => {
+                await actions.update(comment.id, content, image);
                 setEditing(false);
               }}
             />

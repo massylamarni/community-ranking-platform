@@ -187,6 +187,7 @@ export interface CreateCommentPayload {
 
 export interface UpdateCommentPayload {
   content: string;
+  image?: File | null;
 }
 
 export type CommentPage = Page<Comment>;

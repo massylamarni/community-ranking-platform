@@ -32,8 +32,8 @@ export function CommentSection({
     reply: async (parentCommentId, payload) => {
       await create(workId, { ...payload, parentCommentId });
     },
-    update: async (id, content) => {
-      await update(id, { content });
+    update: async (id, content, image) => {
+      await update(id, { content, image });
     },
     remove,
   };

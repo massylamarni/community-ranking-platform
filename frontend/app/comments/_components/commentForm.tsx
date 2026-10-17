@@ -9,6 +9,7 @@ import { AttachmentUploader } from "@/components/attachmentUploader";
 
 export function CommentForm({
   initialContent = "",
+  initialImageUrl,
   placeholder = "Write a comment...",
   submitLabel = "Post",
   allowImage = true,
@@ -16,6 +17,7 @@ export function CommentForm({
   onCancel,
 }: {
   initialContent?: string;
+  initialImageUrl?: string | null;
   placeholder?: string;
   submitLabel?: string;
   allowImage?: boolean;
@@ -68,6 +70,15 @@ export function CommentForm({
             <AttachmentUploader
               key={uploaderKey}
               accept="image/*"
+              initialAttachment={
+                initialImageUrl
+                  ? {
+                      name: "Current image",
+                      url: initialImageUrl,
+                    }
+                  : undefined
+              }
+              allowRemoveInitial={false}
               onFileSelect={setImage}
             />
           )}
