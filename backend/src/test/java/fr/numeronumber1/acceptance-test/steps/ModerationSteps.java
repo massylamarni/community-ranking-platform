@@ -135,12 +135,13 @@ public class ModerationSteps {
     @When("l'administrateur refuse l'œuvre")
     @When("un administrateur refuse l'œuvre")
     public void administrateur_refuse_oeuvre() throws Exception {
+        if (scenarioContext.getSession() == null || !scenarioContext.isAdministrator()) {
+            authSteps.authenticateAs("cucumber-admin", true);
+        }
         var request = post("/moderation/works/{workId}/refuse", requireOeuvreId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(Map.of("reason", "Refusé dans le test")));
-        if (scenarioContext.getSession() != null) {
-            request.session(scenarioContext.getSession());
-        }
+        request.session(scenarioContext.getSession());
         capture(mockMvc.perform(request).andReturn());
     }
 
