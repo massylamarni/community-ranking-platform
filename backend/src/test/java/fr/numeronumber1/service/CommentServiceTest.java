@@ -212,6 +212,43 @@ class CommentServiceTest {
     }
 
     @Test
+    void updatesCommentImageAndReturnsNewImageUrl() {
+        Comment existing = comment(20, "Ancien contenu", author, null);
+        existing.setImageUrl("/uploads/comments/old.png");
+        MockMultipartFile image = new MockMultipartFile(
+                "image", "new.png", "image/png", new byte[] {4, 5, 6});
+        UpdateCommentRequest request = updateRequest("Nouveau contenu");
+        request.setImage(image);
+        when(commentRepository.findById(20)).thenReturn(Optional.of(existing));
+        when(fileStorageService.store(image, "comments"))
+                .thenReturn("/uploads/comments/new.png");
+        when(commentRepository.save(existing)).thenReturn(existing);
+
+        var result = commentService.updateComment(20, request, author);
+
+        assertEquals("/uploads/comments/new.png", existing.getImageUrl());
+        assertEquals("/uploads/comments/new.png", result.getImageUrl());
+        verify(fileStorageService).store(image, "comments");
+        verify(commentRepository).save(existing);
+    }
+
+    @Test
+    void keepsExistingCommentImageWhenNoNewImageIsProvided() {
+        Comment existing = comment(20, "Ancien contenu", author, null);
+        existing.setImageUrl("/uploads/comments/existing.png");
+        when(commentRepository.findById(20)).thenReturn(Optional.of(existing));
+        when(commentRepository.save(existing)).thenReturn(existing);
+
+        var result = commentService.updateComment(
+                20, updateRequest("Nouveau contenu"), author);
+
+        assertEquals("/uploads/comments/existing.png", result.getImageUrl());
+        verify(fileStorageService, never()).store(
+                org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.anyString());
+        verify(commentRepository).save(existing);
+    }
+
+    @Test
     void rejectsUpdatingCommentByAnotherUser() {
         Comment existing = comment(20, "Ancien contenu", owner, null);
         when(commentRepository.findById(20)).thenReturn(Optional.of(existing));
