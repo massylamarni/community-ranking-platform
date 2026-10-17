@@ -94,21 +94,23 @@ public class NotificationSteps {
 
     @Then("l'utilisateur est informé que son œuvre a été refusée")
     public void utilisateur_informe_refus_oeuvre() {
-        // TODO: vérifier la notification de refus
-    }
+            Long oeuvreId = scenarioContext.getOeuvreId();
+    assertNotNull(oeuvreId, "L'identifiant de l'œuvre doit être présent");
 
-    @Given("un utilisateur possède un contenu")
-    public void utilisateur_possede_contenu() {
-        // TODO: préparer un contenu utilisateur
-    }
+    Oeuvre oeuvre = oeuvres.findById(oeuvreId).orElseThrow();
+    String authorUsername = oeuvre.getAuthor().getUsername();
 
-    @When("un administrateur réalise une action affectant ce contenu")
-    public void administrateur_realise_action_sur_contenu() {
-        // TODO: préparer une action affectant le contenu
-    }
+    List<Notification> userNotifications = notifications
+            .findByRecipientUsernameOrderByCreatedAtDesc(authorUsername);
 
-    @Then("l'utilisateur est informé de l'action réalisée")
-    public void utilisateur_informe_action_realisee() {
-        // TODO: vérifier la notification de l'action
+    assertFalse(userNotifications.isEmpty(), "L'utilisateur devrait avoir reçu une notification");
+
+    Notification notif = userNotifications.get(0);
+    assertEquals(NotificationType.MODERATION, notif.getType());
+    assertTrue(notif.getMessage().contains("refusée"),
+            "Le message doit indiquer que l'œuvre a été refusée : " + notif.getMessage());
+
+    assertTrue(notif.getMessage().contains(oeuvre.getTitle()),
+            "Le message doit contenir le titre de l'œuvre : " + notif.getMessage());        
     }
 }
