@@ -53,52 +53,37 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import RankingArchiveFilterBar, {
-  type RankingArchiveSortOption,
-} from "./_components/rankingArchiveFilterBar";
+import RankingArchiveFilterBar from "./_components/rankingArchiveFilterBar";
 import RankingArchiveHasNoWork from "./_components/rankingArchiveHasNoWork";
 
 type CellMeta = { className?: string };
-
-interface TableMeta {
-  closureDate?: string;
-}
 
 const features = tableFeatures({ rowPaginationFeature });
 
 const PAGE_SIZE = 10;
 
-function computeClosureDate(dateStr?: string | null): string {
-  if (!dateStr || dateStr === "latest") return "-";
+function computeClosureDate(dateStr?: string | null): string | null {
+  if (!dateStr) return null;
   try {
     const [year, month, day] = dateStr.split("-").map(Number);
-    if (!year || !month || !day) return dateStr;
+    if (!year || !month || !day) return null;
     const end = new Date(Date.UTC(year, month - 1, day + 6));
     const endD = String(end.getUTCDate()).padStart(2, "0");
     const endM = String(end.getUTCMonth() + 1).padStart(2, "0");
     const endY = end.getUTCFullYear();
     return `${endD}/${endM}/${endY}`;
   } catch {
-    return dateStr;
+    return null;
   }
-}
-
-function normalizeSort(param: string | null): RankingArchiveSortOption {
-  if (!param) return "date_desc";
-  const p = param.trim().toLowerCase();
-  if (p === "date_asc") return "date_asc";
-  if (p === "score_desc") return "score_desc";
-  if (p === "score_asc") return "score_asc";
-  return "date_desc";
 }
 
 const columns: ColumnDef<typeof features, RankingEntry>[] = [
   {
     accessorKey: "position",
     header: "Position",
-    meta: { className: "w-20 text-center" } as CellMeta,
+    meta: { className: "w-24 text-center" } as CellMeta,
     cell: ({ row }) => (
-      <Badge variant="secondary">#{row.original.position ?? row.index + 1}</Badge>
+      <Badge variant="secondary">#{row.original.position}</Badge>
     ),
   },
   {
@@ -127,13 +112,13 @@ const columns: ColumnDef<typeof features, RankingEntry>[] = [
   {
     id: "categories",
     header: "Catégories",
-    accessorFn: (entry) => entry.categories?.join(" ") ?? "",
-    meta: { className: "w-48 hidden md:table-cell" } as CellMeta,
+    accessorFn: (entry) => entry.categories.join(" "),
+    meta: { className: "w-70 hidden md:table-cell" } as CellMeta,
     cell: ({ row }) =>
-      row.original.categories?.length ? (
+      row.original.categories.length ? (
         <ScrollArea>
           {row.original.categories.map((category) => (
-            <Badge key={category} variant="outline" className="mr-1">
+            <Badge key={category} variant="outline">
               {category}
             </Badge>
           ))}
@@ -141,19 +126,6 @@ const columns: ColumnDef<typeof features, RankingEntry>[] = [
       ) : (
         <Badge variant="ghost">Général</Badge>
       ),
-  },
-  {
-    id: "closureDate",
-    header: "Date de fin",
-    meta: { className: "w-32 text-center tabular-nums" } as CellMeta,
-    cell: ({ table }) => {
-      const meta = table.options.meta as TableMeta | undefined;
-      return (
-        <span className="text-muted-foreground font-medium text-xs sm:text-sm">
-          {meta?.closureDate ?? "-"}
-        </span>
-      );
-    },
   },
   {
     accessorKey: "score",
@@ -169,47 +141,28 @@ function RankingArchivesContent() {
   // Read URL query parameters
   const urlCategory =
     searchParams.get("category") ?? searchParams.get("categoryId") ?? "all";
-  const urlPeriodStart = searchParams.get("periodStart") ?? "latest";
-  const urlSort = normalizeSort(searchParams.get("sortBy"));
 
-  // Form selections
+  // Form selection
   const [selectedCategory, setSelectedCategory] = useState<string>(urlCategory);
-  const [selectedPeriodStart, setSelectedPeriodStart] =
-    useState<string>(urlPeriodStart);
-  const [selectedSort, setSelectedSort] =
-    useState<RankingArchiveSortOption>(urlSort);
 
-  // Available archived periods
-  const [availablePeriods, setAvailablePeriods] = useState<string[]>([]);
+  // Available archived periods to extract the most recently closed period
+  const [latestPeriodStart, setLatestPeriodStart] = useState<string | null>(null);
   useEffect(() => {
     rankingsRepository
       .listArchivedPeriods("week")
       .then((periods) => {
-        setAvailablePeriods(periods ?? []);
+        if (periods && periods.length > 0) {
+          setLatestPeriodStart(periods[0]);
+        }
       })
-      .catch(() => setAvailablePeriods([]));
+      .catch(() => {
+        setLatestPeriodStart(null);
+      });
   }, []);
 
-  // Sorted periods list based on sort selection
-  const sortedPeriods = useMemo(() => {
-    const copy = [...availablePeriods];
-    if (urlSort === "date_asc") {
-      return copy.sort((a, b) => a.localeCompare(b));
-    }
-    return copy.sort((a, b) => b.localeCompare(a));
-  }, [availablePeriods, urlSort]);
-
-  // Active period start date
-  const effectivePeriodStart = useMemo(() => {
-    if (urlPeriodStart && urlPeriodStart !== "latest") {
-      return urlPeriodStart;
-    }
-    return sortedPeriods.length > 0 ? sortedPeriods[0] : undefined;
-  }, [urlPeriodStart, sortedPeriods]);
-
-  const displayedClosureDate = useMemo(() => {
-    return computeClosureDate(effectivePeriodStart);
-  }, [effectivePeriodStart]);
+  const closureDate = useMemo(() => {
+    return computeClosureDate(latestPeriodStart);
+  }, [latestPeriodStart]);
 
   // Categories list
   const [categories, setCategories] = useState<Category[]>([]);
@@ -244,27 +197,16 @@ function RankingArchivesContent() {
   const { pageIndex } = pagination;
 
   // Keep state synced with URL changes
-  const [prevParams, setPrevParams] = useState({
-    urlCategory,
-    urlPeriodStart,
-    urlSort,
-  });
-
-  if (
-    prevParams.urlCategory !== urlCategory ||
-    prevParams.urlPeriodStart !== urlPeriodStart ||
-    prevParams.urlSort !== urlSort
-  ) {
-    setPrevParams({ urlCategory, urlPeriodStart, urlSort });
+  const [prevCategory, setPrevCategory] = useState(urlCategory);
+  if (prevCategory !== urlCategory) {
+    setPrevCategory(urlCategory);
     setSelectedCategory(urlCategory);
-    setSelectedPeriodStart(urlPeriodStart);
-    setSelectedSort(urlSort);
     setPagination((prev) =>
       prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 },
     );
   }
 
-  // Fetch archived rankings
+  // Fetch archived rankings (always by date from recently ended)
   useEffect(() => {
     let cancelled = false;
     // eslint-disable-next-line
@@ -274,7 +216,6 @@ function RankingArchivesContent() {
     rankingsRepository
       .listArchives({
         periodType: "week",
-        periodStart: effectivePeriodStart,
         categoryId: resolvedCategoryId,
         page: pageIndex + 1,
         pageSize: PAGE_SIZE,
@@ -296,32 +237,11 @@ function RankingArchivesContent() {
     return () => {
       cancelled = true;
     };
-  }, [effectivePeriodStart, resolvedCategoryId, pageIndex, reloadKey]);
-
-  // Client-side sorting for current page if requested
-  const displayItems = useMemo(() => {
-    if (!ranking?.items) return [];
-    const items = [...ranking.items];
-    if (urlSort === "score_asc") {
-      return items.sort((a, b) => a.score - b.score);
-    }
-    if (urlSort === "score_desc") {
-      return items.sort((a, b) => b.score - a.score);
-    }
-    return items;
-  }, [ranking?.items, urlSort]);
+  }, [resolvedCategoryId, pageIndex, reloadKey]);
 
   function handleFilterSubmit(e?: React.FormEvent) {
     if (e) e.preventDefault();
     const params = new URLSearchParams();
-
-    if (selectedSort && selectedSort !== "date_desc") {
-      params.set("sortBy", selectedSort);
-    }
-
-    if (selectedPeriodStart && selectedPeriodStart !== "latest") {
-      params.set("periodStart", selectedPeriodStart);
-    }
 
     if (selectedCategory && selectedCategory !== "all") {
       params.set("category", selectedCategory);
@@ -332,38 +252,24 @@ function RankingArchivesContent() {
   }
 
   function handleReset() {
-    setSelectedSort("date_desc");
-    setSelectedPeriodStart("latest");
     setSelectedCategory("all");
     router.push("/rankings/archives");
   }
 
   const table = useTable({
     features,
-    data: displayItems,
+    data: ranking?.items ?? [],
     columns,
     manualPagination: true,
     rowCount: ranking?.total ?? 0,
     state: { pagination },
     onPaginationChange: setPagination,
-    meta: {
-      closureDate: displayedClosureDate,
-    } as TableMeta,
   });
 
   const activeCategoryObj = categories.find((c) => c.id === resolvedCategoryId);
   const cardTitle = activeCategoryObj
     ? `Anciens classements : ${activeCategoryObj.name}`
     : "Anciens classements";
-
-  const sortDescriptions: Record<RankingArchiveSortOption, string> = {
-    date_desc: "triés par date de clôture décroissante (plus récents d'abord)",
-    date_asc: "triés par date de clôture croissante (plus anciens d'abord)",
-    score_desc: "triés par score décroissant (meilleurs scores d'abord)",
-    score_asc: "triés par score croissant",
-  };
-  const sortDesc = sortDescriptions[urlSort];
-  const cardDescription = `Consultez les résultats finaux des votes et classements clôturés, ${sortDesc}.`;
 
   const rows = table.getRowModel().rows;
   const pageCount = Math.max(1, table.getPageCount());
@@ -375,22 +281,30 @@ function RankingArchivesContent() {
   return (
     <Card className="flex flex-col gap-4">
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <History className="size-5 text-muted-foreground" />
-          <CardTitle className="text-xl font-bold">{cardTitle}</CardTitle>
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
+            <History className="size-5 text-muted-foreground" />
+            <CardTitle className="text-xl font-bold">{cardTitle}</CardTitle>
+          </div>
+          {closureDate && (
+            <Badge
+              variant="outline"
+              className="font-normal text-xs text-muted-foreground"
+            >
+              Date de fin : {closureDate}
+            </Badge>
+          )}
         </div>
-        <CardDescription>{cardDescription}</CardDescription>
+        <CardDescription>
+          Consultez les résultats finaux des classements hebdomadaires clôturés
+          {closureDate ? ` (date de fin : ${closureDate})` : ""}.
+        </CardDescription>
 
         <div className="pt-2">
           <RankingArchiveFilterBar
             categories={categories}
-            availablePeriods={sortedPeriods}
-            selectedPeriodStart={selectedPeriodStart}
             selectedCategory={selectedCategory}
-            selectedSort={selectedSort}
-            onPeriodStartChange={setSelectedPeriodStart}
             onCategoryChange={setSelectedCategory}
-            onSortChange={setSelectedSort}
             onSubmit={handleFilterSubmit}
             onReset={handleReset}
             loading={loading}
@@ -420,105 +334,114 @@ function RankingArchivesContent() {
 
         {loading ? (
           <LoadingGuard />
-        ) : displayItems.length === 0 && !error ? (
+        ) : ranking?.items.length === 0 ? (
           <RankingArchiveHasNoWork />
         ) : (
-          <div className="space-y-4">
-            <Table>
-              <TableHeader>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <TableRow key={headerGroup.id}>
-                    {headerGroup.headers.map((header) => {
-                      const meta = header.column.columnDef.meta as CellMeta;
-                      return (
+          <>
+            <div
+              className={cn("border rounded-md", loading && "opacity-60")}
+              aria-busy={loading}
+            >
+              <Table className="table-fixed">
+                <TableHeader>
+                  {table.getHeaderGroups().map((headerGroup) => (
+                    <TableRow key={headerGroup.id}>
+                      {headerGroup.headers.map((header) => (
                         <TableHead
                           key={header.id}
-                          className={cn(meta?.className)}
+                          className={
+                            (
+                              header.column.columnDef.meta as
+                                | CellMeta
+                                | undefined
+                            )?.className
+                          }
                         >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext(),
-                              )}
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
                         </TableHead>
-                      );
-                    })}
-                  </TableRow>
-                ))}
-              </TableHeader>
-              <TableBody>
-                {rows.map((row) => (
-                  <TableRow key={row.id}>
-                    {row.getAllCells().map((cell) => {
-                      const meta = cell.column.columnDef.meta as CellMeta;
-                      return (
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableHeader>
+                <TableBody>
+                  {rows.map((row) => (
+                    <TableRow key={row.id}>
+                      {row.getAllCells().map((cell) => (
                         <TableCell
                           key={cell.id}
-                          className={cn(meta?.className)}
+                          className={
+                            (
+                              cell.column.columnDef.meta as
+                                | CellMeta
+                                | undefined
+                            )?.className
+                          }
                         >
                           {flexRender(
                             cell.column.columnDef.cell,
                             cell.getContext(),
                           )}
                         </TableCell>
-                      );
-                    })}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                      ))}
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
 
             {ranking && ranking.total > PAGE_SIZE && (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-                <Label className="text-xs text-muted-foreground order-2 sm:order-1">
-                  Affichage de {firstResult} à {lastResult} sur {ranking.total}{" "}
-                  œuvres archivées
+              <div className="flex justify-between items-center">
+                <Label className="pl-1">
+                  Affichage de {firstResult} à {lastResult} sur {ranking.total}
                 </Label>
-                <Pagination className="order-1 sm:order-2 justify-end mx-0 w-auto">
+
+                <Pagination className="mx-0 w-auto">
                   <PaginationContent>
                     <PaginationItem>
                       <PaginationPrevious
                         href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (table.getCanPreviousPage()) {
-                            table.previousPage();
-                          }
-                        }}
+                        text="Précédent"
                         aria-disabled={!table.getCanPreviousPage()}
                         className={cn(
                           !table.getCanPreviousPage() &&
                             "pointer-events-none opacity-50",
                         )}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          table.previousPage();
+                        }}
                       />
                     </PaginationItem>
+
                     <PaginationItem>
-                      <span className="text-xs text-muted-foreground px-2">
+                      <Label>
                         Page {pageIndex + 1} sur {pageCount}
-                      </span>
+                      </Label>
                     </PaginationItem>
+
                     <PaginationItem>
                       <PaginationNext
                         href="#"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          if (table.getCanNextPage()) {
-                            table.nextPage();
-                          }
-                        }}
+                        text="Suivant"
                         aria-disabled={!table.getCanNextPage()}
                         className={cn(
                           !table.getCanNextPage() &&
                             "pointer-events-none opacity-50",
                         )}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          table.nextPage();
+                        }}
                       />
                     </PaginationItem>
                   </PaginationContent>
                 </Pagination>
               </div>
             )}
-          </div>
+          </>
         )}
       </CardContent>
     </Card>
@@ -527,13 +450,7 @@ function RankingArchivesContent() {
 
 export default function RankingArchivesPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="p-8 text-center text-muted-foreground text-sm">
-          Chargement des anciens classements...
-        </div>
-      }
-    >
+    <Suspense fallback={<LoadingGuard />}>
       <RankingArchivesContent />
     </Suspense>
   );

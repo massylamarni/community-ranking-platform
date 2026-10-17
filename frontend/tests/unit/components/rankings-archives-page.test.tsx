@@ -102,48 +102,54 @@ describe("RankingArchivesPage Component", () => {
     );
   });
 
-  it("renders page title, sort and category controls, table headers, and calculated date de fin column", async () => {
+  it("renders page title, closure date in header, category control, and table headers matching rankings UI", async () => {
     render(<RankingArchivesPage />);
 
     expect(await screen.findByText("Anciens classements")).toBeDefined();
-    expect(screen.getByLabelText("Période clôturée")).toBeDefined();
-    expect(screen.getByLabelText("Trier par")).toBeDefined();
+
+    // Verify closure date (date de fin) is displayed in the dashboard header (2026-09-28 + 6 days = 04/10/2026)
+    expect(await screen.findByText("Date de fin : 04/10/2026")).toBeDefined();
+
+    // Verify 'Type de période', 'Période archivée', 'Période clôturée', 'Trier par' are completely removed
+    expect(screen.queryByLabelText("Type de période")).toBeNull();
+    expect(screen.queryByLabelText("Période archivée")).toBeNull();
+    expect(screen.queryByLabelText("Période clôturée")).toBeNull();
+    expect(screen.queryByLabelText("Trier par")).toBeNull();
+
+    // Only Category filter and Valider button are present
     expect(screen.getByLabelText("Catégorie")).toBeDefined();
     expect(screen.getByRole("button", { name: /valider/i })).toBeDefined();
 
-    // Verify archived works are displayed with closure date and final score
+    // Verify archived works are displayed matching rankings UI
     expect(await screen.findByText("Fragments d'Acier")).toBeDefined();
     expect(screen.getByText("Lumière d'Automne")).toBeDefined();
     expect(screen.getByText("Le Cri Silencieux")).toBeDefined();
     expect(screen.getByText("Urbanisme Poétique")).toBeDefined();
 
-    // Verify table headers
-    expect(screen.getByText("Date de fin")).toBeDefined();
+    // Table headers match rankings view & screenshot
+    expect(screen.getByText("Position")).toBeDefined();
+    expect(screen.getByText("Œuvre")).toBeDefined();
+    expect(screen.getByText("Catégories")).toBeDefined();
     expect(screen.getByText("Score final")).toBeDefined();
 
-    // Closure date calculated for 2026-09-28 + 6 days = 04/10/2026
-    expect(screen.getAllByText("04/10/2026").length).toBeGreaterThan(0);
     expect(screen.getByText("30")).toBeDefined();
   });
 
-  it("calls listArchives with periodType week and default latest period", async () => {
+  it("always queries archives by recently ended date without client-side re-sorting", async () => {
     render(<RankingArchivesPage />);
 
     await waitFor(() => {
-      expect(rankingsRepository.listArchives).toHaveBeenCalledWith(
-        expect.objectContaining({
-          periodType: "week",
-          periodStart: "2026-09-28",
-          page: 1,
-          pageSize: 10,
-        }),
-      );
+      expect(rankingsRepository.listArchives).toHaveBeenCalledWith({
+        periodType: "week",
+        categoryId: undefined,
+        page: 1,
+        pageSize: 10,
+      });
     });
   });
 
-  it("initializes from URL query parameters (periodStart and category)", async () => {
+  it("initializes from URL query parameters (category)", async () => {
     mockSearchParams({
-      periodStart: "2026-09-21",
       category: "3",
     });
 
@@ -153,7 +159,6 @@ describe("RankingArchivesPage Component", () => {
       expect(rankingsRepository.listArchives).toHaveBeenCalledWith(
         expect.objectContaining({
           periodType: "week",
-          periodStart: "2026-09-21",
           categoryId: 3,
           page: 1,
           pageSize: 10,
@@ -168,7 +173,6 @@ describe("RankingArchivesPage Component", () => {
 
   it("submitting filter form updates URL query parameters", async () => {
     mockSearchParams({
-      periodStart: "2026-09-21",
       category: "1",
     });
 
@@ -179,9 +183,7 @@ describe("RankingArchivesPage Component", () => {
     const submitButton = screen.getByRole("button", { name: /valider/i });
     fireEvent.click(submitButton);
 
-    expect(mockPush).toHaveBeenCalledWith(
-      "/rankings/archives?periodStart=2026-09-21&category=1",
-    );
+    expect(mockPush).toHaveBeenCalledWith("/rankings/archives?category=1");
   });
 
   it("renders empty state when no archives exist for criteria", async () => {
@@ -198,8 +200,6 @@ describe("RankingArchivesPage Component", () => {
       await screen.findByText("Aucun classement archivé"),
     ).toBeDefined();
     // Filter controls remain present
-    expect(screen.getByLabelText("Période clôturée")).toBeDefined();
-    expect(screen.getByLabelText("Trier par")).toBeDefined();
     expect(screen.getByLabelText("Catégorie")).toBeDefined();
   });
 
@@ -228,9 +228,7 @@ describe("RankingArchivesPage Component", () => {
 
   it("resets filters when clicking Réinitialiser", async () => {
     mockSearchParams({
-      sortBy: "score_asc",
       category: "2",
-      periodStart: "2026-09-21",
     });
 
     render(<RankingArchivesPage />);
@@ -243,10 +241,7 @@ describe("RankingArchivesPage Component", () => {
     expect(mockPush).toHaveBeenCalledWith("/rankings/archives");
   });
 
-  it("fulfills CLAS-007 acceptance criteria: displayed ranking is exactly the archived one", async () => {
-    // Acceptance criteria:
-    // A weekly ranking of the previous week was archived with its result (e.g. B, A, C)
-    // The user opens the 'previous rankings' section and selects the previous week: the displayed ranking is exactly the archived one
+  it("fulfills CLAS-007 acceptance criteria: displayed ranking is exactly the archived one (B, A, C)", async () => {
     const weekRankingData: RankingPage = {
       items: [
         { id: 11, position: 1, title: "Oeuvre B", author: "artiste2", categories: [], score: 45, description: "" },
@@ -259,8 +254,6 @@ describe("RankingArchivesPage Component", () => {
     };
 
     (rankingsRepository.listArchives as jest.Mock).mockResolvedValue(weekRankingData);
-
-    mockSearchParams({ periodStart: "2026-09-21" });
 
     render(<RankingArchivesPage />);
 
