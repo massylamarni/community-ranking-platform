@@ -13,6 +13,8 @@ const HOME: Redirect = { user: "/works/mine", admin: "/moderation" };
 export const DEFAULT_DENY = "/auth/login";
 
 export const routes: Route[] = [
+  { path: "/rankings", allow: ALL },
+  { path: "/rankings/archives", allow: ALL },
   { path: "/categories", allow: ALL },
   { path: "/categories/[id]", allow: ALL },
   {

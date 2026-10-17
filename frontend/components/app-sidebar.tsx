@@ -65,8 +65,19 @@ const data = {
     },
     {
       title: "Classements",
-      url: "/rankings",
+      url: "#",
       icon: <Trophy />,
+      isActive: true,
+      items: [
+        {
+          title: "Classement actuel",
+          url: "/rankings",
+        },
+        {
+          title: "Anciens classements",
+          url: "/rankings/archives",
+        },
+      ],
     },
   ],
 };
