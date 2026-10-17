@@ -493,6 +493,13 @@ paths:
         content:
           application/json:
             schema: { $ref: "#/components/schemas/UpdateCommentRequest" }
+          multipart/form-data:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content: { type: string, minLength: 1, pattern: '\S' }
+                image: { type: string, format: binary }
       responses:
         "200":
           description: Updated comment
@@ -1087,13 +1094,14 @@ components:
 
     PublicProfileWork:
       type: object
-      required: [oeuvreId, title, description, imageUrl, score, createdAt]
+      required: [oeuvreId, title, description, imageUrl, score, totalVotes, createdAt]
       properties:
         oeuvreId: { type: integer, format: int64 }
         title: { type: string }
         description: { type: [string, "null"] }
         imageUrl: { type: [string, "null"] }
         score: { type: integer, format: int32 }
+        totalVotes: { type: integer, format: int32 }
         createdAt: { type: string, format: date-time }
 
     PublicProfileComment:
@@ -1110,12 +1118,13 @@ components:
 
     PublicProfileVotedWork:
       type: object
-      required: [oeuvreId, title, imageUrl, score, voteValue]
+      required: [oeuvreId, title, imageUrl, score, totalVotes, voteValue]
       properties:
         oeuvreId: { type: integer, format: int64 }
         title: { type: string }
         imageUrl: { type: [string, "null"] }
         score: { type: integer, format: int32 }
+        totalVotes: { type: integer, format: int32 }
         voteValue: { type: integer, enum: [-1, 1] }
 
     CategoryResponse:

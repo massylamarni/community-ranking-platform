@@ -93,6 +93,10 @@ public class CommentService {
         }
 
         comment.setContent(request.getContent().trim());
+        MultipartFile image = request.getImage();
+        if (image != null && !image.isEmpty()) {
+            comment.setImageUrl(fileStorageService.store(image, "comments"));
+        }
         return new CommentResponse(commentRepository.save(comment));
     }
 
