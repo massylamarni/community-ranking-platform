@@ -110,13 +110,13 @@ describe("RankingArchivesPage Component", () => {
     // Verify closure date (date de fin) is displayed in the dashboard header (2026-09-28 + 6 days = 04/10/2026)
     expect(await screen.findByText("Date de fin : 04/10/2026")).toBeDefined();
 
-    // Verify 'Type de période', 'Période archivée', 'Période clôturée', 'Trier par' are completely removed
+    // Verify 'Type de période', 'Période clôturée', 'Trier par' are completely removed
     expect(screen.queryByLabelText("Type de période")).toBeNull();
-    expect(screen.queryByLabelText("Période archivée")).toBeNull();
     expect(screen.queryByLabelText("Période clôturée")).toBeNull();
     expect(screen.queryByLabelText("Trier par")).toBeNull();
 
-    // Only Category filter and Valider button are present
+    // Period selector and Category filter with Valider button are present
+    expect(screen.getByLabelText("Période archivée")).toBeDefined();
     expect(screen.getByLabelText("Catégorie")).toBeDefined();
     expect(screen.getByRole("button", { name: /valider/i })).toBeDefined();
 
@@ -143,6 +143,7 @@ describe("RankingArchivesPage Component", () => {
     await waitFor(() => {
       expect(rankingsRepository.listArchives).toHaveBeenCalledWith({
         periodType: "week",
+        periodStart: "2026-09-28",
         categoryId: undefined,
         page: 1,
         pageSize: 10,
@@ -150,9 +151,10 @@ describe("RankingArchivesPage Component", () => {
     });
   });
 
-  it("initializes from URL query parameters (category)", async () => {
+  it("initializes from URL query parameters (category and periodStart)", async () => {
     mockSearchParams({
       category: "3",
+      periodStart: "2026-09-21",
     });
 
     render(<RankingArchivesPage />);
@@ -161,6 +163,7 @@ describe("RankingArchivesPage Component", () => {
       expect(rankingsRepository.listArchives).toHaveBeenCalledWith(
         expect.objectContaining({
           periodType: "week",
+          periodStart: "2026-09-21",
           categoryId: 3,
           page: 1,
           pageSize: 10,

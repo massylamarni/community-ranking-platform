@@ -12,13 +12,8 @@ import {
 } from "@tanstack/react-table";
 import { AlertCircle, History, RefreshCw } from "lucide-react";
 import { cn } from "cn";
-import { categoriesRepository } from "@/repositories/categories.repository";
-import { rankingsRepository } from "@/repositories/rankings.repository";
-import type {
-  Category,
-  RankingEntry,
-  RankingPage,
-} from "@/types/api";
+import { useCategories, useRankings } from "@/hooks";
+import type { RankingEntry } from "@/types/api";
 import LoadingGuard from "@/components/guards/loadingGuard";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -88,40 +83,63 @@ function RankingArchivesContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  // Custom hooks for domain state and actions
+  const {
+    ranking,
+    periods,
+    loading: rankingsLoading,
+    error: rankingsError,
+    listArchives,
+    listPeriods,
+  } = useRankings();
+
+  const {
+    categories,
+    loading: categoriesLoading,
+    list: fetchCategories,
+  } = useCategories();
+
   // Read URL query parameters
   const urlCategory =
     searchParams.get("category") ?? searchParams.get("categoryId") ?? "all";
+  const urlPeriodStart = searchParams.get("periodStart") ?? "";
 
-  // Form selection
-  const [selectedCategory, setSelectedCategory] = useState<string>(urlCategory);
-
-  // Available archived periods to extract the most recently closed period
-  const [latestPeriodStart, setLatestPeriodStart] = useState<string | null>(null);
+  // Available periods and categories loaded once on mount
   useEffect(() => {
-    rankingsRepository
-      .listArchivedPeriods("week")
-      .then((periods) => {
-        if (periods && periods.length > 0) {
-          setLatestPeriodStart(periods[0]);
-        }
-      })
-      .catch(() => {
-        setLatestPeriodStart(null);
-      });
-  }, []);
+    listPeriods("week").catch(() => {});
+    fetchCategories().catch(() => {});
+  }, [listPeriods, fetchCategories]);
+
+  // Derive effective periodStart: URL param -> first available period -> null
+  const effectivePeriodStart = useMemo(() => {
+    if (urlPeriodStart) return urlPeriodStart;
+    if (periods.length > 0) return periods[0];
+    return null;
+  }, [urlPeriodStart, periods]);
+
+  // Form selection states
+  const [selectedCategory, setSelectedCategory] = useState<string>(urlCategory);
+  const [selectedPeriodStart, setSelectedPeriodStart] =
+    useState<string>(urlPeriodStart);
+
+  // Keep form state in sync when URL or periods load
+  useEffect(() => {
+    if (urlPeriodStart) {
+      setSelectedPeriodStart(urlPeriodStart);
+    } else if (periods.length > 0) {
+      setSelectedPeriodStart(periods[0]);
+    }
+  }, [urlPeriodStart, periods]);
+
+  const [prevCategory, setPrevCategory] = useState(urlCategory);
+  if (prevCategory !== urlCategory) {
+    setPrevCategory(urlCategory);
+    setSelectedCategory(urlCategory);
+  }
 
   const closureDate = useMemo(() => {
-    return computeClosureDate(latestPeriodStart);
-  }, [latestPeriodStart]);
-
-  // Categories list
-  const [categories, setCategories] = useState<Category[]>([]);
-  useEffect(() => {
-    categoriesRepository
-      .list()
-      .then((data) => setCategories(data ?? []))
-      .catch(() => setCategories([]));
-  }, []);
+    return computeClosureDate(effectivePeriodStart);
+  }, [effectivePeriodStart]);
 
   // Resolve numeric categoryId
   const resolvedCategoryId = useMemo(() => {
@@ -135,74 +153,56 @@ function RankingArchivesContent() {
   }, [urlCategory, categories]);
 
   // Table & pagination state
-  const [ranking, setRanking] = useState<RankingPage | null>(null);
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: PAGE_SIZE,
   });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
   const { pageIndex } = pagination;
 
-  // Keep state synced with URL changes
-  const [prevCategory, setPrevCategory] = useState(urlCategory);
-  if (prevCategory !== urlCategory) {
-    setPrevCategory(urlCategory);
-    setSelectedCategory(urlCategory);
-    setPagination((prev) =>
-      prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 },
-    );
-  }
-
-  // Fetch archived rankings (always by date from recently ended)
+  // Fetch archived rankings through custom hook
   useEffect(() => {
-    let cancelled = false;
-    // eslint-disable-next-line
-    setLoading(true);
-    setError(null);
-
-    rankingsRepository
-      .listArchives({
-        periodType: "week",
-        categoryId: resolvedCategoryId,
-        page: pageIndex + 1,
-        pageSize: PAGE_SIZE,
-      })
-      .then((data) => {
-        if (!cancelled) setRanking(data);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setError(
-            "Impossible de charger les anciens classements. Veuillez vérifier votre connexion ou réessayer.",
-          );
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [resolvedCategoryId, pageIndex, reloadKey]);
+    listArchives({
+      periodType: "week",
+      periodStart: effectivePeriodStart ?? undefined,
+      categoryId: resolvedCategoryId,
+      page: pageIndex + 1,
+      pageSize: PAGE_SIZE,
+    }).catch(() => {});
+  }, [
+    effectivePeriodStart,
+    resolvedCategoryId,
+    pageIndex,
+    reloadKey,
+    listArchives,
+  ]);
 
   function handleFilterSubmit(e?: React.FormEvent) {
     if (e) e.preventDefault();
     const params = new URLSearchParams();
 
+    const chosenPeriod = selectedPeriodStart || (periods[0] ?? "");
+    if (chosenPeriod && periods.length > 0 && chosenPeriod !== periods[0]) {
+      params.set("periodStart", chosenPeriod);
+    } else if (chosenPeriod && periods.length === 0) {
+      params.set("periodStart", chosenPeriod);
+    }
+
     if (selectedCategory && selectedCategory !== "all") {
       params.set("category", selectedCategory);
     }
 
+    setPagination((prev) => (prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 }));
     const qs = params.toString();
     router.push(qs ? `/rankings/archives?${qs}` : "/rankings/archives");
   }
 
   function handleReset() {
     setSelectedCategory("all");
+    const defaultPeriod = periods[0] ?? "";
+    setSelectedPeriodStart(defaultPeriod);
+    setPagination((prev) => (prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 }));
     router.push("/rankings/archives");
   }
 
@@ -245,11 +245,11 @@ function RankingArchivesContent() {
         accessorFn: (entry) => entry.categories?.join(" ") ?? "",
         meta: { className: "text-left px-4 whitespace-normal" } as CellMeta,
         cell: ({ row }) => {
-          const categories = row.original.categories ?? [];
+          const categoriesList = row.original.categories ?? [];
           return (
             <div className="flex flex-wrap gap-1.5 py-1">
-              {categories.length > 0 ? (
-                categories.map((category) => (
+              {categoriesList.length > 0 ? (
+                categoriesList.map((category) => (
                   <Badge key={category} variant="outline" className="text-xs">
                     {category}
                   </Badge>
@@ -330,6 +330,11 @@ function RankingArchivesContent() {
     ? Math.min((pageIndex + 1) * PAGE_SIZE, ranking.total)
     : 0;
 
+  const loading = rankingsLoading;
+  const errorMessage = rankingsError
+    ? "Impossible de charger les anciens classements. Veuillez vérifier votre connexion ou réessayer."
+    : null;
+
   return (
     <Card className="min-w-0 w-full max-w-4xl">
       <CardHeader>
@@ -358,6 +363,9 @@ function RankingArchivesContent() {
           categories={categories}
           selectedCategory={selectedCategory}
           onCategoryChange={setSelectedCategory}
+          periods={periods}
+          selectedPeriod={selectedPeriodStart || (effectivePeriodStart ?? "")}
+          onPeriodChange={setSelectedPeriodStart}
           onSubmit={handleFilterSubmit}
           onReset={handleReset}
           loading={loading}
@@ -365,12 +373,12 @@ function RankingArchivesContent() {
 
         {loading && !ranking ? (
           <LoadingGuard />
-        ) : error ? (
+        ) : errorMessage ? (
           <Alert variant="destructive" className="w-full">
             <AlertCircle />
             <AlertTitle>Erreur de chargement</AlertTitle>
             <AlertDescription>
-              <p>{error}</p>
+              <p>{errorMessage}</p>
               <Button
                 variant="outline"
                 size="sm"

@@ -12,8 +12,7 @@ import {
 } from "@tanstack/react-table";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { cn } from "cn";
-import { categoriesRepository } from "@/repositories/categories.repository";
-import { rankingsRepository } from "@/repositories/rankings.repository";
+import { useCategories, useRankings } from "@/hooks";
 import type {
   Category,
   RankingEntry,
@@ -150,14 +149,24 @@ function RankingsContent() {
   const [selectedPeriod, setSelectedPeriod] =
     useState<RankingPeriod>(urlPeriod);
 
+  // Hooks for domain state
+  const {
+    ranking,
+    loading: rankingsLoading,
+    error: rankingsError,
+    list: fetchRankings,
+  } = useRankings();
+
+  const {
+    categories,
+    loading: categoriesLoading,
+    list: fetchCategories,
+  } = useCategories();
+
   // Load available categories once on mount
-  const [categories, setCategories] = useState<Category[]>([]);
   useEffect(() => {
-    categoriesRepository
-      .list()
-      .then((data) => setCategories(data ?? []))
-      .catch(() => setCategories([]));
-  }, []);
+    fetchCategories().catch(() => {});
+  }, [fetchCategories]);
 
   // Resolve numeric categoryId
   const resolvedCategoryId = useMemo(() => {
@@ -171,13 +180,10 @@ function RankingsContent() {
   }, [urlCategory, categories]);
 
   // Table & pagination state
-  const [ranking, setRanking] = useState<RankingPage | null>(null);
   const [pagination, setPagination] = useState({
     pageIndex: 0,
     pageSize: PAGE_SIZE,
   });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [reloadKey, setReloadKey] = useState(0);
 
   const { pageIndex } = pagination;
@@ -198,36 +204,18 @@ function RankingsContent() {
 
   // Fetch ranking data
   useEffect(() => {
-    let cancelled = false;
-    // eslint-disable-next-line
-    setLoading(true);
-    setError(null);
+    fetchRankings({
+      categoryId: resolvedCategoryId,
+      period: urlPeriod !== "all" ? urlPeriod : undefined,
+      page: pageIndex + 1,
+      pageSize: PAGE_SIZE,
+    }).catch(() => {});
+  }, [resolvedCategoryId, urlPeriod, pageIndex, reloadKey, fetchRankings]);
 
-    rankingsRepository
-      .list({
-        categoryId: resolvedCategoryId,
-        period: urlPeriod !== "all" ? urlPeriod : undefined,
-        page: pageIndex + 1,
-        pageSize: PAGE_SIZE,
-      })
-      .then((data) => {
-        if (!cancelled) setRanking(data);
-      })
-      .catch(() => {
-        if (!cancelled) {
-          setError(
-            "Impossible de charger le classement. Veuillez vérifier votre connexion ou réessayer.",
-          );
-        }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [resolvedCategoryId, urlPeriod, pageIndex, reloadKey]);
+  const loading = rankingsLoading;
+  const error = rankingsError
+    ? "Impossible de charger le classement. Veuillez vérifier votre connexion ou réessayer."
+    : null;
 
   function handleFilterSubmit(e?: React.FormEvent) {
     if (e) e.preventDefault();

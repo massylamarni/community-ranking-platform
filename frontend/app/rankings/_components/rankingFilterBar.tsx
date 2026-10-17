@@ -141,7 +141,6 @@ export default function RankingFilterBar({
           <Button
             type="button"
             variant="outline"
-            disabled={loading}
             onClick={onReset}
             className="gap-1.5"
             aria-label="Réinitialiser les filtres"
