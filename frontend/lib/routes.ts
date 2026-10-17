@@ -15,6 +15,7 @@ export const DEFAULT_DENY = "/auth/login";
 export const routes: Route[] = [
   { path: "/categories", allow: ALL },
   { path: "/categories/[id]", allow: ALL },
+  { path: "/profiles/[id]", allow: ALL },
   {
     path: "/categories/edit",
     allow: ["admin"],

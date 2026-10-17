@@ -2,8 +2,8 @@ import { request } from "@/lib/http";
 import type { GetActivity, PublicProfile } from "@/types/api";
 
 export const profilesRepository = {
-  getPublicProfile(username: string) {
-    return request<PublicProfile>(`/users/${username}`);
+  getPublicProfile(userId: number) {
+    return request<PublicProfile>(`/users/${userId}/public_profile`);
   },
 
   getActivity(username: string) {

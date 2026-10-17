@@ -64,7 +64,9 @@ export function Navbar() {
               />
               <DropdownMenuContent align="end" className="w-40">
                 <DropdownMenuGroup>
-                  <DropdownMenuItem render={<Link href="/auth/profile" />}>
+                  <DropdownMenuItem
+                    render={<Link href={`/profiles/${user.id}`} />}
+                  >
                     Profil
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={hadnleLogout}>
