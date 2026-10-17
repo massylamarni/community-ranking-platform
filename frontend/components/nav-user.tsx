@@ -32,7 +32,6 @@ export function NavUser({
   logout,
 }: {
   user: {
-    id: number;
     name: string;
     email: string;
   };
@@ -82,9 +81,7 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem
-                render={<Link href={`/profiles/${user.id}`} />}
-              >
+              <DropdownMenuItem render={<Link href="/auth/profile" />}>
                 <User />
                 Profil
               </DropdownMenuItem>

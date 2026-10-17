@@ -9,8 +9,9 @@ import type {
 function toFormData(payload: CreateCommentPayload): FormData {
   const form = new FormData();
   form.set("content", payload.content);
-  if (payload.parentCommentId)
-    form.set("parentCommentId", payload.parentCommentId);
+  if (payload.parentCommentId != null) {
+    form.set("parentCommentId", String(payload.parentCommentId));
+  }
   if (payload.image) form.set("image", payload.image);
   return form;
 }
@@ -29,14 +30,14 @@ export const commentsRepository = {
     });
   },
 
-  update(commentId: string, payload: UpdateCommentPayload) {
+  update(commentId: number, payload: UpdateCommentPayload) {
     return request<Comment>(`/comments/${commentId}`, {
       method: "PATCH",
-      body: payload,
+      body: toFormData(payload),
     });
   },
 
-  remove(commentId: string) {
+  remove(commentId: number) {
     return request<void>(`/comments/${commentId}`, { method: "DELETE" });
   },
 };

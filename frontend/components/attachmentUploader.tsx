@@ -13,6 +13,7 @@ import {
   AttachmentAction,
 } from "@/components/ui/attachment";
 import Image from "next/image";
+import { Button } from "./ui/button";
 
 type Item = {
   id: string;
@@ -21,7 +22,15 @@ type Item = {
   src?: string;
   icon?: React.ComponentType;
   file?: File;
+  isInitial?: boolean;
 };
+
+let fallbackId = 0;
+
+function createItemId() {
+  if (typeof crypto.randomUUID === "function") return crypto.randomUUID();
+  return `${Date.now().toString(36)}-${(++fallbackId).toString(36)}-${Math.random().toString(36).slice(2)}`;
+}
 
 function formatBytes(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
@@ -39,11 +48,13 @@ function iconFor(file: File) {
 export function AttachmentUploader({
   onFileSelect,
   initialAttachment,
+  allowRemoveInitial = true,
   type = "file",
   accept = "image/*,.pdf,.csv,.tsx",
 }: {
   onFileSelect: (file: File | null) => void;
   initialAttachment?: { name: string; url: string };
+  allowRemoveInitial?: boolean;
   type?: string;
   accept?: string;
 }) {
@@ -51,10 +62,11 @@ export function AttachmentUploader({
     initialAttachment
       ? [
           {
-            id: crypto.randomUUID(),
+            id: createItemId(),
             name: initialAttachment.name,
             meta: "Actuel",
             src: initialAttachment.url,
+            isInitial: true,
           },
         ]
       : [],
@@ -67,7 +79,7 @@ export function AttachmentUploader({
     const newItems: Item[] = Array.from(fileList).map((file) => {
       const isImage = file.type.startsWith("image/");
       return {
-        id: crypto.randomUUID(),
+        id: createItemId(),
         name: file.name,
         meta: `${file.type.split("/")[1]?.toUpperCase() ?? "FILE"} · ${formatBytes(file.size)}`,
         src: isImage ? URL.createObjectURL(file) : undefined,
@@ -104,49 +116,53 @@ export function AttachmentUploader({
         className="hidden"
         onChange={(e) => handleFiles(e.target.files)}
       />
-      <button
+      <Button
         type="button"
+        variant="outline"
         onClick={() => inputRef.current?.click()}
-        className="rounded border px-3 py-1.5 text-sm"
       >
         Ajouter une pièce jointe
-      </button>
+      </Button>
 
-      <AttachmentGroup className="w-full">
-        {items.map((item) => {
-          const Icon = item.icon;
-          return (
-            <Attachment key={item.id} className="w-64">
-              {item.src ? (
-                <AttachmentMedia variant="image">
-                  <Image
-                    src={item.src}
-                    alt={item.name}
-                    fill
-                    className="object-cover"
-                  />
-                </AttachmentMedia>
-              ) : Icon ? (
-                <AttachmentMedia>
-                  <Icon />
-                </AttachmentMedia>
-              ) : null}
-              <AttachmentContent>
-                <AttachmentTitle>{item.name}</AttachmentTitle>
-                <AttachmentDescription>{item.meta}</AttachmentDescription>
-              </AttachmentContent>
-              <AttachmentActions>
-                <AttachmentAction
-                  aria-label={`Supprimer ${item.name}`}
-                  onClick={() => removeItem(item.id)}
-                >
-                  <XIcon />
-                </AttachmentAction>
-              </AttachmentActions>
-            </Attachment>
-          );
-        })}
-      </AttachmentGroup>
+      {items.length > 0 && (
+        <AttachmentGroup className="w-full">
+          {items.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Attachment key={item.id} className="w-64">
+                {item.src ? (
+                  <AttachmentMedia variant="image">
+                    <Image
+                      src={item.src}
+                      alt={item.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </AttachmentMedia>
+                ) : Icon ? (
+                  <AttachmentMedia>
+                    <Icon />
+                  </AttachmentMedia>
+                ) : null}
+                <AttachmentContent>
+                  <AttachmentTitle>{item.name}</AttachmentTitle>
+                  <AttachmentDescription>{item.meta}</AttachmentDescription>
+                </AttachmentContent>
+                {(!item.isInitial || allowRemoveInitial) && (
+                  <AttachmentActions>
+                    <AttachmentAction
+                      aria-label={`Supprimer ${item.name}`}
+                      onClick={() => removeItem(item.id)}
+                    >
+                      <XIcon />
+                    </AttachmentAction>
+                  </AttachmentActions>
+                )}
+              </Attachment>
+            );
+          })}
+        </AttachmentGroup>
+      )}
     </div>
   );
 }

@@ -82,8 +82,6 @@ export interface UpdateProfilePayload {
   email?: string | null;
 }
 
-
-
 // ---- categories -----------------------------------------------------------
 
 export interface Category {
@@ -166,23 +164,26 @@ export interface VoteForWorkReponse {
 // ---- comments -----------------------------------------------------------
 
 export interface Comment {
-  id: string;
+  id: number;
   content: string;
   imageUrl: string | null;
   author: { username: string };
+  username: string;
   parentCommentId: string | null;
+  oeuvreId: string;
   replies: Comment[];
   createdAt: string;
 }
 
 export interface CreateCommentPayload {
   content: string;
-  parentCommentId?: string | null;
+  parentCommentId?: number | null;
   image?: File | null;
 }
 
 export interface UpdateCommentPayload {
   content: string;
+  image?: File | null;
 }
 
 export type CommentPage = Page<Comment>;
@@ -239,6 +240,7 @@ export interface PublicProfileWork {
   description: string | null;
   imageUrl: string | null;
   score: number;
+  totalVotes: number;
   createdAt: string;
 }
 
@@ -257,6 +259,7 @@ export interface PublicProfileVotedWork {
   title: string;
   imageUrl: string | null;
   score: number;
+  totalVotes: number;
   voteValue: 1 | -1;
 }
 
@@ -268,17 +271,9 @@ export interface PublicProfile {
   votedWorks: PublicProfileVotedWork[];
 }
 
-export interface GetActivity {
-  works: Work[];
-  comments: Comment[];
-  favorites: Work[];
-}
-
 // ---- notifications --------------------------------------------------------
 
-export type NotificationType =
-  | "MODERATION"
-  | "SYSTEM";
+export type NotificationType = "MODERATION" | "SYSTEM";
 
 export interface Notification {
   id: number;

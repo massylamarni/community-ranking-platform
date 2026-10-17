@@ -20,7 +20,6 @@ import {
   ShieldCheck,
   Bell,
   Trophy,
-  Settings,
 } from "lucide-react";
 import { isAdmin, useAuth } from "@/hooks/use-auth";
 import { useCategory } from "@/contexts/categoryContext";
@@ -34,6 +33,22 @@ const data = {
     },
   ],
   navMain: [
+    {
+      title: "Profil",
+      url: "/auth/profile",
+      icon: <User />,
+      isActive: true,
+      items: [
+        /*{
+          title: "View",
+          url: "#",
+        },*/
+        {
+          title: "Modifier",
+          url: "/auth/profile",
+        },
+      ],
+    },
     {
       title: "Œuvres",
       url: "#",
@@ -100,16 +115,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain
           items={[
-            {
-              title: "Profil",
-              url: user ? `/profiles/${user.id}` : "/auth/profile",
-              icon: <User />,
-            },
-            {
-              title: "Paramètres",
-              url: "/auth/profile",
-              icon: <Settings />,
-            },
             ...data.navMain,
             ...(isAdmin(user) ? [navModeration] : []),
             navCategories,
@@ -120,7 +125,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         {user && (
           <NavUser
             user={{
-              id: user.id,
               name: user.username,
               email: "",
             }}

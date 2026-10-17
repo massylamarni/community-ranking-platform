@@ -9,28 +9,37 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { useAuth } from "@/hooks/use-auth";
 import { votesRepository } from "@/repositories";
 import { ApiErrorBody, VoteForWorkReponse, Work } from "@/types/api";
-import { ArrowBigDown, ArrowBigUp } from "lucide-react";
+import { ArrowBigDown, ArrowBigUp, MessageSquare } from "lucide-react";
 import Image from "next/image";
 import { ReactNode, useState } from "react";
+import { CommentSection } from "../../comments/_components/commentSection";
 import WorkNotFoundGuard from "./guards/workNotFoundGuard";
 
-export function WorkItem({
+export type WorkLike = Pick<Work, "id" | "title" | "imageUrl" | "totalVotes"> &
+  Partial<Pick<Work, "description" | "author" | "score">>;
+
+export function WorkItem<T extends WorkLike = Work>({
   work,
   setWork,
   setSelectedWork,
   children,
   statusChildren,
+  showComments = true,
 }: {
-  work: Work | null;
+  work: T | null;
   setWork?: (work: Work) => void | undefined;
-  setSelectedWork?: (w: Work | null) => void;
+  setSelectedWork?: (w: T | null) => void;
   children?: ReactNode;
   statusChildren?: ReactNode;
+  showComments?: boolean;
 }) {
+  const { user } = useAuth();
   const [errors, setErrors] = useState<ApiErrorBody | null>(null);
   const [vote, setVote] = useState<VoteForWorkReponse | null>(null);
+  const [commentsOpen, setCommentsOpen] = useState(false);
 
   async function handleVote(vt: 1 | -1) {
     if (!work || !setWork) return;
@@ -50,8 +59,9 @@ export function WorkItem({
 
   if (!work) return <WorkNotFoundGuard />;
   return (
-    <Card className="max-w-3xl">
+    <Card className="max-w-3xl gap-0">
       <CardHeader
+        className="pb-(--card-spacing)"
         onClick={() => (setSelectedWork ? setSelectedWork(work) : null)}
       >
         <CardTitle>{work.title}</CardTitle>
@@ -59,7 +69,7 @@ export function WorkItem({
       </CardHeader>
       {work.imageUrl && (
         <CardContent
-          className="flex flex-col gap-3 max-w-none"
+          className="flex flex-col gap-3 max-w-none pb-(--card-spacing)"
           onClick={() => (setSelectedWork ? setSelectedWork(work) : null)}
         >
           <div className="relative aspect-4/3 overflow-hidden rounded-md border bg-black">
@@ -71,9 +81,9 @@ export function WorkItem({
               className="object-contain"
             />
           </div>
-          {children}
         </CardContent>
       )}
+      {children && <CardContent>{children}</CardContent>}
       <CardFooter className="flex justify-between">
         <div className="flex gap-3">
           {work.score === undefined ? (
@@ -84,6 +94,7 @@ export function WorkItem({
                 variant={vote?.value === 1 ? "default" : "outline"}
                 onClick={() => handleVote(1)}
                 disabled={disableVote}
+                aria-label="Upvote"
               >
                 <ArrowBigUp />
                 {work.totalVotes - (work.totalVotes - work.score) / 2}
@@ -92,23 +103,46 @@ export function WorkItem({
                 variant={vote?.value === -1 ? "default" : "outline"}
                 onClick={() => handleVote(-1)}
                 disabled={disableVote}
+                aria-label="Downvote"
               >
                 <ArrowBigDown />
                 {(work.totalVotes - work.score) / 2}
               </Button>
             </ButtonGroup>
           )}
+          {showComments && (
+            <Button
+              variant={commentsOpen ? "secondary" : "outline"}
+              onClick={() => setCommentsOpen((v) => !v)}
+              aria-expanded={commentsOpen}
+            >
+              <MessageSquare />
+              Comments
+            </Button>
+          )}
         </div>
-        <div className="flex justify-center items-center gap-2 w-fit">
-          <Avatar>
-            <AvatarFallback>
-              {work.author.slice(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div>{work.author}</div>
-        </div>
+        {work.author && (
+          <div className="flex justify-center items-center gap-2 w-fit">
+            <Avatar>
+              <AvatarFallback>
+                {work.author.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div>{work.author}</div>
+          </div>
+        )}
         {statusChildren}
       </CardFooter>
+      {showComments && commentsOpen && (
+        <CardFooter className="justify-start">
+          <CommentSection
+            workId={work.id}
+            workAuthor={work.author ?? "Unknown"}
+            currentUser={user?.username}
+            isAdmin={user?.role === "admin"}
+          />
+        </CardFooter>
+      )}
     </Card>
   );
 }

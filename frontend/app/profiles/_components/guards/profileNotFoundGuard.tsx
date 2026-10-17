@@ -5,18 +5,19 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { TriangleAlert } from "lucide-react";
+import { UserX } from "lucide-react";
 
 export default function ProfileNotFoundGuard() {
   return (
     <Empty className="w-full">
       <EmptyHeader>
         <EmptyMedia variant="icon">
-          <TriangleAlert />
+          <UserX />
         </EmptyMedia>
         <EmptyTitle>Profil introuvable</EmptyTitle>
         <EmptyDescription>
-          Ce profil n&apos;existe pas ou n&apos;est plus disponible.
+          Cet utilisateur n&apos;existe pas ou son profil n&apos;est plus
+          disponible.
         </EmptyDescription>
       </EmptyHeader>
     </Empty>
