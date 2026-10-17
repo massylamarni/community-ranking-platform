@@ -67,7 +67,7 @@ const columns: ColumnDef<typeof features, RankingEntry>[] = [
   {
     accessorKey: "position",
     header: "Position",
-    meta: { className: "w-24 text-center" } as CellMeta,
+    meta: { className: "w-24 text-left px-6" } as CellMeta,
     cell: ({ row }) => (
       <Badge variant="secondary">#{row.original.position}</Badge>
     ),
@@ -75,48 +75,55 @@ const columns: ColumnDef<typeof features, RankingEntry>[] = [
   {
     accessorKey: "title",
     header: "Œuvre",
-    meta: { className: "whitespace-normal" } as CellMeta,
+    meta: { className: "text-left px-4 whitespace-normal" } as CellMeta,
     cell: ({ row }) => {
       const entry = row.original;
       return (
-        <Item className="p-0" size="sm">
-          <ItemContent>
-            <ItemTitle>
-              <Button
-                variant="link"
-                className="h-auto p-0"
-                nativeButton={false}
-                render={<Link href={`/works/${entry.id}`}>{entry.title}</Link>}
-              />
-            </ItemTitle>
-            <ItemDescription>par {entry.author}</ItemDescription>
-          </ItemContent>
-        </Item>
+        <div>
+          <Button
+            variant="link"
+            className="h-auto p-0 font-medium text-foreground hover:underline text-sm justify-start"
+            nativeButton={false}
+            render={<Link href={`/works/${entry.id}`}>{entry.title}</Link>}
+          />
+          {entry.author && (
+            <div className="text-xs text-muted-foreground mt-0.5">
+              par {entry.author}
+            </div>
+          )}
+        </div>
       );
     },
   },
   {
     id: "categories",
     header: "Catégories",
-    accessorFn: (entry) => entry.categories.join(" "),
-    meta: { className: "w-70 hidden md:table-cell" } as CellMeta,
-    cell: ({ row }) =>
-      row.original.categories.length ? (
-        <ScrollArea>
-          {row.original.categories.map((category) => (
-            <Badge key={category} variant="outline">
-              {category}
-            </Badge>
-          ))}
-        </ScrollArea>
-      ) : (
-        <Badge variant="ghost">Général</Badge>
-      ),
+    accessorFn: (entry) => entry.categories?.join(" ") ?? "",
+    meta: { className: "text-left px-4 whitespace-normal" } as CellMeta,
+    cell: ({ row }) => {
+      const categories = row.original.categories ?? [];
+      return (
+        <div className="flex flex-wrap gap-1.5 py-1">
+          {categories.length > 0 ? (
+            categories.map((category) => (
+              <Badge key={category} variant="outline" className="text-xs">
+                {category}
+              </Badge>
+            ))
+          ) : (
+            <span className="text-xs text-muted-foreground">Général</span>
+          )}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "score",
     header: "Score",
-    meta: { className: "w-24 text-center tabular-nums" } as CellMeta,
+    meta: { className: "w-28 text-right px-6 tabular-nums font-bold" } as CellMeta,
+    cell: ({ row }) => (
+      <span className="font-bold text-foreground">{row.original.score}</span>
+    ),
   },
 ];
 
@@ -322,7 +329,7 @@ function RankingsContent() {
               className={cn("border rounded-md", loading && "opacity-60")}
               aria-busy={loading}
             >
-              <Table className="table-fixed">
+              <Table>
                 <TableHeader>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
