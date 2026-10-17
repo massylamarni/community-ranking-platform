@@ -130,9 +130,11 @@ describe("RankingArchivesPage Component", () => {
     expect(screen.getByText("Position")).toBeDefined();
     expect(screen.getByText("Œuvre")).toBeDefined();
     expect(screen.getByText("Catégories")).toBeDefined();
+    expect(screen.getByText("Date")).toBeDefined();
     expect(screen.getByText("Score final")).toBeDefined();
 
     expect(screen.getByText("30")).toBeDefined();
+    expect(screen.getAllByText("04/10/2026").length).toBeGreaterThanOrEqual(1);
   });
 
   it("always queries archives by recently ended date without client-side re-sorting", async () => {

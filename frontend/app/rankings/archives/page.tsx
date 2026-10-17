@@ -70,69 +70,19 @@ function computeClosureDate(dateStr?: string | null): string | null {
   }
 }
 
-const columns: ColumnDef<typeof features, RankingEntry>[] = [
-  {
-    accessorKey: "position",
-    header: "Position",
-    meta: { className: "w-24 text-left px-6" } as CellMeta,
-    cell: ({ row }) => (
-      <Badge variant="secondary">#{row.original.position}</Badge>
-    ),
-  },
-  {
-    accessorKey: "title",
-    header: "Œuvre",
-    meta: { className: "text-left px-4 whitespace-normal" } as CellMeta,
-    cell: ({ row }) => {
-      const entry = row.original;
-      return (
-        <div>
-          <Button
-            variant="link"
-            className="h-auto p-0 font-medium text-foreground hover:underline text-sm justify-start"
-            nativeButton={false}
-            render={<Link href={`/works/${entry.id}`}>{entry.title}</Link>}
-          />
-          {entry.author && (
-            <div className="text-xs text-muted-foreground mt-0.5">
-              par {entry.author}
-            </div>
-          )}
-        </div>
-      );
-    },
-  },
-  {
-    id: "categories",
-    header: "Catégories",
-    accessorFn: (entry) => entry.categories?.join(" ") ?? "",
-    meta: { className: "text-left px-4 whitespace-normal" } as CellMeta,
-    cell: ({ row }) => {
-      const categories = row.original.categories ?? [];
-      return (
-        <div className="flex flex-wrap gap-1.5 py-1">
-          {categories.length > 0 ? (
-            categories.map((category) => (
-              <Badge key={category} variant="outline" className="text-xs">
-                {category}
-              </Badge>
-            ))
-          ) : (
-            <span className="text-xs text-muted-foreground">Général</span>
-          )}
-        </div>
-      );
-    },
-  },
-  {
-    accessorKey: "score",
-    header: "Score final",
-    meta: { className: "w-28 text-right px-6 tabular-nums font-bold" } as CellMeta,
-    cell: ({ row }) => (
-      <span className="font-bold text-foreground">{row.original.score}</span>
-    ),
-  },
-];
+function formatDate(dateStr?: string | null): string {
+  if (!dateStr) return "-";
+  if (dateStr.includes("/")) return dateStr;
+  try {
+    const [year, month, day] = dateStr.split("T")[0].split("-").map(Number);
+    if (!year || !month || !day) return dateStr;
+    const d = String(day).padStart(2, "0");
+    const m = String(month).padStart(2, "0");
+    return `${d}/${m}/${year}`;
+  } catch {
+    return dateStr;
+  }
+}
 
 function RankingArchivesContent() {
   const router = useRouter();
@@ -256,6 +206,108 @@ function RankingArchivesContent() {
     router.push("/rankings/archives");
   }
 
+  const columns = useMemo<ColumnDef<typeof features, RankingEntry>[]>(
+    () => [
+      {
+        accessorKey: "position",
+        header: "Position",
+        meta: { className: "w-24 text-left px-6" } as CellMeta,
+        cell: ({ row }) => (
+          <Badge variant="secondary">#{row.original.position}</Badge>
+        ),
+      },
+      {
+        accessorKey: "title",
+        header: "Œuvre",
+        meta: { className: "text-left px-4 whitespace-normal" } as CellMeta,
+        cell: ({ row }) => {
+          const entry = row.original;
+          return (
+            <div>
+              <Button
+                variant="link"
+                className="h-auto p-0 font-medium text-foreground hover:underline text-sm justify-start"
+                nativeButton={false}
+                render={<Link href={`/works/${entry.id}`}>{entry.title}</Link>}
+              />
+              {entry.author && (
+                <div className="text-xs text-muted-foreground mt-0.5">
+                  par {entry.author}
+                </div>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        id: "categories",
+        header: "Catégories",
+        accessorFn: (entry) => entry.categories?.join(" ") ?? "",
+        meta: { className: "text-left px-4 whitespace-normal" } as CellMeta,
+        cell: ({ row }) => {
+          const categories = row.original.categories ?? [];
+          return (
+            <div className="flex flex-wrap gap-1.5 py-1">
+              {categories.length > 0 ? (
+                categories.map((category) => (
+                  <Badge key={category} variant="outline" className="text-xs">
+                    {category}
+                  </Badge>
+                ))
+              ) : (
+                <span className="text-xs text-muted-foreground">Général</span>
+              )}
+            </div>
+          );
+        },
+      },
+      {
+        id: "date",
+        header: "Date",
+        meta: {
+          className:
+            "w-32 text-left px-4 tabular-nums text-sm text-muted-foreground whitespace-nowrap",
+        } as CellMeta,
+        cell: ({ row }) => {
+          const raw =
+            (
+              row.original as unknown as {
+                date?: string;
+                closureDate?: string;
+                createdAt?: string;
+              }
+            ).date ??
+            (
+              row.original as unknown as {
+                date?: string;
+                closureDate?: string;
+                createdAt?: string;
+              }
+            ).closureDate ??
+            closureDate;
+          return (
+            <span>
+              {raw ? (raw.includes("/") ? raw : formatDate(raw)) : "-"}
+            </span>
+          );
+        },
+      },
+      {
+        accessorKey: "score",
+        header: "Score final",
+        meta: {
+          className: "w-28 text-right px-6 tabular-nums font-bold",
+        } as CellMeta,
+        cell: ({ row }) => (
+          <span className="font-bold text-foreground">
+            {row.original.score}
+          </span>
+        ),
+      },
+    ],
+    [closureDate],
+  );
+
   const table = useTable({
     features,
     data: ranking?.items ?? [],
@@ -279,13 +331,13 @@ function RankingArchivesContent() {
     : 0;
 
   return (
-    <Card className="flex flex-col gap-4">
+    <Card className="min-w-0 w-full max-w-4xl">
       <CardHeader>
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          <div className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2">
             <History className="size-5 text-muted-foreground" />
-            <CardTitle className="text-xl font-bold">{cardTitle}</CardTitle>
-          </div>
+            {cardTitle}
+          </CardTitle>
           {closureDate && (
             <Badge
               variant="outline"
@@ -299,42 +351,38 @@ function RankingArchivesContent() {
           Consultez les résultats finaux des classements hebdomadaires clôturés
           {closureDate ? ` (date de fin : ${closureDate})` : ""}.
         </CardDescription>
-
-        <div className="pt-2">
-          <RankingArchiveFilterBar
-            categories={categories}
-            selectedCategory={selectedCategory}
-            onCategoryChange={setSelectedCategory}
-            onSubmit={handleFilterSubmit}
-            onReset={handleReset}
-            loading={loading}
-          />
-        </div>
       </CardHeader>
 
-      <CardContent>
-        {error && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="size-4" />
-            <AlertTitle>Erreur</AlertTitle>
-            <AlertDescription className="flex items-center justify-between gap-2">
-              <span>{error}</span>
+      <CardContent className="min-w-0 max-w-none flex flex-col gap-6">
+        <RankingArchiveFilterBar
+          categories={categories}
+          selectedCategory={selectedCategory}
+          onCategoryChange={setSelectedCategory}
+          onSubmit={handleFilterSubmit}
+          onReset={handleReset}
+          loading={loading}
+        />
+
+        {loading && !ranking ? (
+          <LoadingGuard />
+        ) : error ? (
+          <Alert variant="destructive" className="w-full">
+            <AlertCircle />
+            <AlertTitle>Erreur de chargement</AlertTitle>
+            <AlertDescription>
+              <p>{error}</p>
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setReloadKey((k) => k + 1)}
-                className="gap-1 shrink-0"
+                className="mt-2"
+                onClick={() => setReloadKey((key) => key + 1)}
               >
-                <RefreshCw className="size-3" />
+                <RefreshCw />
                 Réessayer
               </Button>
             </AlertDescription>
           </Alert>
-        )}
-
-        {loading ? (
-          <LoadingGuard />
-        ) : ranking?.items.length === 0 ? (
+        ) : !ranking || ranking.total === 0 ? (
           <RankingArchiveHasNoWork />
         ) : (
           <>
@@ -346,47 +394,53 @@ function RankingArchivesContent() {
                 <TableHeader>
                   {table.getHeaderGroups().map((headerGroup) => (
                     <TableRow key={headerGroup.id}>
-                      {headerGroup.headers.map((header) => {
-                        const meta = header.column.columnDef.meta as CellMeta | undefined;
-                        return (
-                          <TableHead
-                            key={header.id}
-                            className={cn("h-10 font-medium", meta?.className)}
-                          >
-                            {flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                          </TableHead>
-                        );
-                      })}
+                      {headerGroup.headers.map((header) => (
+                        <TableHead
+                          key={header.id}
+                          className={
+                            (
+                              header.column.columnDef.meta as
+                                | CellMeta
+                                | undefined
+                            )?.className
+                          }
+                        >
+                          {flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                        </TableHead>
+                      ))}
                     </TableRow>
                   ))}
                 </TableHeader>
                 <TableBody>
                   {rows.map((row) => (
                     <TableRow key={row.id}>
-                      {row.getAllCells().map((cell) => {
-                        const meta = cell.column.columnDef.meta as CellMeta | undefined;
-                        return (
-                          <TableCell
-                            key={cell.id}
-                            className={cn("py-3 align-middle", meta?.className)}
-                          >
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
-                            )}
-                          </TableCell>
-                        );
-                      })}
+                      {row.getAllCells().map((cell) => (
+                        <TableCell
+                          key={cell.id}
+                          className={
+                            (
+                              cell.column.columnDef.meta as
+                                | CellMeta
+                                | undefined
+                            )?.className
+                          }
+                        >
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext(),
+                          )}
+                        </TableCell>
+                      ))}
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
             </div>
 
-            {ranking && ranking.total > PAGE_SIZE && (
+            {ranking.total > PAGE_SIZE && (
               <div className="flex justify-between items-center">
                 <Label className="pl-1">
                   Affichage de {firstResult} à {lastResult} sur {ranking.total}
