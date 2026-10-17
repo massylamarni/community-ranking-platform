@@ -493,6 +493,13 @@ paths:
         content:
           application/json:
             schema: { $ref: "#/components/schemas/UpdateCommentRequest" }
+          multipart/form-data:
+            schema:
+              type: object
+              required: [content]
+              properties:
+                content: { type: string, minLength: 1, pattern: '\S' }
+                image: { type: string, format: binary }
       responses:
         "200":
           description: Updated comment
