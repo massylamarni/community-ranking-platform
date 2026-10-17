@@ -18,7 +18,10 @@ import { ReactNode, useState } from "react";
 import { CommentSection } from "../../comments/_components/commentSection";
 import WorkNotFoundGuard from "./guards/workNotFoundGuard";
 
-export function WorkItem({
+export type WorkLike = Pick<Work, "id" | "title" | "imageUrl" | "totalVotes"> &
+  Partial<Pick<Work, "description" | "author" | "score">>;
+
+export function WorkItem<T extends WorkLike = Work>({
   work,
   setWork,
   setSelectedWork,
@@ -26,9 +29,9 @@ export function WorkItem({
   statusChildren,
   showComments = true,
 }: {
-  work: Work | null;
+  work: T | null;
   setWork?: (work: Work) => void | undefined;
-  setSelectedWork?: (w: Work | null) => void;
+  setSelectedWork?: (w: T | null) => void;
   children?: ReactNode;
   statusChildren?: ReactNode;
   showComments?: boolean;
@@ -118,21 +121,23 @@ export function WorkItem({
             </Button>
           )}
         </div>
-        <div className="flex justify-center items-center gap-2 w-fit">
-          <Avatar>
-            <AvatarFallback>
-              {work.author.slice(0, 2).toUpperCase()}
-            </AvatarFallback>
-          </Avatar>
-          <div>{work.author}</div>
-        </div>
+        {work.author && (
+          <div className="flex justify-center items-center gap-2 w-fit">
+            <Avatar>
+              <AvatarFallback>
+                {work.author.slice(0, 2).toUpperCase()}
+              </AvatarFallback>
+            </Avatar>
+            <div>{work.author}</div>
+          </div>
+        )}
         {statusChildren}
       </CardFooter>
       {showComments && commentsOpen && (
         <CardFooter className="justify-start">
           <CommentSection
             workId={work.id}
-            workAuthor={work.author}
+            workAuthor={work.author ?? "Unknown"}
             currentUser={user?.username}
             isAdmin={user?.role === "admin"}
           />

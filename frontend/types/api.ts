@@ -82,10 +82,6 @@ export interface UpdateProfilePayload {
   email?: string | null;
 }
 
-export interface PublicProfile {
-  username: string;
-}
-
 // ---- categories -----------------------------------------------------------
 
 export interface Category {
@@ -238,10 +234,41 @@ export interface RankingSnapshot {
 
 // ---- profiles -----------------------------------------------------------
 
-export interface GetActivity {
-  works: Work[];
-  comments: Comment[];
-  favorites: Work[];
+export interface PublicProfileWork {
+  oeuvreId: number;
+  title: string;
+  description: string | null;
+  imageUrl: string | null;
+  score: number;
+  totalVotes: number;
+  createdAt: string;
+}
+
+export interface PublicProfileComment {
+  commentId: number;
+  content: string;
+  imageUrl: string | null;
+  createdAt: string;
+  oeuvreId: number;
+  oeuvreTitle: string;
+  parentCommentId: number | null;
+}
+
+export interface PublicProfileVotedWork {
+  oeuvreId: number;
+  title: string;
+  imageUrl: string | null;
+  score: number;
+  totalVotes: number;
+  voteValue: 1 | -1;
+}
+
+export interface PublicProfile {
+  userId: number;
+  username: string;
+  publishedWorks: PublicProfileWork[];
+  comments: PublicProfileComment[];
+  votedWorks: PublicProfileVotedWork[];
 }
 
 // ---- notifications --------------------------------------------------------
