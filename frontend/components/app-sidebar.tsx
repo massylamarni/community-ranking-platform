@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   Bell,
   Trophy,
+  Settings,
 } from "lucide-react";
 import { isAdmin, useAuth } from "@/hooks/use-auth";
 import { useCategory } from "@/contexts/categoryContext";
@@ -105,9 +106,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               icon: <User />,
             },
             {
-              title: "Modifier",
+              title: "Paramètres",
               url: "/auth/profile",
-              icon: <User />,
+              icon: <Settings />,
             },
             ...data.navMain,
             ...(isAdmin(user) ? [navModeration] : []),
