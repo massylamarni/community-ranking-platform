@@ -5,43 +5,43 @@ import { render, screen, waitFor, act } from "@testing-library/react";
 import { describe, expect, it, beforeEach } from "@jest/globals";
 import AuthorWorkGuard from "@/app/works/_components/guards/authorWorkGuard";
 import type { Work } from "@/types/api";
-import { createWork, deferred } from "../shared/utils";
-import { mockUser } from "../shared/mocks/auth";
-import { mockWorksState, workActions } from "../shared/mocks/works";
+import { createWork, deferred } from "../../../shared/utils";
+import { mockUser } from "../../../shared/mocks/auth";
+import { mockWorksState, workActions } from "../../../shared/mocks/works";
 
 jest.mock(
   "@/hooks/use-auth",
   () =>
-    jest.requireActual<typeof import("../shared/mocks/auth")>(
-      "../shared/mocks/auth",
+    jest.requireActual<typeof import("../../../shared/mocks/auth")>(
+      "../../../shared/mocks/auth",
     ).authModule,
 );
 jest.mock(
   "@/hooks/use-work",
   () =>
-    jest.requireActual<typeof import("../shared/mocks/works")>(
-      "../shared/mocks/works",
+    jest.requireActual<typeof import("../../../shared/mocks/works")>(
+      "../../../shared/mocks/works",
     ).useWorksModule,
 );
 jest.mock(
   "@/components/guards/loadingGuard",
   () =>
-    jest.requireActual<typeof import("../shared/mocks/guards")>(
-      "../shared/mocks/guards",
+    jest.requireActual<typeof import("../../../shared/mocks/guards")>(
+      "../../../shared/mocks/guards",
     ).loadingGuardModule,
 );
 jest.mock(
   "@/app/works/_components/guards/workNotFoundGuard",
   () =>
-    jest.requireActual<typeof import("../shared/mocks/guards")>(
-      "../shared/mocks/guards",
+    jest.requireActual<typeof import("../../../shared/mocks/guards")>(
+      "../../../shared/mocks/guards",
     ).workNotFoundGuardModule,
 );
 jest.mock(
   "@/app/works/_components/guards/authorGuard",
   () =>
-    jest.requireActual<typeof import("../shared/mocks/guards")>(
-      "../shared/mocks/guards",
+    jest.requireActual<typeof import("../../../shared/mocks/guards")>(
+      "../../../shared/mocks/guards",
     ).authorGuardModule,
 );
 

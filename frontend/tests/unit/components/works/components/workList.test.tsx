@@ -4,28 +4,28 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, beforeEach } from "@jest/globals";
 import { WorkList } from "@/app/works/_components/workList";
 import type { Work } from "@/types/api";
-import { createWork } from "../shared/utils";
-import { workItemPropsFor } from "../shared/mocks/views";
+import { createWork } from "../../../shared/utils";
+import { workItemPropsFor } from "../../../shared/mocks/views";
 
 jest.mock(
   "@/app/works/_components/workItem",
   () =>
-    jest.requireActual<typeof import("../shared/mocks/views")>(
-      "../shared/mocks/views",
+    jest.requireActual<typeof import("../../../shared/mocks/views")>(
+      "../../../shared/mocks/views",
     ).workItemModule,
 );
 jest.mock(
   "@/app/works/_components/categoryHasNoWork",
   () =>
-    jest.requireActual<typeof import("../shared/mocks/views")>(
-      "../shared/mocks/views",
+    jest.requireActual<typeof import("../../../shared/mocks/views")>(
+      "../../../shared/mocks/views",
     ).noWorkModule,
 );
 jest.mock(
   "@/app/works/_components/worksContainer",
   () =>
-    jest.requireActual<typeof import("../shared/mocks/views")>(
-      "../shared/mocks/views",
+    jest.requireActual<typeof import("../../../shared/mocks/views")>(
+      "../../../shared/mocks/views",
     ).worksContainerModule,
 );
 

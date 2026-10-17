@@ -6,8 +6,8 @@ import userEvent from "@testing-library/user-event";
 import { WorkItem } from "@/app/works/_components/workItem";
 import { buildVoteResponse } from "@/tests/unit/shared/factories/voteResponse";
 import { buildWork } from "@/tests/unit/shared/factories/work";
-import { mockUseAuth } from "@/tests/unit/shared/mocks/useAuth";
-import { mockVote } from "@/tests/unit/shared/mocks/votesRepository";
+import { mockUseAuth } from "@/tests/unit/shared/mocks/hooks/use-auth";
+import { mockVote } from "@/tests/unit/shared/mocks/repositories/votesRepository";
 
 jest.mock("@/hooks/use-auth", () => ({ useAuth: () => mockUseAuth() }));
 jest.mock("@/repositories", () => ({

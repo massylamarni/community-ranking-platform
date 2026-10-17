@@ -4,21 +4,21 @@ import React from "react";
 import { render, act } from "@testing-library/react";
 import { describe, expect, it, beforeEach } from "@jest/globals";
 import WorksByCategory from "@/app/categories/[id]/page";
-import { mockPush, mockRouteParams } from "../shared/mocks/navigation";
-import { lastCategoryViewProps } from "../shared/mocks/views";
+import { mockPush, mockRouteParams } from "../../shared/mocks/navigation";
+import { lastCategoryViewProps } from "../../shared/mocks/views";
 
 jest.mock(
   "next/navigation",
   () =>
-    jest.requireActual<typeof import("../shared/mocks/navigation")>(
-      "../shared/mocks/navigation",
+    jest.requireActual<typeof import("../../shared/mocks/navigation")>(
+      "../../shared/mocks/navigation",
     ).navigationModule,
 );
 jest.mock(
   "@/app/categories/_components/categoryView",
   () =>
-    jest.requireActual<typeof import("../shared/mocks/views")>(
-      "../shared/mocks/views",
+    jest.requireActual<typeof import("../../shared/mocks/views")>(
+      "../../shared/mocks/views",
     ).categoryViewModule,
 );
 

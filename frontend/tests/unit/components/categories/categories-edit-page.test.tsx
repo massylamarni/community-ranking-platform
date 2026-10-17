@@ -5,47 +5,47 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, expect, it, beforeEach } from "@jest/globals";
 import EditCategories from "@/app/categories/edit/page";
 import type { Category } from "@/types/api";
-import { mockUser } from "../shared/mocks/auth";
+import { mockUser } from "../../shared/mocks/auth";
 import {
   cat,
   categoryActions,
   mockCategoriesState,
-} from "../shared/mocks/categories";
-import { lastConfirmDialogProps } from "../shared/mocks/ui";
+} from "../../shared/mocks/categories";
+import { lastConfirmDialogProps } from "../../shared/mocks/ui";
 
 jest.mock(
   "@/hooks/use-auth",
   () =>
-    jest.requireActual<typeof import("../shared/mocks/auth")>(
-      "../shared/mocks/auth",
+    jest.requireActual<typeof import("../../shared/mocks/auth")>(
+      "../../shared/mocks/auth",
     ).authModule,
 );
 jest.mock(
   "@/contexts/categoryContext",
   () =>
-    jest.requireActual<typeof import("../shared/mocks/categories")>(
-      "../shared/mocks/categories",
+    jest.requireActual<typeof import("../../shared/mocks/categories")>(
+      "../../shared/mocks/categories",
     ).categoryContextModule,
 );
 jest.mock(
   "@/components/header-portal",
   () =>
-    jest.requireActual<typeof import("../shared/mocks/ui")>(
-      "../shared/mocks/ui",
+    jest.requireActual<typeof import("../../shared/mocks/ui")>(
+      "../../shared/mocks/ui",
     ).headerPortalModule,
 );
 jest.mock(
   "@/components/confirmDialog",
   () =>
-    jest.requireActual<typeof import("../shared/mocks/ui")>(
-      "../shared/mocks/ui",
+    jest.requireActual<typeof import("../../shared/mocks/ui")>(
+      "../../shared/mocks/ui",
     ).confirmDialogModule,
 );
 jest.mock(
   "@/app/categories/_components/noCategory",
   () =>
-    jest.requireActual<typeof import("../shared/mocks/ui")>(
-      "../shared/mocks/ui",
+    jest.requireActual<typeof import("../../shared/mocks/ui")>(
+      "../../shared/mocks/ui",
     ).noCategoryModule,
 );
 

@@ -8,7 +8,7 @@ import { CommentSection } from "@/app/comments/_components/commentSection";
 import { buildCommentPage } from "@/tests/unit/shared/factories/commentPage";
 import { buildUseComments } from "@/tests/unit/shared/factories/useComments";
 import { mockCommentForm } from "@/tests/unit/shared/mocks/commentForm";
-import { mockUseComments } from "@/tests/unit/shared/mocks/useComments";
+import { mockUseComments } from "@/tests/unit/shared/mocks/hooks/use-comments";
 
 jest.mock("@/hooks/use-comments", () => ({
   useComments: () => mockUseComments(),

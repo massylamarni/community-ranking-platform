@@ -4,50 +4,50 @@ import React from "react";
 import { render, screen, act } from "@testing-library/react";
 import { describe, expect, it, beforeEach } from "@jest/globals";
 import EditWork from "@/app/works/[id]/edit/page";
-import { createWork } from "../shared/utils";
-import { mockPush, mockRouteParams } from "../shared/mocks/navigation";
-import { workActions, mockWorksState } from "../shared/mocks/works";
+import { createWork } from "../../shared/utils";
+import { mockPush, mockRouteParams } from "../../shared/mocks/navigation";
+import { workActions, mockWorksState } from "../../shared/mocks/works";
 import {
   cat,
   categoryActions,
   mockCategoriesState,
-} from "../shared/mocks/categories";
-import { mockAuthorWorkGuard, setGuardResult } from "../shared/mocks/guards";
-import { lastWorkEditProps } from "../shared/mocks/views";
+} from "../../shared/mocks/categories";
+import { mockAuthorWorkGuard, setGuardResult } from "../../shared/mocks/guards";
+import { lastWorkEditProps } from "../../shared/mocks/views";
 
 jest.mock(
   "next/navigation",
   () =>
-    jest.requireActual<typeof import("../shared/mocks/navigation")>(
-      "../shared/mocks/navigation",
+    jest.requireActual<typeof import("../../shared/mocks/navigation")>(
+      "../../shared/mocks/navigation",
     ).navigationModule,
 );
 jest.mock(
   "@/hooks/use-work",
   () =>
-    jest.requireActual<typeof import("../shared/mocks/works")>(
-      "../shared/mocks/works",
+    jest.requireActual<typeof import("../../shared/mocks/works")>(
+      "../../shared/mocks/works",
     ).useWorksModule,
 );
 jest.mock(
   "@/contexts/categoryContext",
   () =>
-    jest.requireActual<typeof import("../shared/mocks/categories")>(
-      "../shared/mocks/categories",
+    jest.requireActual<typeof import("../../shared/mocks/categories")>(
+      "../../shared/mocks/categories",
     ).categoryContextModule,
 );
 jest.mock(
   "@/app/works/_components/guards/authorWorkGuard",
   () =>
-    jest.requireActual<typeof import("../shared/mocks/guards")>(
-      "../shared/mocks/guards",
+    jest.requireActual<typeof import("../../shared/mocks/guards")>(
+      "../../shared/mocks/guards",
     ).authorWorkGuardModule,
 );
 jest.mock(
   "@/app/works/_components/workEdit",
   () =>
-    jest.requireActual<typeof import("../shared/mocks/views")>(
-      "../shared/mocks/views",
+    jest.requireActual<typeof import("../../shared/mocks/views")>(
+      "../../shared/mocks/views",
     ).workEditModule,
 );
 
