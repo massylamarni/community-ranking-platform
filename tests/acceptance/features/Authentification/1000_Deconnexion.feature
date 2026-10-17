@@ -1,7 +1,6 @@
 # language: en
 Feature: Déconnexion
 
-@wip
 Scenario: Se déconnecter d'un compte authentifié
   Given l'utilisateur "bob" est authentifié
   When il demande à se déconnecter

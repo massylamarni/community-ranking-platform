@@ -9,6 +9,9 @@ import java.util.Optional;
 
 import fr.numeronumber1.dto.response.PublicProfileResponse;
 import fr.numeronumber1.exception.ResourceNotFoundException;
+import fr.numeronumber1.model.Oeuvre;
+import fr.numeronumber1.model.Vote;
+import fr.numeronumber1.model.enums.OeuvreStatus;
 import fr.numeronumber1.repository.CommentRepository;
 import fr.numeronumber1.repository.OeuvreRepository;
 import fr.numeronumber1.repository.VoteRepository;
@@ -178,6 +181,30 @@ class UserServiceTest {
         assertTrue(result.publishedWorks().isEmpty());
         assertTrue(result.comments().isEmpty());
         assertTrue(result.votedWorks().isEmpty());
+    }
+
+    @Test
+    void getPublicProfile_retourne_le_nombre_de_votes_des_oeuvres() {
+        Oeuvre oeuvre = new Oeuvre();
+        oeuvre.setOeuvreId(10L);
+        oeuvre.setTitle("Le Cri Silencieux");
+        oeuvre.setStatus(OeuvreStatus.approved);
+        oeuvre.setVotes(List.of(new Vote(), new Vote(), new Vote()));
+
+        Vote userVote = new Vote();
+        userVote.setOeuvre(oeuvre);
+
+        when(userRepository.findById(1)).thenReturn(Optional.of(alice));
+        when(oeuvreRepository.findByAuthorUserIdAndStatus(1, OeuvreStatus.approved))
+                .thenReturn(List.of(oeuvre));
+        when(commentRepository.findByUserUserIdOrderByCreatedAtDesc(1))
+                .thenReturn(List.of());
+        when(voteRepository.findByUserUserId(1)).thenReturn(List.of(userVote));
+
+        PublicProfileResponse result = userService.getPublicProfile(1);
+
+        assertEquals(3, result.publishedWorks().get(0).get("totalVotes"));
+        assertEquals(3, result.votedWorks().get(0).get("totalVotes"));
     }
 
     @Test
