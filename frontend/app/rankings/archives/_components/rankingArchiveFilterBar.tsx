@@ -77,7 +77,7 @@ export default function RankingArchiveFilterBar({
       onSubmit={onSubmit}
       className="flex flex-wrap items-end gap-3 w-full"
     >
-      <FieldGroup className="w-64 sm:w-72">
+      <FieldGroup className="w-80 sm:w-[330px]">
         <Field>
           <Label
             htmlFor="period-select"
@@ -89,7 +89,7 @@ export default function RankingArchiveFilterBar({
             items={periodItems}
             value={selectedPeriod || defaultPeriod}
             onValueChange={(val) => onPeriodChange(val ?? defaultPeriod)}
-            disabled={loading || periodItems.length <= 1}
+            disabled={loading || periods.length === 0}
           >
             <SelectTrigger
               id="period-select"
