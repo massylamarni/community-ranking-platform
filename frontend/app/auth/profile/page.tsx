@@ -21,6 +21,8 @@ import {
 } from "@/components/ui/field";
 import LoadingGuard from "@/components/guards/loadingGuard";
 import { useAuth } from "@/hooks/use-auth";
+import ChangePassword from "./_components/changePassword";
+import VerticalList from "@/components/vertical-list";
 
 export default function Profile() {
   const { profile, refreshProfile, updateProfile } = useAuth();
@@ -81,51 +83,54 @@ export default function Profile() {
   const fe = profileError?.fields ?? {};
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Profile</CardTitle>
-        <CardDescription>
-          Gérez les informations de votre profil.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {profile ? (
-          <form id="profile-form" onSubmit={handleSave}>
-            <FieldGroup>
-              <Field>
-                <FieldLabel htmlFor="username">
-                  Nom d&apos;utilisateur
-                </FieldLabel>
-                <Input
-                  id="username"
-                  value={usernameEdit}
-                  onChange={(e) => setUsernameEdit(e.target.value)}
-                  required
-                />
-                {fe.username && <FieldError>{fe.username}</FieldError>}
-              </Field>
-              <Field>
-                <FieldLabel htmlFor="email">Adresse e-mail</FieldLabel>
-                <Input
-                  id="email"
-                  type="email"
-                  value={emailEdit}
-                  onChange={(e) => setEmailEdit(e.target.value)}
-                  required
-                />
-                {fe.email && <FieldError>{fe.email}</FieldError>}
-              </Field>
-            </FieldGroup>
-          </form>
-        ) : (
-          "Échec de la récupération du profil"
-        )}
-      </CardContent>
-      <CardFooter>
-        <Button type="submit" form="profile-form" disabled={isLoading}>
-          Enregistrer
-        </Button>
-      </CardFooter>
-    </Card>
+    <VerticalList>
+      <Card>
+        <CardHeader>
+          <CardTitle>Profile</CardTitle>
+          <CardDescription>
+            Gérez les informations de votre profil.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {profile ? (
+            <form id="profile-form" onSubmit={handleSave}>
+              <FieldGroup>
+                <Field>
+                  <FieldLabel htmlFor="username">
+                    Nom d&apos;utilisateur
+                  </FieldLabel>
+                  <Input
+                    id="username"
+                    value={usernameEdit}
+                    onChange={(e) => setUsernameEdit(e.target.value)}
+                    required
+                  />
+                  {fe.username && <FieldError>{fe.username}</FieldError>}
+                </Field>
+                <Field>
+                  <FieldLabel htmlFor="email">Adresse e-mail</FieldLabel>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={emailEdit}
+                    onChange={(e) => setEmailEdit(e.target.value)}
+                    required
+                  />
+                  {fe.email && <FieldError>{fe.email}</FieldError>}
+                </Field>
+              </FieldGroup>
+            </form>
+          ) : (
+            "Échec de la récupération du profil"
+          )}
+        </CardContent>
+        <CardFooter>
+          <Button type="submit" form="profile-form" disabled={isLoading}>
+            Enregistrer
+          </Button>
+        </CardFooter>
+      </Card>
+      <ChangePassword />
+    </VerticalList>
   );
 }

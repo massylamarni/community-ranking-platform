@@ -1,6 +1,7 @@
 package fr.numeronumber1.repository;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,6 +19,8 @@ public interface OeuvreRepository extends JpaRepository<Oeuvre, Long>, JpaSpecif
     Page<Oeuvre> findByStatus(OeuvreStatus status, Pageable pageable);
 
     boolean existsByTitleAndOeuvreIdNot(String title, Long oeuvreId);
+
+    List<Oeuvre> findByAuthorUserIdAndStatus(Integer userId, OeuvreStatus status);
 
     Page<Oeuvre> findByStatusOrderByScoreDesc(OeuvreStatus status, Pageable pageable);
 

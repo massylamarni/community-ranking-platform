@@ -3,7 +3,8 @@
 Feature: Commentaire sur une œuvre personnelle
 
   Scenario: Interdiction de publier un commentaire principal sur sa propre œuvre
-    Given un utilisateur authentifié consulte une œuvre qu'il a lui-même déposée
+    Given l'utilisateur "Frédégonde" est authentifié
+    And il consulte une œuvre qu'il a lui-même déposée
     When il tente de publier un commentaire principal sur cette œuvre
     Then l'action est refusée par le système
     And un message indique qu'il ne peut pas commenter sa propre œuvre
