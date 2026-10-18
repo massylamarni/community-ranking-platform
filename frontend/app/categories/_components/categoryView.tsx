@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Dispatch, SetStateAction, useCallback, useState } from "react";
 import { isAdmin, useAuth } from "@/hooks/use-auth";
 import type { Work } from "@/types/api";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
@@ -13,54 +13,41 @@ import CategoryNotFoundGuard from "../_components/guards/categoryNotFoundGuard";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { useCategory } from "@/contexts/categoryContext";
+import { useQuery } from "@/hooks/use-query";
 
 export default function CategoryView({
-  categoryId: id,
+  categoryId,
   onCategoryChange,
 }: {
   categoryId: number;
   onCategoryChange: (id: string) => void;
 }) {
-  const categoryId = id;
   const { user } = useAuth();
   const { categories, getById, worksOf } = useCategory();
-  const [works, setWorks] = useState<Work[]>([]);
-  const [error, setError] = useState<unknown>(null);
-  const [loading, setLoading] = useState(true);
-  const [notFound, setNotFound] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
+
+  const { data, error, loading, setData } = useQuery(
+    useCallback(async (): Promise<Work[] | null> => {
+      if (!categoryId) return null;
+      try {
+        await getById(categoryId);
+      } catch {
+        return null; // category not found
+      }
+      return (await worksOf(categoryId)).items;
+    }, [categoryId, getById, worksOf]),
+  );
+
+  const works = data ?? [];
   const selectedWork = works.find((w) => w.id === selectedId) ?? null;
 
-  useEffect(() => {
-    let isCurrent = true;
-    // eslint-disable-next-line
-    setLoading(true);
-    setError(null);
-    setNotFound(false);
-
-    if (!categoryId) {
-      setNotFound(true);
-      setLoading(false);
-      return;
-    }
-
-    getById(categoryId)
-      .then(
-        () =>
-          worksOf(categoryId).then((page) => isCurrent && setWorks(page.items)),
-        () => isCurrent && setNotFound(true),
-      )
-      .catch((err) => {
-        if (isCurrent) setError(err);
-      })
-      .finally(() => {
-        if (isCurrent) setLoading(false);
-      });
-
-    return () => {
-      isCurrent = false;
-    };
-  }, [categoryId, getById, worksOf]);
+  const setWorks: Dispatch<SetStateAction<Work[]>> = useCallback(
+    (action) =>
+      setData((prev) =>
+        prev ? (typeof action === "function" ? action(prev) : action) : prev,
+      ),
+    [setData],
+  );
 
   function handleSetWork(work: Work) {
     setWorks((prev) => prev.map((w) => (w.id === work.id ? work : w)));
@@ -70,7 +57,8 @@ export default function CategoryView({
     !!user && !!selectedWork && user.username === selectedWork.author.username;
 
   if (loading) return <LoadingGuard />;
-  if (notFound) return <CategoryNotFoundGuard />;
+  if (data === null) return <CategoryNotFoundGuard />;
+  if (error) return <div>{error.message}</div>;
   return (
     <>
       <HeaderPortal>
