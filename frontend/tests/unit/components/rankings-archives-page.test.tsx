@@ -107,8 +107,8 @@ describe("RankingArchivesPage Component", () => {
 
     expect(await screen.findByText("Classements archivés")).toBeDefined();
 
-    // Verify closure date (date de fin) is displayed in the dashboard header (2026-09-28 + 6 days = 04/10/2026)
-    expect(await screen.findByText("Date de fin : 04/10/2026")).toBeDefined();
+    // Verify closure date (date d'archivage) is displayed in the dashboard header (2026-09-28 + 6 days = 04/10/2026)
+    expect(await screen.findByText("Date d'archivage : 04/10/2026")).toBeDefined();
 
     // Verify 'Type de période', 'Période clôturée', 'Trier par' are completely removed
     expect(screen.queryByLabelText("Type de période")).toBeNull();
