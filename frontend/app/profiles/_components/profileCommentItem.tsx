@@ -5,13 +5,11 @@ import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardAction,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
 import type { PublicProfileComment } from "@/types/api";
-import { Label } from "@/components/ui/label";
 
 export function ProfileCommentItem({
   comment,

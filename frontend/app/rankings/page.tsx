@@ -13,12 +13,7 @@ import {
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { cn } from "cn";
 import { useCategories, useRankings } from "@/hooks";
-import type {
-  Category,
-  RankingEntry,
-  RankingPage,
-  RankingPeriod,
-} from "@/types/api";
+import type { RankingEntry, RankingPeriod } from "@/types/api";
 import LoadingGuard from "@/components/guards/loadingGuard";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -30,12 +25,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemTitle,
-} from "@/components/ui/item";
 import { Label } from "@/components/ui/label";
 import {
   Pagination,
@@ -44,7 +33,6 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -88,7 +76,7 @@ const columns: ColumnDef<typeof features, RankingEntry>[] = [
           {entry.author && (
             <div className="text-xs text-muted-foreground mt-0.5">
               {/* pour garantir l'espace */}
-              par{" "} 
+              par{" "}
               {entry.author.id ? (
                 <Link
                   href={`/profiles/${entry.author.id}`}
@@ -130,7 +118,9 @@ const columns: ColumnDef<typeof features, RankingEntry>[] = [
   {
     accessorKey: "score",
     header: "Score",
-    meta: { className: "w-28 text-right px-6 tabular-nums font-bold" } as CellMeta,
+    meta: {
+      className: "w-28 text-right px-6 tabular-nums font-bold",
+    } as CellMeta,
     cell: ({ row }) => (
       <span className="font-bold text-foreground">{row.original.score}</span>
     ),
@@ -223,7 +213,7 @@ function RankingsContent() {
     }).catch(() => {});
   }, [resolvedCategoryId, urlPeriod, pageIndex, reloadKey, fetchRankings]);
 
-  const loading = rankingsLoading;
+  const loading = rankingsLoading || categoriesLoading;
   const error = rankingsError
     ? "Impossible de charger le classement. Veuillez vérifier votre connexion ou réessayer."
     : null;
@@ -359,11 +349,8 @@ function RankingsContent() {
                         <TableCell
                           key={cell.id}
                           className={
-                            (
-                              cell.column.columnDef.meta as
-                                | CellMeta
-                                | undefined
-                            )?.className
+                            (cell.column.columnDef.meta as CellMeta | undefined)
+                              ?.className
                           }
                         >
                           {flexRender(
