@@ -55,6 +55,7 @@ import {
 } from "@/components/ui/table";
 import RankingFilterBar from "./_components/rankingFilterBar";
 import RankingHasNoWork from "./_components/rankingHasNoWork";
+import RankingWorkThumbnail from "./_components/rankingWorkThumbnail";
 
 type CellMeta = { className?: string };
 
@@ -78,29 +79,36 @@ const columns: ColumnDef<typeof features, RankingEntry>[] = [
     cell: ({ row }) => {
       const entry = row.original;
       return (
-        <div>
-          <Button
-            variant="link"
-            className="h-auto p-0 font-medium text-foreground hover:underline text-sm justify-start"
-            nativeButton={false}
-            render={<Link href={`/works/${entry.id}`}>{entry.title}</Link>}
+        <div className="flex items-center justify-between gap-3 min-w-0">
+          <div className="min-w-0">
+            <Button
+              variant="link"
+              className="h-auto p-0 font-medium text-foreground hover:underline text-sm justify-start text-left"
+              nativeButton={false}
+              render={<Link href={`/works/${entry.id}`}>{entry.title}</Link>}
+            />
+            {entry.author && (
+              <div className="text-xs text-muted-foreground mt-0.5">
+                {/* pour garantir l'espace */}
+                par{" "} 
+                {entry.author.id ? (
+                  <Link
+                    href={`/profiles/${entry.author.id}`}
+                    className="hover:underline hover:text-foreground"
+                  >
+                    {entry.author.username}
+                  </Link>
+                ) : (
+                  entry.author.username
+                )}
+              </div>
+            )}
+          </div>
+          <RankingWorkThumbnail
+            imageUrl={entry.imageUrl}
+            title={entry.title}
+            workId={entry.id}
           />
-          {entry.author && (
-            <div className="text-xs text-muted-foreground mt-0.5">
-              {/* pour garantir l'espace */}
-              par{" "} 
-              {entry.author.id ? (
-                <Link
-                  href={`/profiles/${entry.author.id}`}
-                  className="hover:underline hover:text-foreground"
-                >
-                  {entry.author.username}
-                </Link>
-              ) : (
-                entry.author.username
-              )}
-            </div>
-          )}
         </div>
       );
     },
