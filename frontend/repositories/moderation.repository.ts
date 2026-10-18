@@ -8,16 +8,7 @@ import type {
 } from "@/types/api";
 
 function normalizeWorkResponse(response: WorkResponse): Work {
-  return {
-    id: response.id,
-    title: response.title,
-    description: response.description,
-    status: response.status,
-    author: response.author,
-    imageUrl: response.imageUrl,
-    categories: response.categories,
-    totalVotes: response.totalVotes,
-  };
+  return response;
 }
 
 export const moderationRepository = {

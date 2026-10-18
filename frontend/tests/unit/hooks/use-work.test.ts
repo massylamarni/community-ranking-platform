@@ -17,9 +17,10 @@ describe("useWorks", () => {
       title: "Hook test work",
       description: "Created through the hook",
       imageUrl: null,
-      author: "alice",
+      author: { id: 2, username: "alice" },
       categories: [],
       status: "created",
+      score: 0,
       totalVotes: 0,
     };
     const createMock = worksRepository.create as jest.Mock;

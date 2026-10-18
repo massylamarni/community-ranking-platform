@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import type { Comment, CreateCommentPayload } from "@/types/api";
 import { CommentForm } from "./commentForm";
 import { Label } from "@/components/ui/label";
+import { ConfirmDialog } from "@/components/confirmDialog";
 
 export interface CommentViewer {
   username?: string | null;
@@ -44,6 +45,8 @@ export function CommentItem({
   const [replying, setReplying] = useState(false);
   const [editing, setEditing] = useState(false);
   const [deleteError, setDeleteError] = useState<unknown>(null);
+  const [loadingDelete, setLoadingDelete] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const username = comment.author.username;
   const isAuthor = !!viewer.username && viewer.username === username;
@@ -131,7 +134,7 @@ export function CommentItem({
                   variant="ghost"
                   size="sm"
                   className="p-2 text-muted-foreground"
-                  onClick={handleDelete}
+                  onClick={() => setLoadingDelete(true)}
                   aria-label="Delete comment"
                 >
                   <Trash2 />
@@ -179,6 +182,21 @@ export function CommentItem({
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        open={!!loadingDelete}
+        onOpenChange={(isOpen) => !isOpen && setLoadingDelete(false)}
+        title="Supprimer le commentaire ?"
+        description={
+          <>
+            Voulez-vous vraiment supprimer ce commentaire ? Toutes les réponses
+            seront également supprimées.
+          </>
+        }
+        onConfirm={handleDelete}
+        loading={loading}
+        error={deleteError}
+      />
     </div>
   );
 }

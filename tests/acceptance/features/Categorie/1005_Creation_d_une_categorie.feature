@@ -2,9 +2,9 @@
 Feature: Création d'une catégorie
 
   Scenario: Un administrateur crée une catégorie
-    Given un administrateur est authentifié
-    When il saisit le nom de catégorie "Science-fiction"
-    And il valide la création
+    Given je suis connecté en tant que "Administrateur"
+    When je saisit le nom de catégorie "Science-fiction"
+    And je valide la création
     Then la catégorie "Science-fiction" est créée
     And elle apparaît dans la liste des catégories
 

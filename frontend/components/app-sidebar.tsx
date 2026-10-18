@@ -39,10 +39,10 @@ const data = {
       icon: <User />,
       isActive: true,
       items: [
-        /*{
-          title: "View",
-          url: "#",
-        },*/
+        {
+          title: "Mon profil",
+          url: `/profiles`,
+        },
         {
           title: "Modifier",
           url: "/auth/profile",
@@ -66,8 +66,19 @@ const data = {
     },
     {
       title: "Classements",
-      url: "/rankings",
+      url: "#",
       icon: <Trophy />,
+      isActive: true,
+      items: [
+        {
+          title: "Classement actuel",
+          url: "/rankings",
+        },
+        {
+          title: "Classements archivés",
+          url: "/rankings/archives",
+        },
+      ],
     },
     {
       title: "Notifications",

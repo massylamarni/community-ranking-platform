@@ -82,10 +82,6 @@ export interface UpdateProfilePayload {
   email?: string | null;
 }
 
-export interface PublicProfile {
-  username: string;
-}
-
 // ---- categories -----------------------------------------------------------
 
 export interface Category {
@@ -115,11 +111,11 @@ export interface Work {
   title: string;
   description: string;
   imageUrl: string | null;
-  author: string;
+  author: { id: number; username: string };
   categories: string[];
   status: WorkStatus;
   reason?: string;
-  score?: number;
+  score: number;
   totalVotes: number;
   createdAt?: string;
   updatedAt?: string | null;
@@ -171,7 +167,7 @@ export interface Comment {
   id: number;
   content: string;
   imageUrl: string | null;
-  author: { username: string };
+  author: { id: number; username: string };
   username: string;
   parentCommentId: string | null;
   oeuvreId: string;
@@ -201,7 +197,7 @@ export interface RankingEntry {
   position: number;
   title: string;
   description: string;
-  author: string;
+  author: { id: number; username: string };
   categories: string[];
   score: number;
   imageUrl?: string | null;
@@ -238,10 +234,41 @@ export interface RankingSnapshot {
 
 // ---- profiles -----------------------------------------------------------
 
-export interface GetActivity {
-  works: Work[];
-  comments: Comment[];
-  favorites: Work[];
+export interface PublicProfileWork {
+  oeuvreId: number;
+  title: string;
+  description: string | null;
+  imageUrl: string | null;
+  score: number;
+  totalVotes: number;
+  createdAt: string;
+}
+
+export interface PublicProfileComment {
+  commentId: number;
+  content: string;
+  imageUrl: string | null;
+  createdAt: string;
+  oeuvreId: number;
+  oeuvreTitle: string;
+  parentCommentId: number | null;
+}
+
+export interface PublicProfileVotedWork {
+  oeuvreId: number;
+  title: string;
+  imageUrl: string | null;
+  score: number;
+  totalVotes: number;
+  voteValue: 1 | -1;
+}
+
+export interface PublicProfile {
+  userId: number;
+  username: string;
+  publishedWorks: PublicProfileWork[];
+  comments: PublicProfileComment[];
+  votedWorks: PublicProfileVotedWork[];
 }
 
 // ---- notifications --------------------------------------------------------

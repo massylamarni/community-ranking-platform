@@ -91,6 +91,8 @@ class RankingControllerTest {
                 .andExpect(jsonPath("$.content[0].title").value("B"))
                 .andExpect(jsonPath("$.content[0].score").value(15))
                 .andExpect(jsonPath("$.content[0].position").value(1))
+                .andExpect(jsonPath("$.content[0].author.id").value(1))
+                .andExpect(jsonPath("$.content[0].author.username").value("creator"))
                 .andExpect(jsonPath("$.content[0].categories[0]").value("Photographie"))
                 .andExpect(jsonPath("$.content[1].id").value(1))
                 .andExpect(jsonPath("$.content[1].title").value("A"))

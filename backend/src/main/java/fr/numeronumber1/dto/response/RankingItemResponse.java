@@ -9,7 +9,7 @@ public class RankingItemResponse {
 
     private Long id;
     private String title;
-    private String author;
+    private AuthorResponse author;
     private String imageUrl;
     private String description;
     private List<String> categories;
@@ -19,7 +19,7 @@ public class RankingItemResponse {
     public RankingItemResponse(Oeuvre oeuvre, int score, int position) {
         this.id = oeuvre.getOeuvreId();
         this.title = oeuvre.getTitle();
-        this.author = oeuvre.getAuthor().getUsername();
+        this.author = new AuthorResponse(oeuvre.getAuthor());
         this.imageUrl = oeuvre.getImageUrl();
         this.description = oeuvre.getDescription();
         this.categories = oeuvre.getOeuvreCategories().stream()
@@ -31,7 +31,7 @@ public class RankingItemResponse {
 
     public Long getId() { return id; }
     public String getTitle() { return title; }
-    public String getAuthor() { return author; }
+    public AuthorResponse getAuthor() { return author; }
     public String getImageUrl() { return imageUrl; }
     public String getDescription() { return description; }
     public List<String> getCategories() { return categories; }
