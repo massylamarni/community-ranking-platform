@@ -39,10 +39,6 @@ const data = {
       icon: <User />,
       isActive: true,
       items: [
-        /*{
-          title: "View",
-          url: "#",
-        },*/
         {
           title: "Modifier",
           url: "/auth/profile",
@@ -107,6 +103,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     })),
   };
 
+  const myProfile = {
+    title: "Mon profil",
+    url: `/profiles/${user?.id}`,
+  };
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
@@ -115,7 +116,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarContent>
         <NavMain
           items={[
-            ...data.navMain,
+            ...data.navMain.map((item) =>
+              item.title === "Profil"
+                ? {
+                    ...item,
+                    items: [myProfile, ...(item.items ?? [])],
+                  }
+                : item,
+            ),
             ...(isAdmin(user) ? [navModeration] : []),
             navCategories,
           ]}
