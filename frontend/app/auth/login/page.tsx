@@ -21,13 +21,12 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { safeRedirectPath, successUrl } from "@/lib/routes";
 import { useApi } from "@/hooks";
 
 export default function Login() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { login } = useAuth();
   const { run, loading, error } = useApi();
 
@@ -46,7 +45,9 @@ export default function Login() {
     });
     if (res.ok) {
       const user = res.data;
-      const from = safeRedirectPath(searchParams.get("from"));
+      const from = safeRedirectPath(
+        new URLSearchParams(window.location.search).get("from"),
+      );
       const target = from ?? successUrl(pathname, user?.role ?? "visitor");
       window.location.replace(target);
     }

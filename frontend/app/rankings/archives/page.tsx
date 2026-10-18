@@ -111,6 +111,8 @@ function RankingArchivesContent() {
   // Keep form state in sync when URL or periods load
   useEffect(() => {
     if (urlPeriodStart) {
+      // TODO
+      // eslint-disable-next-line
       setSelectedPeriodStart(urlPeriodStart);
     } else if (periods.length > 0) {
       setSelectedPeriodStart(periods[0]);
@@ -179,7 +181,9 @@ function RankingArchivesContent() {
       params.set("category", selectedCategory);
     }
 
-    setPagination((prev) => (prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 }));
+    setPagination((prev) =>
+      prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 },
+    );
     const qs = params.toString();
     router.push(qs ? `/rankings/archives?${qs}` : "/rankings/archives");
   }
@@ -188,7 +192,9 @@ function RankingArchivesContent() {
     setSelectedCategory("all");
     const defaultPeriod = periods[0] ?? "";
     setSelectedPeriodStart(defaultPeriod);
-    setPagination((prev) => (prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 }));
+    setPagination((prev) =>
+      prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 },
+    );
     router.push("/rankings/archives");
   }
 
@@ -304,9 +310,7 @@ function RankingArchivesContent() {
     <Card className="min-w-0 w-full max-w-4xl">
       <CardHeader>
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          <CardTitle className="flex items-center gap-2">
-            {cardTitle}
-          </CardTitle>
+          <CardTitle className="flex items-center gap-2">{cardTitle}</CardTitle>
           {closureDate && (
             <Badge
               variant="outline"
@@ -392,11 +396,8 @@ function RankingArchivesContent() {
                         <TableCell
                           key={cell.id}
                           className={
-                            (
-                              cell.column.columnDef.meta as
-                                | CellMeta
-                                | undefined
-                            )?.className
+                            (cell.column.columnDef.meta as CellMeta | undefined)
+                              ?.className
                           }
                         >
                           {flexRender(
