@@ -138,6 +138,16 @@ export function WorkItem<T extends WorkLike = Work>({
               Comments
             </Button>
           )}
+          {showComments && (
+            <Button
+              variant={commentsOpen ? "secondary" : "outline"}
+              onClick={() => setCommentsOpen((v) => !v)}
+              aria-expanded={commentsOpen}
+            >
+              <MessageSquare />
+              Comments
+            </Button>
+          )}
         </div>
         {statusChildren}
       </CardFooter>
