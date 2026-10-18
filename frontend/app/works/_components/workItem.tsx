@@ -72,14 +72,20 @@ export function WorkItem<T extends WorkLike = Work>({
         <CardDescription>{work.description}</CardDescription>
         <CardAction>
           {work.author && (
-            <div className="flex justify-center items-center gap-2 w-fit">
+            <Button
+              type="button"
+              variant="ghost"
+              nativeButton={false}
+              className="flex justify-center items-center gap-2 w-fit p-0 hover:bg-transparent"
+              render={<Link href={`/profiles/${work.author.id}`} />}
+            >
               <Avatar>
                 <AvatarFallback>
-                  {work.author.slice(0, 2).toUpperCase()}
+                  {work.author.username.slice(0, 2).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
-              <Label>{work.author}</Label>
-            </div>
+              <div>{work.author.username}</div>
+            </Button>
           )}
         </CardAction>
       </CardHeader>
@@ -133,22 +139,6 @@ export function WorkItem<T extends WorkLike = Work>({
             </Button>
           )}
         </div>
-        {work.author && (
-          <Button
-            type="button"
-            variant="ghost"
-            nativeButton={false}
-            className="flex justify-center items-center gap-2 w-fit"
-            render={<Link href={`/profiles/${work.author.id}`} />}
-          >
-            <Avatar>
-              <AvatarFallback>
-                {work.author.username.slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div>{work.author.username}</div>
-          </Button>
-        )}
         {statusChildren}
       </CardFooter>
       {showComments && commentsOpen && (
