@@ -32,16 +32,6 @@ describe("WorkItem", () => {
       );
     });
 
-    it("shows a plain vote total instead of vote buttons when score is undefined", () => {
-      render(
-        <WorkItem work={buildWork({ score: undefined, totalVotes: 5 })} />,
-      );
-
-      expect(screen.getByText("5 vote(s)")).not.toBeNull();
-      expect(screen.queryByRole("button", { name: "Upvote" })).toBeNull();
-      expect(screen.queryByRole("button", { name: "Downvote" })).toBeNull();
-    });
-
     it("disables the vote buttons when setWork is not provided", () => {
       render(<WorkItem work={buildWork({ totalVotes: 10, score: 4 })} />);
 

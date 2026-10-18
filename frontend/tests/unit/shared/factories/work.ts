@@ -10,7 +10,7 @@ export function buildWork(overrides: Partial<Work> = {}): Work {
     title: "Test work",
     description: "A test description",
     imageUrl: null,
-    author: "alice",
+    author: { id: 2, username: "alice" },
     categories: [],
     status: "approved",
     score: 0,

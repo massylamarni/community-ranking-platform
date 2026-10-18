@@ -111,11 +111,11 @@ export interface Work {
   title: string;
   description: string;
   imageUrl: string | null;
-  author: string;
+  author: { id: number; username: string };
   categories: string[];
   status: WorkStatus;
   reason?: string;
-  score?: number;
+  score: number;
   totalVotes: number;
   createdAt?: string;
   updatedAt?: string | null;
@@ -167,7 +167,7 @@ export interface Comment {
   id: number;
   content: string;
   imageUrl: string | null;
-  author: { username: string };
+  author: { id: number; username: string };
   username: string;
   parentCommentId: string | null;
   oeuvreId: string;

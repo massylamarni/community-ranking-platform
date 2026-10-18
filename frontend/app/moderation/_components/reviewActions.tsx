@@ -36,13 +36,7 @@ export default function ReviewActions({
           setReason("");
         }}
       >
-        <PopoverTrigger
-          render={
-            <Button size="sm" variant="destructive">
-              Refuser
-            </Button>
-          }
-        />
+        <PopoverTrigger render={<Button variant="outline">Refuser</Button>} />
         <PopoverContent className="w-64" align="end">
           <div className="flex flex-col gap-2">
             <Label htmlFor={`reason-${work.id}`}>Motif (optionnel)</Label>
@@ -53,7 +47,6 @@ export default function ReviewActions({
               autoFocus
             />
             <Button
-              size="sm"
               variant="destructive"
               disabled={refusing}
               onClick={() => onRefuse(work, reason)}
@@ -64,7 +57,7 @@ export default function ReviewActions({
         </PopoverContent>
       </Popover>
 
-      <Button size="sm" disabled={accepting} onClick={() => onAccept(work)}>
+      <Button disabled={accepting} onClick={() => onAccept(work)}>
         {accepting ? "..." : "Accepter"}
       </Button>
     </div>

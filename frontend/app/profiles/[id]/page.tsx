@@ -19,7 +19,10 @@ import ProfileNotFoundGuard from "../_components/guards/profileNotFoundGuard";
 import { ProfileEmpty } from "../_components/profileEmpty";
 import { ProfileCommentItem } from "../_components/profileCommentItem";
 
-const fromPublishedWork = (w: PublicProfileWork, author: string) => ({
+const fromPublishedWork = (
+  w: PublicProfileWork,
+  author: { id: number; username: string },
+) => ({
   id: w.oeuvreId,
   title: w.title,
   description: w.description ?? undefined,
@@ -113,7 +116,10 @@ export default function PublicProfilePage() {
               current.publishedWorks.map((w) => (
                 <WorkItem
                   key={w.oeuvreId}
-                  work={fromPublishedWork(w, current.username)}
+                  work={fromPublishedWork(w, {
+                    id: current.userId,
+                    username: current.username,
+                  })}
                   setSelectedWork={openWork}
                 />
               ))

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { ButtonGroup } from "@/components/ui/button-group";
 import {
   Card,
+  CardAction,
   CardContent,
   CardDescription,
   CardFooter,
@@ -17,9 +18,14 @@ import Image from "next/image";
 import { ReactNode, useState } from "react";
 import { CommentSection } from "../../comments/_components/commentSection";
 import WorkNotFoundGuard from "./guards/workNotFoundGuard";
+import { Label } from "@/components/ui/label";
+import Link from "next/link";
 
-export type WorkLike = Pick<Work, "id" | "title" | "imageUrl" | "totalVotes"> &
-  Partial<Pick<Work, "description" | "author" | "score">>;
+export type WorkLike = Pick<
+  Work,
+  "id" | "title" | "imageUrl" | "totalVotes" | "score"
+> &
+  Partial<Pick<Work, "description" | "author">>;
 
 export function WorkItem<T extends WorkLike = Work>({
   work,
@@ -55,22 +61,38 @@ export function WorkItem<T extends WorkLike = Work>({
       setErrors(err as ApiErrorBody);
     }
   }
-  const disableVote = !setWork;
+  const disableVote = !setWork || !user;
+  const handleCardClick = undefined; //() => setSelectedWork ? setSelectedWork(work) : null;
 
   if (!work) return <WorkNotFoundGuard />;
   return (
     <Card className="max-w-3xl gap-0">
-      <CardHeader
-        className="pb-(--card-spacing)"
-        onClick={() => (setSelectedWork ? setSelectedWork(work) : null)}
-      >
+      <CardHeader className="pb-(--card-spacing)" onClick={handleCardClick}>
         <CardTitle>{work.title}</CardTitle>
         <CardDescription>{work.description}</CardDescription>
+        <CardAction>
+          {work.author && (
+            <Button
+              type="button"
+              variant="ghost"
+              nativeButton={false}
+              className="flex justify-center items-center gap-2 w-fit p-0 hover:bg-transparent"
+              render={<Link href={`/profiles/${work.author.id}`} />}
+            >
+              <Avatar>
+                <AvatarFallback>
+                  {work.author.username.slice(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <div>{work.author.username}</div>
+            </Button>
+          )}
+        </CardAction>
       </CardHeader>
       {work.imageUrl && (
         <CardContent
           className="flex flex-col gap-3 max-w-none pb-(--card-spacing)"
-          onClick={() => (setSelectedWork ? setSelectedWork(work) : null)}
+          onClick={handleCardClick}
         >
           <div className="relative aspect-4/3 overflow-hidden rounded-md border bg-black">
             <Image
@@ -86,30 +108,26 @@ export function WorkItem<T extends WorkLike = Work>({
       {children && <CardContent>{children}</CardContent>}
       <CardFooter className="flex justify-between">
         <div className="flex gap-3">
-          {work.score === undefined ? (
-            <span>{work.totalVotes} vote(s)</span>
-          ) : (
-            <ButtonGroup>
-              <Button
-                variant={vote?.value === 1 ? "default" : "outline"}
-                onClick={() => handleVote(1)}
-                disabled={disableVote}
-                aria-label="Upvote"
-              >
-                <ArrowBigUp />
-                {work.totalVotes - (work.totalVotes - work.score) / 2}
-              </Button>
-              <Button
-                variant={vote?.value === -1 ? "default" : "outline"}
-                onClick={() => handleVote(-1)}
-                disabled={disableVote}
-                aria-label="Downvote"
-              >
-                <ArrowBigDown />
-                {(work.totalVotes - work.score) / 2}
-              </Button>
-            </ButtonGroup>
-          )}
+          <ButtonGroup>
+            <Button
+              variant={vote?.value === 1 ? "default" : "outline"}
+              onClick={() => handleVote(1)}
+              disabled={disableVote}
+              aria-label="Upvote"
+            >
+              <ArrowBigUp />
+              {work.totalVotes - (work.totalVotes - work.score) / 2}
+            </Button>
+            <Button
+              variant={vote?.value === -1 ? "default" : "outline"}
+              onClick={() => handleVote(-1)}
+              disabled={disableVote}
+              aria-label="Downvote"
+            >
+              <ArrowBigDown />
+              {(work.totalVotes - work.score) / 2}
+            </Button>
+          </ButtonGroup>
           {showComments && (
             <Button
               variant={commentsOpen ? "secondary" : "outline"}
@@ -121,23 +139,13 @@ export function WorkItem<T extends WorkLike = Work>({
             </Button>
           )}
         </div>
-        {work.author && (
-          <div className="flex justify-center items-center gap-2 w-fit">
-            <Avatar>
-              <AvatarFallback>
-                {work.author.slice(0, 2).toUpperCase()}
-              </AvatarFallback>
-            </Avatar>
-            <div>{work.author}</div>
-          </div>
-        )}
         {statusChildren}
       </CardFooter>
       {showComments && commentsOpen && (
         <CardFooter className="justify-start">
           <CommentSection
             workId={work.id}
-            workAuthor={work.author ?? "Unknown"}
+            workAuthor={work.author?.username ?? "Unknown"}
             currentUser={user?.username}
             isAdmin={user?.role === "admin"}
           />
