@@ -3,3 +3,4 @@
 djalil-docs/*
 /djalil-docs
 backend/bin/*
+.agents/*
