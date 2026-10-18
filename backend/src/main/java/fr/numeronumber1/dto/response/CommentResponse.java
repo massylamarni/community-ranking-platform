@@ -24,7 +24,7 @@ public class CommentResponse {
         this.oeuvreId = comment.getOeuvre().getOeuvreId();
         this.content = comment.getContent();
         this.imageUrl = comment.getImageUrl();
-        this.author = new AuthorResponse(comment.getUser().getUsername());
+        this.author = new AuthorResponse(comment.getUser());
         this.parentCommentId = comment.getParentComment() == null
                 ? null
                 : comment.getParentComment().getCommentId().toString();
@@ -68,6 +68,4 @@ public class CommentResponse {
         return createdAt;
     }
 
-    public record AuthorResponse(String username) {
-    }
 }

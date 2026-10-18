@@ -704,7 +704,9 @@ public class AuthSteps {
     @Then("l'œuvre est associée à l'utilisateur {string}")
     public void oeuvre_associee_au_deposant(String expectedAuthor) throws Exception {
         JsonNode result = objectMapper.readTree(responseBody);
-        assertEquals(expectedAuthor, result.path("author").asText());
+        JsonNode authorNode = result.path("author");
+        String actualAuthor = authorNode.isObject() ? authorNode.path("username").asText() : authorNode.asText();
+        assertEquals(expectedAuthor, actualAuthor);
         assertEquals(expectedAuthor, oeuvres.findById(oeuvreId).orElseThrow()
                 .getAuthor().getUsername());
     }
