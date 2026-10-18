@@ -12,6 +12,7 @@ export const createWork = (
   author: username,
   categories: ["Default", "Movie"],
   status: "approved",
+  score: 2,
   totalVotes: 3,
   ...o,
 });

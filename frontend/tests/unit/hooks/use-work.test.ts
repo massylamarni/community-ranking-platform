@@ -20,6 +20,7 @@ describe("useWorks", () => {
       author: "alice",
       categories: [],
       status: "created",
+      score: 0,
       totalVotes: 0,
     };
     const createMock = worksRepository.create as jest.Mock;

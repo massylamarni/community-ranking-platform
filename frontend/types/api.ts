@@ -115,7 +115,7 @@ export interface Work {
   categories: string[];
   status: WorkStatus;
   reason?: string;
-  score?: number;
+  score: number;
   totalVotes: number;
   createdAt?: string;
   updatedAt?: string | null;

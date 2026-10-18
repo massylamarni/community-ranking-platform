@@ -18,8 +18,11 @@ import { ReactNode, useState } from "react";
 import { CommentSection } from "../../comments/_components/commentSection";
 import WorkNotFoundGuard from "./guards/workNotFoundGuard";
 
-export type WorkLike = Pick<Work, "id" | "title" | "imageUrl" | "totalVotes"> &
-  Partial<Pick<Work, "description" | "author" | "score">>;
+export type WorkLike = Pick<
+  Work,
+  "id" | "title" | "imageUrl" | "totalVotes" | "score"
+> &
+  Partial<Pick<Work, "description" | "author">>;
 
 export function WorkItem<T extends WorkLike = Work>({
   work,
@@ -86,30 +89,26 @@ export function WorkItem<T extends WorkLike = Work>({
       {children && <CardContent>{children}</CardContent>}
       <CardFooter className="flex justify-between">
         <div className="flex gap-3">
-          {work.score === undefined ? (
-            <span>{work.totalVotes} vote(s)</span>
-          ) : (
-            <ButtonGroup>
-              <Button
-                variant={vote?.value === 1 ? "default" : "outline"}
-                onClick={() => handleVote(1)}
-                disabled={disableVote}
-                aria-label="Upvote"
-              >
-                <ArrowBigUp />
-                {work.totalVotes - (work.totalVotes - work.score) / 2}
-              </Button>
-              <Button
-                variant={vote?.value === -1 ? "default" : "outline"}
-                onClick={() => handleVote(-1)}
-                disabled={disableVote}
-                aria-label="Downvote"
-              >
-                <ArrowBigDown />
-                {(work.totalVotes - work.score) / 2}
-              </Button>
-            </ButtonGroup>
-          )}
+          <ButtonGroup>
+            <Button
+              variant={vote?.value === 1 ? "default" : "outline"}
+              onClick={() => handleVote(1)}
+              disabled={disableVote}
+              aria-label="Upvote"
+            >
+              <ArrowBigUp />
+              {work.totalVotes - (work.totalVotes - work.score) / 2}
+            </Button>
+            <Button
+              variant={vote?.value === -1 ? "default" : "outline"}
+              onClick={() => handleVote(-1)}
+              disabled={disableVote}
+              aria-label="Downvote"
+            >
+              <ArrowBigDown />
+              {(work.totalVotes - work.score) / 2}
+            </Button>
+          </ButtonGroup>
           {showComments && (
             <Button
               variant={commentsOpen ? "secondary" : "outline"}
