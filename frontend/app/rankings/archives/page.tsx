@@ -218,7 +218,17 @@ function RankingArchivesContent() {
               />
               {entry.author && (
                 <div className="text-xs text-muted-foreground mt-0.5">
-                  par {entry.author}
+                  par{" "}
+                  {entry.author.id ? (
+                    <Link
+                      href={`/profiles/${entry.author.id}`}
+                      className="hover:underline hover:text-foreground"
+                    >
+                      {entry.author.username}
+                    </Link>
+                  ) : (
+                    entry.author.username
+                  )}
                 </div>
               )}
             </div>
