@@ -15,57 +15,56 @@ import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Eye, EyeClosed } from "lucide-react";
-import { toast } from "sonner";
 import {
   Field,
   FieldError,
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
-import { ApiErrorBody } from "@/types/api";
+import { useApi } from "@/hooks";
+import { useRouter } from "next/navigation";
 
 export default function Register() {
-  const { register } = useAuth();
+  const { register, login } = useAuth();
+  const { run, loading, error } = useApi();
+  const routes = useRouter();
+
   const [registerForm, setRegisterForm] = useState({
     username: "",
     email: "",
     password: "",
   });
-  const [authError, setAuthError] = useState<ApiErrorBody | null>(null);
-  const [authBusy, setAuthBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   async function handleRegister(e: React.FormEvent) {
     e.preventDefault();
-    setAuthError(null);
-    setAuthBusy(true);
 
-    const promise = register(registerForm);
-
-    toast.promise(promise, {
+    const res = await run(register(registerForm), {
       loading: "Création de votre compte...",
-      success: () => "Compte créé avec succès",
-      error: (err) => err?.message ?? "Échec de l'inscription",
+      success: "Compte créé avec succès",
+      error: "Échec de l'inscription",
     });
-
-    try {
-      await promise;
-    } catch (err) {
-      setAuthError(err as ApiErrorBody);
-    } finally {
-      setAuthBusy(false);
+    if (res.ok) {
+      const user = {
+        username: registerForm.username,
+        password: registerForm.password,
+      };
+      await login(user);
+      routes.replace("/profiles");
     }
   }
-
-  const fe = authError?.fields ?? {};
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Créer un compte</CardTitle>
         <CardAction>
-          <Button variant="link">
-            <Link href="/auth/login">Se connecter</Link>
+          <Button
+            variant="link"
+            nativeButton={false}
+            render={<Link href="/auth/login" />}
+          >
+            Se connecter
           </Button>
         </CardAction>
       </CardHeader>
@@ -85,7 +84,7 @@ export default function Register() {
                 pattern="[a-zA-Z0-9_]+"
                 required
               />
-              {fe.username && <FieldError>{fe.username}</FieldError>}
+              <FieldError>{error?.fields?.username}</FieldError>
             </Field>
             <Field>
               <FieldLabel htmlFor="email">Adresse e-mail</FieldLabel>
@@ -98,7 +97,7 @@ export default function Register() {
                 }
                 required
               />
-              {fe.email && <FieldError>{fe.email}</FieldError>}
+              <FieldError>{error?.fields?.email}</FieldError>
             </Field>
             <Field>
               <FieldLabel htmlFor="password">Mot de passe</FieldLabel>
@@ -121,13 +120,13 @@ export default function Register() {
                   {showPassword ? <Eye /> : <EyeClosed />}
                 </Button>
               </ButtonGroup>
-              {fe.password && <FieldError>{fe.password}</FieldError>}
+              <FieldError>{error?.fields?.password}</FieldError>
             </Field>
           </FieldGroup>
         </form>
       </CardContent>
       <CardFooter>
-        <Button type="submit" form="register-form" disabled={authBusy}>
+        <Button type="submit" form="register-form" disabled={loading}>
           Créer le compte
         </Button>
       </CardFooter>

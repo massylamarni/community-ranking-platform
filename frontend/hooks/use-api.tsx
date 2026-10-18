@@ -1,40 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { toast } from "sonner";
-import type { ApiErrorBody } from "@/types/api";
+import { ApiError } from "@/lib/errors";
 
 type ToastMessages = {
-  loading: string;
-  success: string;
+  loading?: string;
+  success?: string;
   error: string;
 };
 
+type RunResult<T> = { ok: true; data: T } | { ok: false };
+
 export function useApi() {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<ApiErrorBody | null>(null);
+  const [error, setError] = useState<ApiError | null>(null);
 
-  async function run<T>(
+  const run = useCallback(async function run<T>(
     promise: Promise<T>,
     messages: ToastMessages,
-  ): Promise<boolean> {
+  ): Promise<RunResult<T>> {
     setError(null);
     setLoading(true);
     toast.promise(promise, {
-      loading: messages.loading,
-      success: messages.success,
+      ...(messages.loading && { loading: messages.loading }),
+      ...(messages.success && { success: messages.success }),
       error: (err) => err?.message ?? messages.error,
     });
     try {
-      await promise;
-      return true;
+      return { ok: true, data: await promise };
     } catch (err) {
-      setError(err as ApiErrorBody);
-      return false;
+      setError(err as ApiError);
+      return { ok: false };
     } finally {
       setLoading(false);
     }
-  }
+  }, []);
 
-  return { run, loading, error, fieldErrors: error?.fields };
+  return { run, loading, error };
 }

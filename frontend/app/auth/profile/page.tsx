@@ -11,8 +11,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { useEffect, useState } from "react";
-import type { ApiErrorBody } from "@/types/api";
-import { toast } from "sonner";
 import {
   Field,
   FieldError,
@@ -23,64 +21,46 @@ import LoadingGuard from "@/components/guards/loadingGuard";
 import { useAuth } from "@/hooks/use-auth";
 import ChangePassword from "./_components/changePassword";
 import VerticalList from "@/components/vertical-list";
+import { useApi } from "@/hooks";
 
 export default function Profile() {
   const { profile, refreshProfile, updateProfile } = useAuth();
-  const [profileError, setProfileError] = useState<ApiErrorBody | null>(null);
+  const { run, loading, error } = useApi();
+
   const [usernameEdit, setUsernameEdit] = useState("");
   const [emailEdit, setEmailEdit] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     async function loadProfile() {
-      setProfileError(null);
-
-      const promise = refreshProfile();
-
-      toast.promise(promise, {
-        loading: "Récupération du profil...",
-        error: (err) => err?.message ?? "Échec de la récupération du profil",
+      const res = await run(refreshProfile(), {
+        error: "Échec de la récupération du profil",
       });
-
-      try {
-        const p = await promise;
-        setUsernameEdit(p.username);
-        setEmailEdit(p.email);
-      } catch (err) {
-        setProfileError(err as ApiErrorBody);
+      if (res.ok) {
+        const profile = res.data;
+        setUsernameEdit(profile.username);
+        setEmailEdit(profile.email);
       }
     }
     loadProfile();
-  }, [refreshProfile]);
+  }, [refreshProfile, run]);
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
-    setProfileError(null);
-    setIsLoading(true);
 
-    const promise = updateProfile({
-      username: usernameEdit,
-      email: emailEdit,
-    });
-
-    toast.promise(promise, {
-      loading: "Enregistrement du profil...",
-      success: () => "Profil enregistré avec succès",
-      error: (err) => err?.message ?? "Échec de l'enregistrement",
-    });
-
-    try {
-      await promise;
-    } catch (err) {
-      setProfileError(err as ApiErrorBody);
-    } finally {
-      setIsLoading(false);
-    }
+    await run(
+      updateProfile({
+        username: usernameEdit,
+        email: emailEdit,
+      }),
+      {
+        loading: "Enregistrement du profil...",
+        success: "Profil enregistré avec succès",
+        error: "Échec de l'enregistrement",
+      },
+    );
   }
 
-  if (isLoading) return <LoadingGuard />;
-
-  const fe = profileError?.fields ?? {};
+  if (loading) return <LoadingGuard />;
 
   return (
     <VerticalList>
@@ -105,7 +85,7 @@ export default function Profile() {
                     onChange={(e) => setUsernameEdit(e.target.value)}
                     required
                   />
-                  {fe.username && <FieldError>{fe.username}</FieldError>}
+                  <FieldError>{error?.fields?.username}</FieldError>
                 </Field>
                 <Field>
                   <FieldLabel htmlFor="email">Adresse e-mail</FieldLabel>
@@ -116,7 +96,7 @@ export default function Profile() {
                     onChange={(e) => setEmailEdit(e.target.value)}
                     required
                   />
-                  {fe.email && <FieldError>{fe.email}</FieldError>}
+                  <FieldError>{error?.fields?.email}</FieldError>
                 </Field>
               </FieldGroup>
             </form>
@@ -125,7 +105,7 @@ export default function Profile() {
           )}
         </CardContent>
         <CardFooter>
-          <Button type="submit" form="profile-form" disabled={isLoading}>
+          <Button type="submit" form="profile-form" disabled={loading}>
             Enregistrer
           </Button>
         </CardFooter>

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ApiErrorBody } from "@/types/api";
+import { ApiError } from "@/lib/errors";
 import { PasswordField } from "./passwordField";
 
 export type NewPasswordValues = {
@@ -11,14 +11,14 @@ export type NewPasswordValues = {
 type NewPasswordFieldsProps = {
   values: NewPasswordValues;
   onChange: (patch: Partial<NewPasswordValues>) => void;
-  errors?: ApiErrorBody["fields"];
+  error: ApiError | null;
   minLength?: number;
 };
 
 export function NewPasswordFields({
   values,
   onChange,
-  errors,
+  error,
   minLength,
 }: NewPasswordFieldsProps) {
   return (
@@ -29,7 +29,7 @@ export function NewPasswordFields({
         autoComplete="new-password"
         value={values.newPassword}
         onChange={(newPassword) => onChange({ newPassword })}
-        error={errors?.newPassword}
+        error={error?.fields?.newPassword}
         minLength={minLength}
       />
       <PasswordField
@@ -38,7 +38,7 @@ export function NewPasswordFields({
         autoComplete="new-password"
         value={values.confirmPassword}
         onChange={(confirmPassword) => onChange({ confirmPassword })}
-        error={errors?.confirmPassword}
+        error={error?.fields?.confirmPassword}
       />
     </>
   );
