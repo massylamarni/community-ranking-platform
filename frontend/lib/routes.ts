@@ -13,6 +13,8 @@ const HOME: Redirect = { user: "/works/mine", admin: "/moderation" };
 export const DEFAULT_DENY = "/auth/login";
 
 export const routes: Route[] = [
+  { path: "/rankings", allow: ALL },
+  { path: "/rankings/archives", allow: ALL },
   { path: "/categories", allow: ALL },
   { path: "/categories/[id]", allow: ALL },
   {
@@ -58,7 +60,7 @@ export const routes: Route[] = [
     onSuccess: "/auth/profile",
   },
   { path: "/auth/profile", allow: ["user", "admin"], onDeny: "/auth/login" },
-
+  { path: "/profiles", allow: ["user", "admin"], onDeny: "/auth/login" },
   {
     path: "/moderation",
     allow: ["admin"],

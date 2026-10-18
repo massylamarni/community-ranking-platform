@@ -69,13 +69,42 @@ public class OeuvreSteps {
     private String editedDescription;
     private boolean updatePrepared;
     private boolean expectCommentList;
-    private boolean descriptionWasOmitted;
     private int expectedVoteCount;
     private List<String> expectedCommentAuthors = List.of();
 
     @Given("une œuvre existe")
     public void oeuvre_existe() {
         saveWork(scenarioAuthor(), uniqueTitle("œuvre existante"), "Description initiale", OeuvreStatus.created);
+    }
+
+    @Given("une œuvre {string} existe")
+    public void oeuvre_avec_titre_existe(String title) {
+        saveWork(scenarioAuthor(), title, "Description initiale", OeuvreStatus.created);
+    }
+
+    @Given("une œuvre {string} créée par cet utilisateur")
+    public void oeuvre_avec_titre_creee_par_utilisateur(String title) {
+        saveWork(scenarioAuthor(), title, "Description initiale", OeuvreStatus.created);
+    }
+
+    @Given("une œuvre créée par cet utilisateur")
+    public void oeuvre_creee_par_utilisateur_sans_titre() {
+        saveWork(scenarioAuthor(), uniqueTitle("œuvre utilisateur"), "Description initiale", OeuvreStatus.created);
+    }
+
+    @Given("une œuvre créée par un autre utilisateur")
+    public void oeuvre_creee_par_autre_utilisateur_sans_titre() {
+        saveWork(fixtureUser("cucumber-other-owner", false), uniqueTitle("œuvre tierce"),
+                "Description initiale", OeuvreStatus.created);
+    }
+
+    @Given("une œuvre {string} créée par un autre utilisateur {string}")
+    public void oeuvre_avec_titre_creee_par_un_autre_utilisateur(String title, String otherUsername) {
+        saveWork(fixtureUser(otherUsername, false), title, "Description initiale", OeuvreStatus.created);
+    }
+
+    public void oeuvre_creee_par_un_autre_utilisateur(String otherUsername) {
+        saveWork(fixtureUser(otherUsername, false), uniqueTitle("œuvre tierce"), "Description initiale", OeuvreStatus.created);
     }
 
     @Given("une œuvre existante")
@@ -98,6 +127,14 @@ public class OeuvreSteps {
                 scenarioContext.getResponseBody());
     }
 
+    @Then("l'œuvre {string} est supprimée")
+    public void oeuvre_avec_titre_est_supprimee(String title) {
+        assertEquals(204, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
+        assertFalse(oeuvres.findAll().stream().anyMatch(work -> title.equals(work.getTitle())),
+                "L'œuvre devait exister avant suppression");
+        assertFalse(oeuvres.existsById(requireOeuvreId()));
+    }
+
     @Then("l'œuvre est supprimée")
     public void oeuvre_est_supprimee() {
         assertEquals(204, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
@@ -115,6 +152,16 @@ public class OeuvreSteps {
         assertEquals(OeuvreStatus.rejected, status, scenarioContext.getResponseBody());
     }
 
+    @Then("l'œuvre {string} n'est pas publiée")
+    public void oeuvre_titre_n_est_pas_publiee(String title) throws Exception {
+        Oeuvre oeuvre = oeuvres.findAll().stream()
+                .filter(current -> current.getTitle().equals(title))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Œuvre introuvable: " + title));
+        assertTrue(oeuvre.getStatus() == OeuvreStatus.created || oeuvre.getStatus() == OeuvreStatus.rejected,
+                "L'œuvre doit rester non publiée: " + title);
+    }
+
     @Then("l'œuvre est créée avec le titre {string}")
     public void oeuvre_creee_avec_titre(String title) throws Exception {
         assertEquals(201, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
@@ -124,15 +171,14 @@ public class OeuvreSteps {
         scenarioContext.setOeuvreId(body.path("id").asLong());
     }
 
-    @When("elle ne saisit aucun titre")
+    @When("il ne saisit aucun titre")
     public void elle_ne_saisit_aucun_titre() {
         scenarioContext.setWorkTitle(null);
-        descriptionWasOmitted = false;
+        scenarioContext.setDescriptionWasOmitted(false);
     }
 
-    @When("elle renseigne les autres informations obligatoires")
     public void elle_renseigne_autres_informations_obligatoires() {
-        if (!descriptionWasOmitted && scenarioContext.getWorkDescription() == null) {
+        if (!scenarioContext.isDescriptionWasOmitted() && scenarioContext.getWorkDescription() == null) {
             scenarioContext.setWorkDescription("Description de validation");
         }
     }
@@ -148,10 +194,10 @@ public class OeuvreSteps {
         assertEquals(description, lastResponse().path("description").asText());
     }
 
-    @When("elle ne saisit aucune description")
+    @When("il ne saisit aucune description")
     public void elle_ne_saisit_aucune_description() {
         scenarioContext.setWorkDescription(null);
-        descriptionWasOmitted = true;
+        scenarioContext.setDescriptionWasOmitted(true);
     }
 
     @Then("un message indique que la description est obligatoire")
@@ -200,7 +246,25 @@ public class OeuvreSteps {
         scenarioContext.setCategoryName(category.getName());
     }
 
-    @When("l'utilisateur propose une œuvre dans cette catégorie")
+    @When("l'utilisateur propose une œuvre {string} dans cette catégorie {string}")
+    public void utilisateur_propose_oeuvre_avec_titre_dans_categorie(String title, String categoryName) throws Exception {
+        Category category = categories.findByName(categoryName).orElseGet(() -> ensureCategory(categoryName));
+        scenarioContext.setCategoryId(category.getCategoryId());
+        scenarioContext.setCategoryName(category.getName());
+        scenarioContext.setWorkTitle(title);
+        perform(post("/works")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(Map.of("title", title,
+                        "description", "Description de proposition"))));
+        if (scenarioContext.getResponseStatus() == 201) {
+            Long id = lastResponse().path("id").asLong();
+            scenarioContext.setOeuvreId(id);
+            perform(post("/works/{id}/submit", id)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(objectMapper.writeValueAsString(Map.of("categoryIds", List.of(category.getCategoryId())))));
+        }
+    }
+
     public void utilisateur_propose_oeuvre_dans_categorie() throws Exception {
         Category category = scenarioContext.getCategoryId() == null
                 ? ensureCategory("Cucumber proposal category")
@@ -231,14 +295,36 @@ public class OeuvreSteps {
                         "description", "Description de proposition"))));
     }
 
-    @Then("la proposition de l'œuvre est enregistrée")
     public void proposition_oeuvre_enregistree() throws Exception {
         assertEquals(200, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
         assertEquals("pending", lastResponse().path("status").asText());
         assertTrue(lastResponse().path("id").canConvertToLong());
     }
 
-    @Then("l'œuvre est associée à la catégorie sélectionnée")
+    @Then("la proposition de l'œuvre {string} est enregistrée")
+    public void proposition_oeuvre_avec_titre_enregistree(String title) throws Exception {
+        proposition_oeuvre_enregistree();
+        assertEquals(title, scenarioContext.getWorkTitle());
+    }
+
+    @Then("l'œuvre {string} est associée à la catégorie {string}")
+    public void oeuvre_avec_titre_associee_a_categorie(String title, String categoryName) throws Exception {
+        assertEquals(title, scenarioContext.getWorkTitle());
+        Category category = categories.findByName(categoryName).orElseThrow();
+        assertNotNull(category.getCategoryId());
+        assertTrue(oeuvreCategories.existsById(
+                new OeuvreCategoryId(requireOeuvreId(), category.getCategoryId())),
+                scenarioContext.getResponseBody());
+    }
+
+    @Then("l'œuvre est associée à la catégorie {string}")
+    public void oeuvre_associee_a_categorie(String categoryName) throws Exception {
+        Category category = categories.findByName(categoryName).orElseThrow();
+        assertTrue(oeuvreCategories.existsById(
+                new OeuvreCategoryId(requireOeuvreId(), category.getCategoryId())),
+                scenarioContext.getResponseBody());
+    }
+
     public void oeuvre_associee_a_categorie_selectionnee() throws Exception {
         assertNotNull(scenarioContext.getCategoryId());
         assertTrue(oeuvreCategories.existsById(
@@ -283,18 +369,6 @@ public class OeuvreSteps {
     public void proposition_est_soumise_a_nouveau() throws Exception {
         assertEquals(200, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
         assertEquals("pending", lastResponse().path("status").asText());
-    }
-
-    @Given("une œuvre créée par cet utilisateur")
-    public void oeuvre_creee_par_utilisateur() {
-        saveWork(scenarioAuthor(), uniqueTitle("œuvre personnelle"), "Description initiale",
-                OeuvreStatus.created);
-    }
-
-    @Given("une œuvre créée par un autre utilisateur")
-    public void oeuvre_creee_par_autre_utilisateur() {
-        saveWork(fixtureUser("cucumber-other-owner", false), uniqueTitle("œuvre tierce"),
-                "Description initiale", OeuvreStatus.created);
     }
 
     @When("l'utilisateur modifie l'œuvre")
@@ -346,14 +420,40 @@ public class OeuvreSteps {
                 "Après une modification, le scénario attend une nouvelle soumission au filtrage");
     }
 
-    @When("l'utilisateur supprime l'œuvre")
+    @When("je supprime l'œuvre")
     public void utilisateur_supprime_oeuvre() throws Exception {
         perform(delete("/works/{id}", requireOeuvreId()));
     }
 
-    @When("l'utilisateur tente de supprimer l'œuvre")
+    @When("l'utilisateur supprime l'œuvre {string}")
+    public void utilisateur_supprime_oeuvre_par_titre(String title) throws Exception {
+        scenarioContext.setWorkTitle(title);
+        Oeuvre work = oeuvres.findAll().stream()
+                .filter(existing -> title.equals(existing.getTitle()))
+                .findFirst()
+                .orElseThrow();
+        scenarioContext.setOeuvreId(work.getOeuvreId());
+        perform(delete("/works/{id}", work.getOeuvreId()));
+    }
+
+    @When("je supprime l'œuvre {string}")
+    public void administrateur_supprime_oeuvre_par_titre(String title) throws Exception {
+        utilisateur_supprime_oeuvre_par_titre(title);
+    }
+
     public void utilisateur_tente_de_supprimer_oeuvre() throws Exception {
         perform(delete("/works/{id}", requireOeuvreId()));
+    }
+
+    @When("l'utilisateur tente de supprimer l'œuvre {string}")
+    public void utilisateur_tente_de_supprimer_oeuvre_par_titre(String title) throws Exception {
+        scenarioContext.setWorkTitle(title);
+        Oeuvre work = oeuvres.findAll().stream()
+                .filter(existing -> title.equals(existing.getTitle()))
+                .findFirst()
+                .orElseThrow();
+        scenarioContext.setOeuvreId(work.getOeuvreId());
+        perform(delete("/works/{id}", work.getOeuvreId()));
     }
    //TODO : a modifier le 0 vers 403
     @Then("la suppression est refusée")

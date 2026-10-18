@@ -64,9 +64,16 @@ public class PublicProfileSteps {
         profileUser = fixtureUser(username);
     }
 
-    @When("un autre utilisateur consulte ce profil")
     public void autre_utilisateur_consulte_profil() throws Exception {
         otherUser = fixtureUser("visitor-" + System.nanoTime());
+        consulterProfil();
+    }
+
+    @When("l'utilisateur {string} consulte ce profil")
+    public void utilisateur_consulte_ce_profil(String username) throws Exception {
+        if (profileUser == null && username != null) {
+            profileUser = fixtureUser(username);
+        }
         consulterProfil();
     }
 
@@ -82,12 +89,11 @@ public class PublicProfileSteps {
         assertEquals(username, json.path("username").asText());
     }
 
-    @When("ce profil est consulté")
     public void profil_est_consulte() throws Exception {
         consulterProfil();
     }
 
-    @Then("le pseudo {string} est affiché sur la page")
+    @Then("le pseudo {string} est affiché")
     public void pseudo_est_affiche_sur_page(String username) throws Exception {
         assertEquals(200, scenarioContext.getResponseStatus(),
                 scenarioContext.getResponseBody());
@@ -143,7 +149,6 @@ public class PublicProfileSteps {
         }
     }
 
-    @When("son profil public est consulté")
     public void profil_public_est_consulte() throws Exception {
         consulterProfil();
     }
@@ -192,13 +197,17 @@ public class PublicProfileSteps {
         assertEquals(workCount, positiveVotes);
     }
 
-    @Given("un utilisateur possède une adresse e-mail")
-    public void utilisateur_possede_email() {
-        profileUser = fixtureUser(
-                "privacy-" + System.nanoTime());
+    @Given("l'utilisateur possede l'adresse e-mail {string}")
+    public void utilisateur_possede_email(String emailValue) {
+        if (profileUser == null) {
+            profileUser = fixtureUser("privacy-" + System.nanoTime());
+        }
+        if (emailValue != null) {
+            profileUser.setEmail(emailValue);
+            userRepository.save(profileUser);
+        }
     }
 
-    @When("un autre utilisateur consulte son profil public")
     public void autre_utilisateur_consulte_profil_public()
             throws Exception {
 
@@ -206,8 +215,8 @@ public class PublicProfileSteps {
         consulterProfil();
     }
 
-    @Then("l'adresse e-mail de l'utilisateur n'est pas affichée")
-    public void email_utilisateur_non_affiche() {
+    @Then("l'adresse e-mail {string} n'est pas affichée")
+    public void email_utilisateur_non_affiche(String ignoredEmail) {
         assertEquals(200, scenarioContext.getResponseStatus(),
                 scenarioContext.getResponseBody());
 

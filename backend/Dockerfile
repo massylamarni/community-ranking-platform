@@ -33,6 +33,7 @@ RUN chown appuser:appgroup app.jar
 
 # Dossier pour les uploads d'images
 RUN mkdir -p /uploads/works /uploads/comments && chown -R appuser:appgroup /uploads
+COPY --chown=appuser:appgroup uploads/works/ /app/seed-works/
 
 USER appuser
 
@@ -40,4 +41,4 @@ USER appuser
 EXPOSE 8080
 
 # Use exec form so the JVM receives OS signals properly
-ENTRYPOINT ["java", "-jar", "app.jar"]
+ENTRYPOINT ["sh", "-c", "for image in /app/seed-works/*.jpg; do cp -n \"$image\" /uploads/works/ || exit 1; done; exec java -jar app.jar"]

@@ -138,7 +138,8 @@ public class OeuvreControllerTest {
                 .andExpect(jsonPath("$.id").value(10))
                 .andExpect(jsonPath("$.title").value("Mon Oeuvre"))
                 .andExpect(jsonPath("$.description").value("Ma Description"))
-                .andExpect(jsonPath("$.author").value("alice"))
+                .andExpect(jsonPath("$.author.id").value(1))
+                .andExpect(jsonPath("$.author.username").value("alice"))
                 .andExpect(jsonPath("$.categories[0]").value("Peinture"))
                 .andExpect(jsonPath("$.totalVotes").value(2));
     }
@@ -375,7 +376,8 @@ public class OeuvreControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value("20"))
                 .andExpect(jsonPath("$.title").value("Œuvre Admin"))
-                .andExpect(jsonPath("$.author").value("admin"))
+                .andExpect(jsonPath("$.author.id").value(3))
+                .andExpect(jsonPath("$.author.username").value("admin"))
                 .andExpect(jsonPath("$.status").value("approved"));
     }
 
@@ -392,6 +394,7 @@ public class OeuvreControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].id").value(10))
                 .andExpect(jsonPath("$[0].title").value("Mon Oeuvre"))
-                .andExpect(jsonPath("$[0].author").value("alice"));
+                .andExpect(jsonPath("$[0].author.id").value(1))
+                .andExpect(jsonPath("$[0].author.username").value("alice"));
     }
 }

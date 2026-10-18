@@ -24,7 +24,6 @@ public class AdminSteps {
     @Autowired
     private JsonMapper objectMapper;
 
-    @When("l'administrateur crée une nouvelle œuvre")
     public void administrateur_cree_nouvelle_oeuvre() throws Exception {
         String title = "Œuvre administrateur " + UUID.randomUUID();
         var request = post("/works")
@@ -40,7 +39,6 @@ public class AdminSteps {
         scenarioContext.setResponseBody(result.getResponse().getContentAsString());
     }
 
-    @When("l'administrateur supprime l'œuvre")
     public void administrateur_supprime_oeuvre() throws Exception {
         Long oeuvreId = scenarioContext.getOeuvreId();
         if (oeuvreId == null) {

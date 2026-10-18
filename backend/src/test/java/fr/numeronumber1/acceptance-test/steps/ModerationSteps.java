@@ -108,7 +108,6 @@ public class ModerationSteps {
         scenarioContext.setCategoryName(categoryName);
     }
 
-    @When("l'administrateur accepte l'œuvre")
     @When("un administrateur accepte l'œuvre")
     public void administrateur_accepte_oeuvre() throws Exception {
         if (scenarioContext.getSession() == null || !scenarioContext.isAdministrator()) {
@@ -120,7 +119,17 @@ public class ModerationSteps {
         capture(result);
     }
 
-    @Then("l'œuvre est publiée")
+    @When("j'accepte l'œuvre {string}")
+    public void j_accepte_l_oeuvre(String title) throws Exception {
+        Oeuvre oeuvre = oeuvres.findAll().stream()
+                .filter(current -> current.getTitle().equals(title))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Œuvre introuvable: " + title));
+        scenarioContext.setOeuvreId(oeuvre.getOeuvreId());
+        scenarioContext.setWorkTitle(oeuvre.getTitle());
+        administrateur_accepte_oeuvre();
+    }
+
     public void oeuvre_est_publiee() throws Exception {
         Oeuvre oeuvre = requireOeuvre();
         assertEquals(OeuvreStatus.approved, oeuvre.getStatus());
@@ -132,19 +141,31 @@ public class ModerationSteps {
         assertEquals(expectedStatus(status), requireOeuvre().getStatus().name());
     }
 
-    @When("l'administrateur refuse l'œuvre")
     @When("un administrateur refuse l'œuvre")
     public void administrateur_refuse_oeuvre() throws Exception {
+        if (scenarioContext.getSession() == null || !scenarioContext.isAdministrator()) {
+            authSteps.authenticateAs("cucumber-admin", true);
+        }
         var request = post("/moderation/works/{workId}/refuse", requireOeuvreId())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(Map.of("reason", "Refusé dans le test")));
-        if (scenarioContext.getSession() != null) {
-            request.session(scenarioContext.getSession());
-        }
+        request.session(scenarioContext.getSession());
         capture(mockMvc.perform(request).andReturn());
     }
 
+    @When("je refuse l'œuvre {string}")
+    public void je_refuse_l_oeuvre(String title) throws Exception {
+        Oeuvre oeuvre = oeuvres.findAll().stream()
+                .filter(current -> current.getTitle().equals(title))
+                .findFirst()
+                .orElseThrow(() -> new AssertionError("Œuvre introuvable: " + title));
+        scenarioContext.setOeuvreId(oeuvre.getOeuvreId());
+        scenarioContext.setWorkTitle(oeuvre.getTitle());
+        administrateur_refuse_oeuvre();
+    }
+
     @Then("le statut de {string} devient {string}")
+    @Then("le statut de l'œuvre {string} devient {string}")
     public void statut_oeuvre_devient(String title, String status) {
         Oeuvre oeuvre = requireOeuvre();
         assertEquals(title, oeuvre.getTitle());
@@ -152,7 +173,7 @@ public class ModerationSteps {
         assertEquals(200, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
     }
 
-    @Then("{string} apparaît dans la liste des œuvres de la catégorie {string}")
+    @Then("l'œuvre {string} apparaît dans la liste des œuvres de la catégorie {string}")
     public void oeuvre_apparait_dans_liste_categorie(String title, String categoryName) throws Exception {
         assertEquals(categoryName, scenarioContext.getCategoryName());
         assertNotNull(scenarioContext.getCategoryId(), "La catégorie de l'œuvre doit avoir été préparée");
@@ -172,7 +193,7 @@ public class ModerationSteps {
         assertEquals(OeuvreStatus.approved.name(), response.path("status").asString());
     }
 
-    @Then("{string} n'apparaît pas dans les œuvres publiques")
+    @Then("l'œuvre {string} n'apparaît pas dans les œuvres publiques")
     public void oeuvre_absente_des_oeuvres_publiques(String title) throws Exception {
         MvcResult result = mockMvc.perform(get("/works").param("status", OeuvreStatus.approved.name())).andReturn();
         assertEquals(200, result.getResponse().getStatus(), result.getResponse().getContentAsString());
@@ -231,13 +252,13 @@ public class ModerationSteps {
         oeuvres.save(oeuvre);
     }
 
-    @When("utilisateur modifie la description de l'œuvre")
+    @When("l'utilisateur modifie la description de l'œuvre")
     public void utilisateur_modifie_description_oeuvre() {
         assertEquals(OeuvreStatus.rejected, requireOeuvre().getStatus());
         assertEquals(AUTHOR_USERNAME, scenarioContext.getUsername());
     }
 
-    @When("il remplace la description par {string}")
+    @When("il remplace la description en {string}")
     public void remplace_description_oeuvre(String description) throws Exception {
         scenarioContext.setWorkDescription(description);
         var request = patch("/works/{workId}", requireOeuvreId())

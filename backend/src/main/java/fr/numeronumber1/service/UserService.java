@@ -127,6 +127,7 @@ public class UserService implements UserDetailsService {
             item.put("description", oeuvre.getDescription());
             item.put("imageUrl", oeuvre.getImageUrl());
             item.put("score", oeuvre.getScore());
+            item.put("totalVotes", oeuvre.getVotes().size());
             item.put("createdAt", oeuvre.getCreatedAt());
 
             result.add(item);
@@ -191,6 +192,7 @@ public class UserService implements UserDetailsService {
             item.put("title", oeuvre.getTitle());
             item.put("imageUrl", oeuvre.getImageUrl());
             item.put("score", oeuvre.getScore());
+            item.put("totalVotes", oeuvre.getVotes().size());
             item.put("voteValue", vote.getValue());
             result.add(item);
         }
