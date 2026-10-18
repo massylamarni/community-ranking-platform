@@ -58,7 +58,7 @@ export function WorkItem<T extends WorkLike = Work>({
       setErrors(err as ApiErrorBody);
     }
   }
-  const disableVote = !setWork;
+  const disableVote = !setWork || !user;
 
   if (!work) return <WorkNotFoundGuard />;
   return (
