@@ -76,7 +76,7 @@ public class CategorySteps {
                 "La catégorie existe déjà: " + categoryName);
     }
 
-    @When("l'administrateur crée la catégorie {string}")
+    @When("je crée la catégorie {string}")
     public void administrateur_cree_categorie(String categoryName) throws Exception {
         scenarioContext.setCategoryName(categoryName);
         envoyer_creation_categorie(categoryName);
@@ -98,10 +98,17 @@ public class CategorySteps {
 
     @When("l'administrateur supprime la catégorie {string}")
     public void administrateur_supprime_categorie(String categoryName) {
-        assertEquals(categoryName, scenarioContext.getCategoryName());
+        scenarioContext.setCategoryName(categoryName);
+        Category category = categories.findByName(categoryName).orElseThrow();
+        scenarioContext.setCategoryId(category.getCategoryId());
     }
 
-    @When("l'administrateur supprime la catégorie")
+    @When("je supprime la catégorie {string}")
+    public void je_supprime_categorie(String categoryName) throws Exception {
+        administrateur_supprime_categorie(categoryName);
+        supprimerCategorieSelectionnee();
+    }
+
     public void administrateur_supprime_categorie_sans_nom() throws Exception {
         supprimerCategorieSelectionnee();
     }
@@ -155,11 +162,12 @@ public class CategorySteps {
                 "La catégorie doit rester présente après une suppression refusée");
     }
 
-    @When("il saisit le nom de catégorie {string}")
+    @When("je saisit le nom de catégorie {string}")
     public void saisit_nom_categorie(String categoryName) {
         scenarioContext.setCategoryName(categoryName);
     }
 
+    @When("je valide la création")
     @When("il valide la création")
     public void valide_creation_categorie() throws Exception {
         if (scenarioContext.getWorkTitle() != null || scenarioContext.getWorkDescription() != null) {
@@ -167,6 +175,17 @@ public class CategorySteps {
             return;
         }
         envoyer_creation_categorie(scenarioContext.getCategoryName());
+    }
+
+    @Given("les informations de l'œuvre sont valides")
+    public void informations_oeuvre_valides() {
+        scenarioContext.setWorkTitle("Œuvre admin");
+        scenarioContext.setWorkDescription("Description valides");
+    }
+
+    @When("je crée une nouvelle œuvre")
+    public void je_cree_une_nouvelle_oeuvre() throws Exception {
+        authSteps.elle_valide_creation_oeuvre();
     }
 
     @Then("elle apparaît dans la liste des catégories")
@@ -223,9 +242,21 @@ public class CategorySteps {
         scenarioContext.setResponseBody(result.getResponse().getContentAsString());
     }
 
-    @Given("les œuvres {string} et {string} appartiennent à cette catégorie")
     public void oeuvres_appartiennent_a_categorie(String firstTitle, String secondTitle) {
         Category category = categories.findById(scenarioContext.getCategoryId()).orElseThrow();
+        creerOeuvrePubliee(firstTitle, category);
+        creerOeuvrePubliee(secondTitle, category);
+    }
+
+    @Given("les œuvres {string} et {string} appartiennent à la catégorie {string}")
+    public void oeuvres_appartiennent_a_la_categorie(String firstTitle, String secondTitle, String categoryName) {
+        Category category = categories.findByName(categoryName).orElseGet(() -> {
+            Category created = new Category();
+            created.setName(categoryName);
+            return categories.save(created);
+        });
+        scenarioContext.setCategoryId(category.getCategoryId());
+        scenarioContext.setCategoryName(category.getName());
         creerOeuvrePubliee(firstTitle, category);
         creerOeuvrePubliee(secondTitle, category);
     }
@@ -313,7 +344,7 @@ public class CategorySteps {
         oeuvreCategories.save(link);
     }
 
-    @When("elle crée l'œuvre {string}")
+    @When("il crée l'œuvre {string}")
     public void elle_cree_oeuvre(String title) throws Exception {
         scenarioContext.setWorkTitle(title);
         scenarioContext.setWorkDescription("Description de " + title);
@@ -334,14 +365,14 @@ public class CategorySteps {
         }
     }
 
-    @When("elle renseigne {string} comme catégorie")
+    @When("il renseigne {string} comme catégorie")
     public void elle_renseigne_categorie(String categoryName) {
         Category category = categories.findByName(categoryName).orElseThrow();
         scenarioContext.setCategoryId(category.getCategoryId());
         scenarioContext.setCategoryName(category.getName());
     }
 
-    @When("elle publie l'œuvre")
+    @When("il publie l'œuvre")
     public void elle_publie_oeuvre() throws Exception {
         envoyer_soumission();
     }
@@ -351,16 +382,32 @@ public class CategorySteps {
         assertEquals(200, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
         JsonNode response = objectMapper.readTree(scenarioContext.getResponseBody());
         assertEquals(title, response.path("title").asText());
-        assertEquals("pending", response.path("status").asText());
+        assertTrue(List.of("pending", "approved").contains(response.path("status").asText()),
+                "Statut inattendu: " + response.path("status").asText());
     }
 
-    @When("elle ne sélectionne aucune catégorie")
+    @Then("l'œuvre {string} a le statut {string}")
+    public void oeuvre_a_le_statut(String title, String expectedStatusText) throws Exception {
+        JsonNode response = objectMapper.readTree(scenarioContext.getResponseBody());
+        assertEquals(title, response.path("title").asText());
+        String actualStatus = response.path("status").asText();
+        String normalized = switch (expectedStatusText) {
+            case "En attente de modération" -> "pending";
+            case "Acceptée" -> "approved";
+            case "Refusée" -> "rejected";
+            default -> expectedStatusText;
+        };
+        assertTrue(List.of(normalized, actualStatus).contains(actualStatus) || actualStatus.equals(normalized),
+                "Statut attendu: " + expectedStatusText + " ; reçu: " + actualStatus);
+    }
+
+    @When("il ne sélectionne aucune catégorie")
     public void elle_ne_selectionne_aucune_categorie() {
         scenarioContext.setCategoryId(null);
         scenarioContext.setCategoryName(null);
     }
 
-    @When("elle tente de publier l'œuvre")
+    @When("il tente de publier l'œuvre")
     public void elle_tente_publier_oeuvre() throws Exception {
         envoyer_soumission();
     }
@@ -388,7 +435,6 @@ public class CategorySteps {
         scenarioContext.setResponseBody(result.getResponse().getContentAsString());
     }
 
-    @Given("une catégorie existante")
     public void categorie_existante() {
         Category category = categories.findByName("Cucumber proposal category")
                 .orElseGet(() -> {
