@@ -62,7 +62,7 @@ public class CommentSteps {
     private MockMultipartFile pendingImage;
     private int commentsBeforeRequest;
 
-    @Given("{string} a publié le commentaire {string} sur {string}")
+    @Given("l'utilisateur {string} a publié le commentaire {string} sur l’œuvre {string}")
     public void utilisateur_a_publie_commentaire_sur_oeuvre(
             String username, String content, String title) {
         User commenter = fixtureUser(username, false);
@@ -81,7 +81,7 @@ public class CommentSteps {
         prepareCommentForCurrentUser(content);
     }
 
-    @When("l'administrateur supprime le commentaire")
+    @When("je supprime le commentaire")
     public void administrateur_supprime_commentaire() throws Exception {
         ensureAuthenticatedUser(true);
         if (commentId == null) {
@@ -93,20 +93,36 @@ public class CommentSteps {
         deleteCurrentComment();
     }
 
-    @Then("le commentaire n'est plus visible sur {string}")
     public void commentaire_n_est_plus_visible_sur_oeuvre(String title) {
         assertEquals(204, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
         assertFalse(comments.existsById(requireCommentId()),
                 "Le commentaire doit avoir été supprimé de l'œuvre " + title);
     }
 
-    @Then("le commentaire n'est plus visible sur le profil de {string}")
+    @Then("le commentaire {string} n'est plus visible sur l’œuvre {string}")
+    public void commentaire_n_est_plus_visible_sur_oeuvre_avec_contenu(String content, String title) {
+        assertEquals(204, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
+        assertFalse(comments.findAll().stream().anyMatch(comment ->
+                comment.getContent().equals(content) && comment.getOeuvre().getTitle().equals(title)),
+                "Le commentaire doit avoir été supprimé de l'œuvre " + title);
+    }
+
     public void commentaire_n_est_plus_visible_sur_profil(String username) {
         assertEquals(204, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
         User user = users.findByUsername(username)
                 .orElseThrow(() -> new AssertionError("Utilisateur introuvable : " + username));
         assertFalse(user.getComments().stream()
                         .anyMatch(comment -> comment.getCommentId().equals(requireCommentId())),
+                "Le commentaire supprimé ne doit plus apparaître sur le profil de " + username);
+    }
+
+    @Then("le commentaire {string} n'est plus visible sur le profil de l'utilisateur {string}")
+    public void commentaire_n_est_plus_visible_sur_profil_utilisateur(String content, String username) {
+        assertEquals(204, scenarioContext.getResponseStatus(), scenarioContext.getResponseBody());
+        User user = users.findByUsername(username)
+                .orElseThrow(() -> new AssertionError("Utilisateur introuvable : " + username));
+        assertFalse(user.getComments().stream()
+                        .anyMatch(comment -> comment.getContent().equals(content)),
                 "Le commentaire supprimé ne doit plus apparaître sur le profil de " + username);
     }
 
@@ -250,7 +266,6 @@ public class CommentSteps {
         rememberComment(saveComment(work, commenter, "Commentaire publié sous une œuvre", null));
     }
 
-    @When("un administrateur supprime ce commentaire")
     public void administrateur_supprime_ce_commentaire() throws Exception {
         ensureAuthenticatedUser(true);
         ensureCommentExistsForDeletion();
@@ -269,7 +284,6 @@ public class CommentSteps {
         assertFalse(comments.existsById(requireCommentId()));
     }
 
-    @Given("l'utilisateur {string} publie un commentaire sous une œuvre")
     public void utilisateur_publie_commentaire(String username) {
         User commenter = fixtureUser(username, false);
         Oeuvre work = workForScenario("Commentaire de " + username,
@@ -445,7 +459,6 @@ public class CommentSteps {
         rememberComment(saveComment(work, commenter, "Contenu non conforme à modérer", null));
     }
 
-    @When("un administrateur consulte ce commentaire")
     public void administrateur_consulte_commentaire() throws Exception {
         ensureAuthenticatedUser(true);
         ensureCommentExistsForDeletion();
@@ -461,7 +474,6 @@ public class CommentSteps {
         administrateur_consulte_commentaire();
     }
 
-    @When("il le supprime dans le cadre de la modération")
     public void supprime_commentaire_pour_moderation() throws Exception {
         ensureAuthenticatedUser(true);
         ensureCommentExistsForDeletion();
@@ -478,7 +490,6 @@ public class CommentSteps {
         administrateur_supprime_ce_commentaire();
     }
 
-    @When("un utilisateur non administrateur tente de le supprimer au titre de la modération")
     public void utilisateur_non_admin_tente_suppression_moderation() throws Exception {
         ensureAuthenticatedUser(false);
         ensureCommentExistsForDeletion();

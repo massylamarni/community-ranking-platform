@@ -1,13 +1,14 @@
 # language: en
 Feature: Suppression des commentaires
+
   Scenario Outline: Supprimer un commentaire
-    Given l'administrateur est connecté
-    And "<utilisateur>" a publié le commentaire "<commentaire>" sur "<oeuvre>"
-    When l'administrateur supprime le commentaire
-    Then le commentaire n'est plus visible sur "<oeuvre>"
-    And le commentaire n'est plus visible sur le profil de "<utilisateur>"
+    Given je suis connecté en tant que "Administrateur"
+    And l'utilisateur "<utilisateur>" a publié le commentaire "<commentaire>" sur l’œuvre "<oeuvre>"
+    When je supprime le commentaire
+    Then le commentaire "<commentaire>" n'est plus visible sur l’œuvre "<oeuvre>"
+    And le commentaire "<commentaire>" n'est plus visible sur le profil de l'utilisateur "<utilisateur>"
 
     Examples:
-      | utilisateur | oeuvre                              | commentaire                 |
-      | Frédégonde  | Les aventures de Momo l'hippopotame | Excellent film !           |
-      | Alice       | La potiche trouée                  | Une très bonne pièce       |
+      | utilisateur | oeuvre                              | commentaire          |
+      | Frédégonde  | Les aventures de Momo l'hippopotame | Excellent film !     |
+      | Alice       | La potiche trouée                   | Une très bonne pièce |

@@ -17,6 +17,7 @@ public class AcceptanceScenarioContext {
     private Long oeuvreId;
     private String workTitle;
     private String workDescription;
+    private boolean descriptionWasOmitted;
     private String imageFileName;
     private String imageUrl;
     private Integer commentId;
@@ -33,6 +34,7 @@ public class AcceptanceScenarioContext {
         oeuvreId = null;
         workTitle = null;
         workDescription = null;
+        descriptionWasOmitted = false;
         imageFileName = null;
         imageUrl = null;
         commentId = null;
@@ -57,6 +59,8 @@ public class AcceptanceScenarioContext {
     public void setWorkTitle(String workTitle) { this.workTitle = workTitle; }
     public String getWorkDescription() { return workDescription; }
     public void setWorkDescription(String workDescription) { this.workDescription = workDescription; }
+    public boolean isDescriptionWasOmitted() { return descriptionWasOmitted; }
+    public void setDescriptionWasOmitted(boolean descriptionWasOmitted) { this.descriptionWasOmitted = descriptionWasOmitted; }
     public String getImageFileName() { return imageFileName; }
     public void setImageFileName(String imageFileName) { this.imageFileName = imageFileName; }
     public String getImageUrl() { return imageUrl; }

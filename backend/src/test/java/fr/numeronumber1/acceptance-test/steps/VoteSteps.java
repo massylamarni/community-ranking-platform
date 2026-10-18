@@ -54,7 +54,6 @@ public class VoteSteps {
     private long voteCountBefore;
     private byte currentVoteValue;
 
-    @Given("une œuvre qui n'appartient pas à l'utilisateur")
     public void oeuvre_n_appartient_pas_a_utilisateur() {
         setOeuvre(createWork(createUser("vote-author-" + UUID.randomUUID())));
     }
@@ -307,13 +306,15 @@ public class VoteSteps {
     }
 
     private User createUser(String username) {
-        User user = new User();
-        user.setUsername(username);
-        user.setEmail(username + "@example.com");
-        user.setPasswordHash("fixture-password");
-        user.setAdmin(false);
-        user.setCreatedAt(LocalDateTime.now());
-        return users.save(user);
+        return users.findByUsername(username).orElseGet(() -> {
+            User user = new User();
+            user.setUsername(username);
+            user.setEmail(username + "@example.com");
+            user.setPasswordHash("fixture-password");
+            user.setAdmin(false);
+            user.setCreatedAt(LocalDateTime.now());
+            return users.save(user);
+        });
     }
 
     private Oeuvre createWork(User author) {
