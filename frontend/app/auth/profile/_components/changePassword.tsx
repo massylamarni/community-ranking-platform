@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { FieldGroup } from "@/components/ui/field";
+import { FieldError, FieldGroup } from "@/components/ui/field";
 import { PasswordField } from "../../_components/passwordField";
 import {
   NewPasswordFields,
@@ -20,7 +20,7 @@ import {
 
 export default function ChangePassword() {
   const { changePassword } = useAuth();
-  const { run, loading, fieldErrors } = useApi();
+  const { run, loading, error } = useApi();
   const [oldPassword, setOldPassword] = useState("");
   const [passwords, setPasswords] = useState<NewPasswordValues>({
     newPassword: "",
@@ -50,13 +50,14 @@ export default function ChangePassword() {
               autoComplete="current-password"
               value={oldPassword}
               onChange={setOldPassword}
-              error={fieldErrors?.oldPassword}
+              error={error?.fields?.oldPassword}
             />
             <NewPasswordFields
               values={passwords}
               onChange={(patch) => setPasswords((p) => ({ ...p, ...patch }))}
-              errors={fieldErrors}
+              error={error}
             />
+            <FieldError>{error?.message}</FieldError>
           </FieldGroup>
         </form>
       </CardContent>
