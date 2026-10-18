@@ -303,7 +303,7 @@ function RankingArchivesContent() {
               variant="outline"
               className="font-normal text-xs text-muted-foreground"
             >
-              Date d'archivage : {closureDate}
+              Date d&apos;archivage : {closureDate}
             </Badge>
           )}
         </div>
