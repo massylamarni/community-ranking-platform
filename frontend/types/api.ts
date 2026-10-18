@@ -197,7 +197,7 @@ export interface RankingEntry {
   position: number;
   title: string;
   description: string;
-  author: string;
+  author: { id: number; username: string };
   categories: string[];
   score: number;
   imageUrl?: string | null;
