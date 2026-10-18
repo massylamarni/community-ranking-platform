@@ -31,7 +31,7 @@ const DEFAULT_WORK: Work = {
   title: "",
   description: "",
   imageUrl: "",
-  author: "",
+  author: { id: 2, username: "" },
   categories: [],
   status: "created",
   reason: "",

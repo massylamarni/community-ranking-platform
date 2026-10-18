@@ -5,7 +5,7 @@ export function buildComment(overrides: Partial<Comment> = {}): Comment {
     id: 1,
     content: "A test comment",
     imageUrl: null,
-    author: { username: "alice" },
+    author: { id: 2, username: "alice" },
     username: "alice",
     parentCommentId: null,
     oeuvreId: "1",

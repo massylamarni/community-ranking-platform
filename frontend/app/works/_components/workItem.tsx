@@ -17,6 +17,7 @@ import Image from "next/image";
 import { ReactNode, useState } from "react";
 import { CommentSection } from "../../comments/_components/commentSection";
 import WorkNotFoundGuard from "./guards/workNotFoundGuard";
+import Link from "next/link";
 
 export type WorkLike = Pick<
   Work,
@@ -121,14 +122,20 @@ export function WorkItem<T extends WorkLike = Work>({
           )}
         </div>
         {work.author && (
-          <div className="flex justify-center items-center gap-2 w-fit">
+          <Button
+            type="button"
+            variant="ghost"
+            nativeButton={false}
+            className="flex justify-center items-center gap-2 w-fit"
+            render={<Link href={`/profiles/${work.author.id}`} />}
+          >
             <Avatar>
               <AvatarFallback>
-                {work.author.slice(0, 2).toUpperCase()}
+                {work.author.username.slice(0, 2).toUpperCase()}
               </AvatarFallback>
             </Avatar>
-            <div>{work.author}</div>
-          </div>
+            <div>{work.author.username}</div>
+          </Button>
         )}
         {statusChildren}
       </CardFooter>
@@ -136,7 +143,7 @@ export function WorkItem<T extends WorkLike = Work>({
         <CardFooter className="justify-start">
           <CommentSection
             workId={work.id}
-            workAuthor={work.author ?? "Unknown"}
+            workAuthor={work.author?.username ?? "Unknown"}
             currentUser={user?.username}
             isAdmin={user?.role === "admin"}
           />
