@@ -295,7 +295,6 @@ function RankingArchivesContent() {
       <CardHeader>
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <CardTitle className="flex items-center gap-2">
-            <History className="size-5 text-muted-foreground" />
             {cardTitle}
           </CardTitle>
           {closureDate && (
