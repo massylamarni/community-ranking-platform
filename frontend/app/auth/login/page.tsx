@@ -18,10 +18,12 @@ import { Eye, EyeClosed } from "lucide-react";
 import { toast } from "sonner";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { ApiErrorBody } from "@/types/api";
-import { useRouter } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
+import { safeRedirectPath, successUrl } from "@/lib/routes";
 
 export default function Login() {
-  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { login } = useAuth();
   const [loginForm, setLoginForm] = useState({
     username: "alice",
@@ -45,12 +47,14 @@ export default function Login() {
     });
 
     try {
-      await promise;
+      const user = await promise;
+      const from = safeRedirectPath(searchParams.get("from"));
+      const target = from ?? successUrl(pathname, user?.role ?? "visitor");
+      window.location.replace(target);
     } catch (err) {
       setAuthError(err as ApiErrorBody);
     } finally {
       setAuthBusy(false);
-      router.push(`/works/mine`);
     }
   }
 

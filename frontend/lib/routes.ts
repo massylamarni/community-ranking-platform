@@ -60,7 +60,7 @@ export const routes: Route[] = [
     onSuccess: "/auth/profile",
   },
   { path: "/auth/profile", allow: ["user", "admin"], onDeny: "/auth/login" },
-  { path: "/profiles/[id]", allow: ["user", "admin"], onDeny: "/auth/login" },
+  { path: "/profiles", allow: ["user", "admin"], onDeny: "/auth/login" },
   {
     path: "/moderation",
     allow: ["admin"],
