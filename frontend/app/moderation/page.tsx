@@ -11,64 +11,53 @@ import ModerationHasNoWork from "./_components/moderationHasNoWork";
 
 import { WorksContainer } from "../works/_components/worksContainer";
 import ReviewActions from "./_components/reviewActions";
+import { useApi } from "@/hooks";
 
 const PAGE_SIZE = 20;
 
 export default function ModerationPage() {
   const { user, userLoading } = useAuth();
+  const { run, loading, error } = useApi();
   const admin = isAdmin(user);
 
   const { pending, pendingWorks, accept, refuse } = useModeration();
   const works = pending?.items ?? [];
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<unknown>(null);
 
   const [selectedWork, setSelectedWork] = useState<Work | null>(null);
   const [acceptingId, setAcceptingId] = useState<number | null>(null);
   const [refusingId, setRefusingId] = useState<number | null>(null);
 
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      await pendingWorks(1, PAGE_SIZE);
-    } catch (err) {
-      setError(err);
-    } finally {
-      setLoading(false);
-    }
-  }, [pendingWorks]);
+  const load = useCallback(
+    () =>
+      run(pendingWorks(1, PAGE_SIZE), {
+        error: "Failed to load pending works",
+      }),
+    [run, pendingWorks],
+  );
 
   useEffect(() => {
     if (userLoading || !admin) return;
-    // eslint-disable-next-line
     load();
   }, [userLoading, admin, load]);
 
   async function handleAccept(work: Work) {
     setAcceptingId(work.id);
-    setError(null);
-    try {
-      await accept(work.id);
-    } catch (err) {
-      setError(err);
-    } finally {
-      setAcceptingId(null);
-    }
+    await run(accept(work.id), {
+      loading: "Accepting work...",
+      success: "Work accepted",
+      error: "Failed to accept work",
+    });
+    setAcceptingId(null);
   }
 
   async function handleRefuse(work: Work, reason: string) {
     setRefusingId(work.id);
-    setError(null);
-    try {
-      await refuse(work.id, {
-        reason: reason.trim() || undefined,
-      });
-    } catch (err) {
-      setError(err);
-    } finally {
-      setRefusingId(null);
-    }
+    await run(refuse(work.id, { reason: reason.trim() || undefined }), {
+      loading: "Refusing work...",
+      success: "Work refused",
+      error: "Failed to refuse work",
+    });
+    setRefusingId(null);
   }
 
   if (loading) return <LoadingGuard />;
@@ -82,6 +71,7 @@ export default function ModerationPage() {
               key={work.id}
               work={work}
               setSelectedWork={setSelectedWork}
+              initialError={error}
               statusChildren={
                 <ReviewActions
                   work={work}

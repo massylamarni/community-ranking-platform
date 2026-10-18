@@ -20,6 +20,7 @@ import { CommentSection } from "../../comments/_components/commentSection";
 import WorkNotFoundGuard from "./guards/workNotFoundGuard";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { ApiError } from "@/lib/errors";
 
 export type WorkLike = Pick<
   Work,
@@ -34,6 +35,7 @@ export function WorkItem<T extends WorkLike = Work>({
   children,
   statusChildren,
   showComments = true,
+  initialError,
 }: {
   work: T | null;
   setWork?: (work: Work) => void | undefined;
@@ -41,6 +43,7 @@ export function WorkItem<T extends WorkLike = Work>({
   children?: ReactNode;
   statusChildren?: ReactNode;
   showComments?: boolean;
+  initialError?: ApiError | null;
 }) {
   const { user } = useAuth();
   const [errors, setErrors] = useState<ApiErrorBody | null>(null);
