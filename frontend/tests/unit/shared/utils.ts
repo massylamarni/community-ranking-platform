@@ -9,7 +9,7 @@ export const createWork = (
   title: "Component test work",
   description: "A rendered work item",
   imageUrl: null,
-  author: username,
+  author: { id: 2, username },
   categories: ["Default", "Movie"],
   status: "approved",
   score: 2,
