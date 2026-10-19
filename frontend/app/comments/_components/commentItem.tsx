@@ -123,7 +123,7 @@ export function CommentItem({
                   size="sm"
                   className="p-2 text-muted-foreground"
                   onClick={() => setEditing(true)}
-                  aria-label="Edit comment"
+                  aria-label="edit-comment"
                 >
                   <Pencil />
                 </Button>
@@ -134,7 +134,7 @@ export function CommentItem({
                   size="sm"
                   className="p-2 text-muted-foreground"
                   onClick={() => setConfirmingDelete(true)}
-                  aria-label="Delete comment"
+                  aria-label="delete-comment"
                 >
                   <Trash2 />
                 </Button>

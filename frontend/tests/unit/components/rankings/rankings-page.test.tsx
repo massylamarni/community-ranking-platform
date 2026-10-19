@@ -9,14 +9,14 @@ import { rankingsRepository } from "@/repositories/rankings.repository";
 import {
   mockPush,
   mockSearchParams,
-} from "../shared/mocks/navigation";
+} from "../../shared/mocks/other/navigation";
 import type { Category, RankingPage } from "@/types/api";
 
 jest.mock(
   "next/navigation",
   () =>
-    jest.requireActual<typeof import("../shared/mocks/navigation")>(
-      "../shared/mocks/navigation",
+    jest.requireActual<typeof import("../../shared/mocks/other/navigation")>(
+      "../../shared/mocks/other/navigation",
     ).navigationModule,
 );
 
@@ -133,9 +133,7 @@ describe("RankingsPage Component with Filters (CLAS-011, CLAS-012)", () => {
 
     render(<RankingsPage />);
 
-    expect(
-      await screen.findByText("Rien ici pour le moment"),
-    ).toBeDefined();
+    expect(await screen.findByText("Rien ici pour le moment")).toBeDefined();
     // Filter controls should remain accessible
     expect(screen.getByLabelText("Catégorie")).toBeDefined();
     expect(screen.getByLabelText("Période")).toBeDefined();

@@ -51,8 +51,9 @@ export function CommentForm({
   }
 
   return (
-    <div className="flex flex-col gap-2">
+    <div className="flex flex-col gap-2" aria-label="comment-form">
       <Textarea
+        aria-label="comment-text"
         className="bg-background"
         value={content}
         onChange={(e) => setContent(e.target.value)}

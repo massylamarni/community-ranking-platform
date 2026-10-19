@@ -7,14 +7,10 @@ import userEvent from "@testing-library/user-event";
 import { CommentSection } from "@/app/comments/_components/commentSection";
 import { buildCommentPage } from "@/tests/unit/shared/factories/commentPage";
 import { buildUseComments } from "@/tests/unit/shared/factories/useComments";
-import { mockCommentForm } from "@/tests/unit/shared/mocks/commentForm";
 import { mockUseComments } from "@/tests/unit/shared/mocks/hooks/use-comments";
 
 jest.mock("@/hooks/use-comments", () => ({
   useComments: () => mockUseComments(),
-}));
-jest.mock("@/app/comments/_components/commentForm", () => ({
-  CommentForm: () => mockCommentForm(),
 }));
 
 type Props = ComponentProps<typeof CommentSection>;
@@ -45,7 +41,7 @@ describe("CommentSection", () => {
       expect(
         screen.getByText("Connectez-vous pour participer à la discussion."), // TODO
       ).not.toBeNull();
-      expect(screen.queryByRole("form", { name: "Comment form" })).toBeNull();
+      expect(screen.queryByLabelText("comment-form")).toBeNull();
     });
 
     it.each([
@@ -56,7 +52,7 @@ describe("CommentSection", () => {
       ({ currentUser, canComment }) => {
         renderSection({ currentUser });
 
-        const form = screen.queryByRole("form", { name: "Comment form" });
+        const form = screen.queryByLabelText("comment-form");
         const ownWorkMessage = screen.queryByText(
           "Vous ne pouvez pas ajouter de commentaire de premier niveau sur votre propre travail, mais vous pouvez répondre à ceux des autres.", // TODO
         );
