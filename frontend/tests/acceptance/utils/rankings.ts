@@ -29,6 +29,8 @@ export function buildRankingSpringPage(
     number: 0,
     first: true,
     last: true,
+    numberOfElements: 0,
+    empty: false,
   };
 }
 
@@ -38,8 +40,17 @@ export async function setupRankingsMock(
 ) {
   const getCategories = () => {
     const items = getItems() ?? [];
-    const uniqueCats = Array.from(new Set(items.map((i) => i.category))).filter(Boolean);
-    const standard = ["Musique", "Photographie", "Théâtre", "Peinture", "Sculpture", "Design"];
+    const uniqueCats = Array.from(new Set(items.map((i) => i.category))).filter(
+      Boolean,
+    );
+    const standard = [
+      "Musique",
+      "Photographie",
+      "Théâtre",
+      "Peinture",
+      "Sculpture",
+      "Design",
+    ];
     const allNames = Array.from(new Set([...uniqueCats, ...standard]));
     return allNames.map((name, idx) => ({ id: idx + 1, name }));
   };
@@ -61,7 +72,10 @@ export async function setupRankingsMock(
     const url = new URL(route.request().url());
 
     // Periods for archive
-    if (url.pathname.endsWith("/periods") || url.pathname.includes("/periods")) {
+    if (
+      url.pathname.endsWith("/periods") ||
+      url.pathname.includes("/periods")
+    ) {
       await route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -150,9 +164,7 @@ export async function assertRankingRow(
   const row = page
     .locator("tbody tr")
     .filter({
-      has: page
-        .locator("td:nth-child(2)")
-        .getByText(title, { exact: true }),
+      has: page.locator("td:nth-child(2)").getByText(title, { exact: true }),
     })
     .first();
   await expect(row).toBeVisible();
@@ -166,9 +178,7 @@ export async function assertRankingRow(
 
 export async function assertWorkNotInRanking(page: Page, title: string) {
   const row = page.locator("tbody tr").filter({
-    has: page
-      .locator("td:nth-child(2)")
-      .getByText(title, { exact: true }),
+    has: page.locator("td:nth-child(2)").getByText(title, { exact: true }),
   });
   await expect(row).toHaveCount(0);
 }
