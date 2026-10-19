@@ -73,10 +73,6 @@ When("il valide le formulaire", async ({ page }) => {
   // TODO
 });
 
-When("l'utilisateur consulte le classement {string}", async ({ page }, arg1: string) => {
-  // TODO
-});
-
 When("il valide la publication", async ({ page }) => {
   // TODO
 });
@@ -118,18 +114,6 @@ Then("l'œuvre n'est pas créée", async ({ page }) => {
 });
 
 Then("l'œuvre est créée", async ({ page }) => {
-  // TODO
-});
-
-Then("l'œuvre {string} apparaît en position 1 avec un score de 15", async ({ page }, arg1: string) => {
-  // TODO
-});
-
-Then("l'œuvre {string} apparaît en position 2 avec un score de 9", async ({ page }, arg1: string) => {
-  // TODO
-});
-
-Then("le vote de {string} est comptabilisé dans ce classement", async ({ page }, arg1: string) => {
   // TODO
 });
 
