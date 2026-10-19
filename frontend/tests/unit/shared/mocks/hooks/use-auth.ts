@@ -1,10 +1,22 @@
-import type { CurrentUser } from "@/types/api";
+import type {
+  CurrentUser,
+  ForgotPasswordPayload,
+  ResetPasswordPayload,
+} from "@/types/api";
 
-export const mockUseAuth = jest.fn(() => ({
-  user: {
-    id: 2,
-    username: "alice",
-    email: "alice@e.c",
-    role: "user",
-  } as CurrentUser | null,
-}));
+type MockAuth = {
+  user: CurrentUser | null;
+  forgotPassword?: (payload: ForgotPasswordPayload) => Promise<void>;
+  resetPassword?: (payload: ResetPasswordPayload) => Promise<void>;
+};
+
+export const mockUseAuth = jest.fn(
+  (): MockAuth => ({
+    user: {
+      id: 2,
+      username: "alice",
+      email: "alice@e.c",
+      role: "user",
+    },
+  }),
+);
