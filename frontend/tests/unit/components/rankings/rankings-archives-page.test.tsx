@@ -9,14 +9,14 @@ import { rankingsRepository } from "@/repositories/rankings.repository";
 import {
   mockPush,
   mockSearchParams,
-} from "../shared/mocks/navigation";
+} from "../../shared/mocks/other/navigation";
 import type { Category, RankingPage } from "@/types/api";
 
 jest.mock(
   "next/navigation",
   () =>
-    jest.requireActual<typeof import("../shared/mocks/navigation")>(
-      "../shared/mocks/navigation",
+    jest.requireActual<typeof import("../../shared/mocks/other/navigation")>(
+      "../../shared/mocks/other/navigation",
     ).navigationModule,
 );
 
@@ -108,7 +108,9 @@ describe("RankingArchivesPage Component", () => {
     expect(await screen.findByText("Classements archivés")).toBeDefined();
 
     // Verify closure date (date d'archivage) is displayed in the dashboard header (2026-09-28 + 6 days = 04/10/2026)
-    expect(await screen.findByText("Date d'archivage : 04/10/2026")).toBeDefined();
+    expect(
+      await screen.findByText("Date d'archivage : 04/10/2026"),
+    ).toBeDefined();
 
     // Verify 'Type de période', 'Période clôturée', 'Trier par' are completely removed
     expect(screen.queryByLabelText("Type de période")).toBeNull();
@@ -200,9 +202,7 @@ describe("RankingArchivesPage Component", () => {
 
     render(<RankingArchivesPage />);
 
-    expect(
-      await screen.findByText("Aucun classement archivé"),
-    ).toBeDefined();
+    expect(await screen.findByText("Aucun classement archivé")).toBeDefined();
     // Filter controls remain present
     expect(screen.getByLabelText("Catégorie")).toBeDefined();
   });
@@ -215,7 +215,9 @@ describe("RankingArchivesPage Component", () => {
     render(<RankingArchivesPage />);
 
     expect(
-      await screen.findByText(/impossible de charger les classements archivés/i),
+      await screen.findByText(
+        /impossible de charger les classements archivés/i,
+      ),
     ).toBeDefined();
 
     const retryButton = screen.getByRole("button", { name: /réessayer/i });
@@ -248,16 +250,42 @@ describe("RankingArchivesPage Component", () => {
   it("fulfills CLAS-007 acceptance criteria: displayed ranking is exactly the archived one (B, A, C)", async () => {
     const weekRankingData: RankingPage = {
       items: [
-        { id: 11, position: 1, title: "Oeuvre B", author: { id: 2, username: "artiste2" }, categories: [], score: 45, description: "" },
-        { id: 12, position: 2, title: "Oeuvre A", author: { id: 1, username: "artiste1" }, categories: [], score: 32, description: "" },
-        { id: 13, position: 3, title: "Oeuvre C", author: { id: 3, username: "artiste3" }, categories: [], score: 18, description: "" },
+        {
+          id: 11,
+          position: 1,
+          title: "Oeuvre B",
+          author: { id: 2, username: "artiste2" },
+          categories: [],
+          score: 45,
+          description: "",
+        },
+        {
+          id: 12,
+          position: 2,
+          title: "Oeuvre A",
+          author: { id: 1, username: "artiste1" },
+          categories: [],
+          score: 32,
+          description: "",
+        },
+        {
+          id: 13,
+          position: 3,
+          title: "Oeuvre C",
+          author: { id: 3, username: "artiste3" },
+          categories: [],
+          score: 18,
+          description: "",
+        },
       ],
       page: 1,
       pageSize: 10,
       total: 3,
     };
 
-    (rankingsRepository.listArchives as jest.Mock).mockResolvedValue(weekRankingData);
+    (rankingsRepository.listArchives as jest.Mock).mockResolvedValue(
+      weekRankingData,
+    );
 
     render(<RankingArchivesPage />);
 

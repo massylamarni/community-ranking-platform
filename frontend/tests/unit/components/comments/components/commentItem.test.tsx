@@ -9,13 +9,6 @@ import {
 } from "@/app/comments/_components/commentItem";
 import { buildComment } from "@/tests/unit/shared/factories/comment";
 import { buildCommentActions } from "@/tests/unit/shared/factories/commentActions";
-import { mockCommentForm } from "@/tests/unit/shared/mocks/commentForm";
-
-// Stub: CommentForm pulls in AttachmentUploader and isn't under test here
-jest.mock("@/app/comments/_components/commentForm", () => ({
-  CommentForm: (props: Parameters<typeof mockCommentForm>[0]) =>
-    mockCommentForm(props),
-}));
 
 function renderItem(
   viewer: CommentViewer,
@@ -71,8 +64,8 @@ describe("CommentItem", () => {
         renderItem(viewer);
 
         expect(isShown("Reply")).toBe(canReply);
-        expect(isShown("Edit comment")).toBe(canEdit);
-        expect(isShown("Delete comment")).toBe(canDelete);
+        expect(isShown("edit-comment")).toBe(canEdit);
+        expect(isShown("delete-comment")).toBe(canDelete);
       },
     );
   });
@@ -103,8 +96,8 @@ describe("CommentItem", () => {
       expect(buttons).toEqual([
         "Reply",
         "Reply",
-        "Edit comment",
-        "Delete comment",
+        "edit-comment",
+        "delete-comment",
       ]);
     });
   });
@@ -118,18 +111,18 @@ describe("CommentItem", () => {
       renderItem({ username: "alice", isAdmin: false }, comment);
 
       await userEvent.click(
-        screen.getByRole("button", { name: "Edit comment" }),
+        screen.getByRole("button", { name: "edit-comment" }),
       );
 
       const textbox = screen.getByRole("textbox", {
-        name: "Comment text",
+        name: "comment-text",
       }) as HTMLTextAreaElement;
       expect(textbox.value).toBe("Original text");
       // The static paragraph is gone (selector avoids matching the textarea)
       expect(screen.queryByText("Original text", { selector: "p" })).toBeNull();
       expect(isShown("Reply")).toBe(false);
-      expect(isShown("Edit comment")).toBe(false);
-      expect(isShown("Delete comment")).toBe(false);
+      expect(isShown("edit-comment")).toBe(false);
+      expect(isShown("delete-comment")).toBe(false);
     });
   });
 });
