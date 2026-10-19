@@ -1,9 +1,10 @@
+
 # language: en
 Feature: Affichage des œuvres par catégorie
 
   Scenario: Consulter les œuvres d'une catégorie
     Given la catégorie "Science-fiction" existe
-    And les œuvres "Dune" et "Fondation" appartiennent à cette catégorie
+    And les œuvres "Dune" et "Fondation" appartiennent à la catégorie "Science-fiction"
     And l'œuvre "Le Seigneur des anneaux" appartient à la catégorie "Fantastique"
     When un utilisateur consulte la catégorie "Science-fiction"
     Then "Dune" est affichée

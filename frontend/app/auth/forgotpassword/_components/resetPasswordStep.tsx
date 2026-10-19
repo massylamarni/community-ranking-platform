@@ -29,7 +29,7 @@ type ResetPasswordStepProps = {
 
 export function ResetPasswordStep({ onComplete }: ResetPasswordStepProps) {
   const { resetPassword } = useAuth();
-  const { run, loading, fieldErrors } = useApi();
+  const { run, loading, error } = useApi();
   const [token, setToken] = useState("");
   const [passwords, setPasswords] = useState<NewPasswordValues>({
     newPassword: "",
@@ -38,12 +38,15 @@ export function ResetPasswordStep({ onComplete }: ResetPasswordStepProps) {
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    const ok = await run(resetPassword({ token: token.trim(), ...passwords }), {
-      loading: "Vérification du code et réinitialisation du mot de passe...",
-      success: "Mot de passe réinitialisé avec succès.",
-      error: "Échec de la réinitialisation du mot de passe",
-    });
-    if (ok) onComplete();
+    const res = await run(
+      resetPassword({ token: token.trim(), ...passwords }),
+      {
+        loading: "Vérification du code et réinitialisation du mot de passe...",
+        success: "Mot de passe réinitialisé avec succès.",
+        error: "Échec de la réinitialisation du mot de passe",
+      },
+    );
+    if (res.ok) onComplete();
   }
 
   return (
@@ -65,16 +68,17 @@ export function ResetPasswordStep({ onComplete }: ResetPasswordStepProps) {
                 onChange={(event) => setToken(event.target.value)}
                 required
               />
-              {fieldErrors?.token && (
-                <FieldError>{fieldErrors.token}</FieldError>
+              {error?.fields?.token && (
+                <FieldError>{error.fields.token}</FieldError>
               )}
             </Field>
             <NewPasswordFields
               values={passwords}
               onChange={(patch) => setPasswords((p) => ({ ...p, ...patch }))}
-              errors={fieldErrors}
+              error={error}
               minLength={8}
             />
+            <FieldError>{error?.message}</FieldError>
           </FieldGroup>
         </form>
       </CardContent>

@@ -56,6 +56,7 @@ class CommentControllerTest {
     @Test
     void listCommentsIsPublicAndReturnsPaginatedNestedResponse() throws Exception {
         User author = new User();
+        author.setUserId(1);
         author.setUsername("alice");
 
         Oeuvre oeuvre = new Oeuvre();
@@ -73,6 +74,7 @@ class CommentControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.items").isArray())
                 .andExpect(jsonPath("$.items[0].content").value("Commentaire racine"))
+                .andExpect(jsonPath("$.items[0].author.id").value(1))
                 .andExpect(jsonPath("$.items[0].author.username").value("alice"))
                 .andExpect(jsonPath("$.items[0].replies[0].content").value("Réponse"))
                 .andExpect(jsonPath("$.page").value(1))
@@ -92,6 +94,7 @@ class CommentControllerTest {
     @WithMockUser(username = "alice")
     void createJsonCommentReturnsCreatedCommentWithAuthor() throws Exception {
         User author = new User();
+        author.setUserId(1);
         author.setUsername("alice");
         Oeuvre oeuvre = new Oeuvre();
         oeuvre.setOeuvreId(10L);
@@ -105,6 +108,7 @@ class CommentControllerTest {
                         .content("{\"content\":\"Commentaire JSON\"}"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.content").value("Commentaire JSON"))
+                .andExpect(jsonPath("$.author.id").value(1))
                 .andExpect(jsonPath("$.author.username").value("alice"));
     }
 
@@ -112,6 +116,7 @@ class CommentControllerTest {
     @WithMockUser(username = "alice")
     void createMultipartCommentStoresImageAndReturnsImageUrl() throws Exception {
         User author = new User();
+        author.setUserId(1);
         author.setUsername("alice");
         Oeuvre oeuvre = new Oeuvre();
         oeuvre.setOeuvreId(10L);
@@ -128,6 +133,7 @@ class CommentControllerTest {
                         .param("content", "Commentaire multipart"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.content").value("Commentaire multipart"))
+                .andExpect(jsonPath("$.author.id").value(1))
                 .andExpect(jsonPath("$.author.username").value("alice"))
                 .andExpect(jsonPath("$.imageUrl").value("/uploads/comments/comment.png"));
 
@@ -152,6 +158,7 @@ class CommentControllerTest {
                         .content("{\"content\":\"Contenu modifié\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").value("Contenu modifié"))
+                .andExpect(jsonPath("$.author.id").value(1))
                 .andExpect(jsonPath("$.author.username").value("alice"));
     }
 

@@ -12,7 +12,7 @@ public class OeuvreResponse {
     private String description;
     private String status;
     private String reason;
-    private String author;
+    private AuthorResponse author;
     private String imageUrl;
     private List<String> categories;
     private int totalVotes;
@@ -24,7 +24,7 @@ public class OeuvreResponse {
         this.description = o.getDescription();
         this.status = o.getStatus().name();
         this.reason = o.getRejectionReason();
-        this.author = o.getAuthor().getUsername();
+        this.author = new AuthorResponse(o.getAuthor());
         this.imageUrl = o.getImageUrl();
         this.categories = o.getOeuvreCategories().stream()
                 .map(oc -> oc.getCategory().getName())
@@ -39,7 +39,7 @@ public class OeuvreResponse {
     public String getDescription() { return description; }
     public String getStatus() { return status; }
     public String getReason() { return reason; }
-    public String getAuthor() { return author; }
+    public AuthorResponse getAuthor() { return author; }
     public String getImageUrl() { return imageUrl; }
     public List<String> getCategories() { return categories; }
     public int getTotalVotes() { return totalVotes; }

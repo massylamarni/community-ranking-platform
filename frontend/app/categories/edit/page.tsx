@@ -25,57 +25,59 @@ import { ConfirmDialog } from "@/components/confirmDialog";
 import { HeaderPortal } from "@/components/header-portal";
 import NoCategory from "../_components/noCategory";
 import { useCategory } from "@/contexts/categoryContext";
+import { useApi } from "@/hooks";
+import { ApiError } from "@/lib/errors";
 
 export default function EditCategories() {
   const { user } = useAuth();
+  const { run, loading, error } = useApi();
+
   const {
     categories,
     list,
     create: createCategory,
     remove: removeCategory,
   } = useCategory();
-  const [error, setError] = useState<unknown>(null);
+  const [listError, setListError] = useState<ApiError | null>(null);
   const [newName, setNewName] = useState("");
   const [open, setOpen] = useState(false);
 
   const [pendingDelete, setPendingDelete] = useState<Category | null>(null);
-  const [deleting, setDeleting] = useState(false);
-  const errorMessage =
-    error instanceof Error
-      ? error.message
-      : error == null
-        ? null
-        : String(error);
 
   useEffect(() => {
-    list().catch(setError);
+    list().catch(setListError);
   }, [list]);
 
   async function create(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
-    try {
-      await createCategory({ name: newName });
+
+    const result = await run(createCategory({ name: newName }), {
+      loading: "Création de la catégorie...",
+      success: "Catégorie créée",
+      error: "Échec de la création de la catégorie",
+    });
+
+    if (result.ok) {
       setNewName("");
       setOpen(false);
-    } catch (err) {
-      setError(err);
     }
   }
 
   async function confirmRemove() {
     if (!pendingDelete) return;
-    setError(null);
-    setDeleting(true);
-    try {
-      await removeCategory(pendingDelete.id);
+
+    const result = await run(removeCategory(pendingDelete.id), {
+      loading: "Suppression de la catégorie...",
+      success: "Catégorie supprimée",
+      error: "Échec de la suppression de la catégorie",
+    });
+
+    if (result.ok) {
       setPendingDelete(null);
-    } catch (err) {
-      setError(err);
-    } finally {
-      setDeleting(false);
     }
   }
+
+  if (listError) return <div>{listError.message}</div>;
 
   return (
     <>
@@ -118,7 +120,7 @@ export default function EditCategories() {
           </CardDescription>
         </CardHeader>
         <CardContent className="max-w-none">
-          <ScrollArea className="rounded-md border [&>[data-slot=scroll-area-viewport]]:max-h-122">
+          <ScrollArea className="rounded-md border *:data-[slot=scroll-area-viewport]:max-h-122">
             <div className="flex flex-col p-2">
               {categories.length !== 0 ? (
                 categories.map((c, index) => (
@@ -160,7 +162,7 @@ export default function EditCategories() {
           </>
         }
         onConfirm={confirmRemove}
-        loading={deleting}
+        loading={loading}
         error={error}
       />
     </>

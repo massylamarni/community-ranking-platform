@@ -42,7 +42,9 @@ describe("CommentSection", () => {
     it("asks logged-out users to log in and shows no comment form", () => {
       renderSection({ currentUser: null });
 
-      expect(screen.getByText("Log in to join the discussion.")).not.toBeNull();
+      expect(
+        screen.getByText("Connectez-vous pour participer à la discussion."), // TODO
+      ).not.toBeNull();
       expect(screen.queryByRole("form", { name: "Comment form" })).toBeNull();
     });
 
@@ -56,7 +58,7 @@ describe("CommentSection", () => {
 
         const form = screen.queryByRole("form", { name: "Comment form" });
         const ownWorkMessage = screen.queryByText(
-          /can't add a top-level comment on your own work/,
+          "Vous ne pouvez pas ajouter de commentaire de premier niveau sur votre propre travail, mais vous pouvez répondre à ceux des autres.", // TODO
         );
 
         expect(form !== null).toBe(canComment);

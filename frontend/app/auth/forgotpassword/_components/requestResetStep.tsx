@@ -2,8 +2,6 @@
 
 import { useState } from "react";
 import { useAuth } from "@/hooks/use-auth";
-import type { ApiErrorBody } from "@/types/api";
-import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -19,6 +17,7 @@ import {
   FieldGroup,
   FieldLabel,
 } from "@/components/ui/field";
+import { useApi } from "@/hooks";
 
 type RequestResetStepProps = {
   onSent: () => void;
@@ -26,29 +25,19 @@ type RequestResetStepProps = {
 
 export function RequestResetStep({ onSent }: RequestResetStepProps) {
   const { forgotPassword } = useAuth();
+  const { run, loading, error } = useApi();
+
   const [email, setEmail] = useState("");
-  const [error, setError] = useState<ApiErrorBody | null>(null);
-  const [loading, setLoading] = useState(false);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setError(null);
-    setLoading(true);
-    const promise = forgotPassword({ email });
-    toast.promise(promise, {
+    const res = await run(forgotPassword({ email }), {
       loading: "Demande de réinitialisation du mot de passe...",
       success:
         "Si cette adresse est enregistrée, un e-mail de réinitialisation sera envoyé.",
-      error: (err) => err?.message ?? "Échec de la demande de réinitialisation",
+      error: "Échec de la demande de réinitialisation",
     });
-    try {
-      await promise;
-      onSent();
-    } catch (err) {
-      setError(err as ApiErrorBody);
-    } finally {
-      setLoading(false);
-    }
+    if (res.ok) onSent();
   }
 
   return (

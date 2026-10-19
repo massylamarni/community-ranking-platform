@@ -37,3 +37,16 @@ build/
 .env
 
 /uploads/
+!/uploads/
+/uploads/*
+!/uploads/works/
+/uploads/works/*
+!/uploads/works/le-cri-silencieux.jpg
+!/uploads/works/lumiere-d-automne.jpg
+!/uploads/works/fragments-d-acier.jpg
+!/uploads/works/melodie-inachevee.jpg
+!/uploads/works/urbanisme-poetique.jpg
+!/uploads/works/eclats-de-lumiere.jpg
+!/uploads/works/jardin-de-silence.jpg
+!/uploads/works/matiere-vivante.jpg
+!/uploads/works/ville-en-mouvement.jpg

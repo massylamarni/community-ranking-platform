@@ -15,42 +15,41 @@ import { useAuth } from "@/hooks/use-auth";
 import Link from "next/link";
 import { ButtonGroup } from "@/components/ui/button-group";
 import { Eye, EyeClosed } from "lucide-react";
-import { toast } from "sonner";
-import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
-import { ApiErrorBody } from "@/types/api";
-import { useRouter } from "next/navigation";
+import {
+  Field,
+  FieldError,
+  FieldGroup,
+  FieldLabel,
+} from "@/components/ui/field";
+import { usePathname } from "next/navigation";
+import { safeRedirectPath, successUrl } from "@/lib/routes";
+import { useApi } from "@/hooks";
 
 export default function Login() {
-  const router = useRouter();
+  const pathname = usePathname();
   const { login } = useAuth();
+  const { run, loading, error } = useApi();
+
   const [loginForm, setLoginForm] = useState({
     username: "alice",
     password: "Password123!",
   });
-  const [authError, setAuthError] = useState<ApiErrorBody | null>(null);
-  const [authBusy, setAuthBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-    setAuthError(null);
-    setAuthBusy(true);
-
-    const promise = login(loginForm);
-
-    toast.promise(promise, {
+    const res = await run(login(loginForm), {
       loading: "Connexion à votre compte...",
-      success: () => "Connexion réussie",
-      error: (err) => err?.message ?? "Échec de la connexion",
+      success: "Connexion réussie",
+      error: "Échec de la connexion",
     });
-
-    try {
-      await promise;
-    } catch (err) {
-      setAuthError(err as ApiErrorBody);
-    } finally {
-      setAuthBusy(false);
-      router.push(`/works/mine`);
+    if (res.ok) {
+      const user = res.data;
+      const from = safeRedirectPath(
+        new URLSearchParams(window.location.search).get("from"),
+      );
+      const target = from ?? successUrl(pathname, user?.role ?? "visitor");
+      window.location.replace(target);
     }
   }
 
@@ -59,8 +58,12 @@ export default function Login() {
       <CardHeader>
         <CardTitle>Connectez-vous à votre compte</CardTitle>
         <CardAction>
-          <Button variant="link">
-            <Link href="/auth/register">Créer un compte</Link>
+          <Button
+            variant="link"
+            nativeButton={false}
+            render={<Link href="/auth/register" />}
+          >
+            Créer un compte
           </Button>
         </CardAction>
       </CardHeader>
@@ -108,11 +111,12 @@ export default function Login() {
                 </Button>
               </ButtonGroup>
             </Field>
+            <FieldError>{error?.message}</FieldError>
           </FieldGroup>
         </form>
       </CardContent>
       <CardFooter>
-        <Button type="submit" form="login-form" disabled={authBusy}>
+        <Button type="submit" form="login-form" disabled={loading}>
           Se connecter
         </Button>
       </CardFooter>

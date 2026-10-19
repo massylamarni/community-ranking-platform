@@ -19,7 +19,7 @@ jest.mock("@/app/comments/_components/commentForm", () => ({
 
 function renderItem(
   viewer: CommentViewer,
-  comment = buildComment({ author: { username: "alice" } }),
+  comment = buildComment({ author: { id: 2, username: "alice" } }),
 ) {
   return render(
     <CommentItem
@@ -82,11 +82,11 @@ describe("CommentItem", () => {
       const reply = buildComment({
         id: 2,
         content: "A reply",
-        author: { username: "bob" },
+        author: { id: 3, username: "bob" },
       });
       const parent = buildComment({
         id: 1,
-        author: { username: "alice" },
+        author: { id: 2, username: "alice" },
         replies: [reply],
       });
 
@@ -113,7 +113,7 @@ describe("CommentItem", () => {
     it("swaps the text for a prefilled form and hides the action buttons", async () => {
       const comment = buildComment({
         content: "Original text",
-        author: { username: "alice" },
+        author: { id: 2, username: "alice" },
       });
       renderItem({ username: "alice", isAdmin: false }, comment);
 

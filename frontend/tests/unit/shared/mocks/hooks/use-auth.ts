@@ -1,5 +1,10 @@
 import type { CurrentUser } from "@/types/api";
 
 export const mockUseAuth = jest.fn(() => ({
-  user: null as CurrentUser | null,
+  user: {
+    id: 2,
+    username: "alice",
+    email: "alice@e.c",
+    role: "user",
+  } as CurrentUser | null,
 }));

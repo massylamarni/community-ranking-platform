@@ -2,7 +2,7 @@
 Feature: Suppression d'une catégorie
 
   Scenario: Un administrateur supprime une catégorie vide
-    Given un administrateur est authentifié
+    Given je suis connecté en tant que "Administrateur"
     And la catégorie "Science-fiction" existe
     And aucune œuvre n'est associée à cette catégorie
     When l'administrateur supprime la catégorie "Science-fiction"

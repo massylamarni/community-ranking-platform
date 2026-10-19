@@ -1,11 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { ImagePlus, X } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { AttachmentUploader } from "@/components/attachmentUploader";
+import { useApi } from "@/hooks";
 
 export function CommentForm({
   initialContent = "",
@@ -24,28 +23,30 @@ export function CommentForm({
   onSubmit: (content: string, image: File | null) => Promise<void>;
   onCancel?: () => void;
 }) {
+  const { run, loading, error } = useApi();
+
   const [content, setContent] = useState(initialContent);
   const [image, setImage] = useState<File | null>(null);
   const [uploaderKey, setUploaderKey] = useState(0);
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<unknown>(null);
+  const [validationError, setValidationError] = useState<string | null>(null);
 
   async function handleSubmit() {
     if (!content.trim()) {
-      setError("Comment cannot be empty.");
+      setValidationError("Le commentaire ne peut pas être vide.");
       return;
     }
-    setSubmitting(true);
-    setError(null);
-    try {
-      await onSubmit(content, image);
+    setValidationError(null);
+
+    const result = await run(onSubmit(content, image), {
+      loading: "Envoi du commentaire...",
+      success: "Commentaire envoyé",
+      error: "Échec de l'envoi du commentaire",
+    });
+
+    if (result.ok) {
       setContent("");
       setImage(null);
       setUploaderKey((k) => k + 1);
-    } catch (err) {
-      setError(err);
-    } finally {
-      setSubmitting(false);
     }
   }
 
@@ -57,13 +58,10 @@ export function CommentForm({
         onChange={(e) => setContent(e.target.value)}
         placeholder={placeholder}
         rows={3}
-        disabled={submitting}
+        disabled={loading}
       />
-      {/* error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )*/}
+      {validationError && <div>{validationError}</div>}
+      {error && <div>{error.message}</div>}
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           {allowImage && (
@@ -89,12 +87,12 @@ export function CommentForm({
               variant="ghost"
               size="sm"
               onClick={onCancel}
-              disabled={submitting}
+              disabled={loading}
             >
               Cancel
             </Button>
           )}
-          <Button size="sm" onClick={handleSubmit} disabled={submitting}>
+          <Button size="sm" onClick={handleSubmit} disabled={loading}>
             {submitLabel}
           </Button>
         </div>

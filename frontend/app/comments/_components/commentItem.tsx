@@ -3,13 +3,12 @@
 import { useState } from "react";
 import Image from "next/image";
 import { Pencil, Reply, Trash2 } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import type { Comment, CreateCommentPayload } from "@/types/api";
 import { CommentForm } from "./commentForm";
-import { Label } from "@/components/ui/label";
 import { ConfirmDialog } from "@/components/confirmDialog";
+import { useApi } from "@/hooks";
 
 export interface CommentViewer {
   username?: string | null;
@@ -42,23 +41,23 @@ export function CommentItem({
   viewer: CommentViewer;
   actions: CommentActions;
 }) {
+  const { run, loading, error } = useApi();
   const [replying, setReplying] = useState(false);
   const [editing, setEditing] = useState(false);
-  const [deleteError, setDeleteError] = useState<unknown>(null);
-  const [loadingDelete, setLoadingDelete] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const username = comment.author.username;
   const isAuthor = !!viewer.username && viewer.username === username;
   const canDelete = isAuthor || viewer.isAdmin;
 
   async function handleDelete() {
-    setDeleteError(null);
-    try {
-      await actions.remove(comment.id);
-    } catch (err) {
-      setDeleteError(err);
-    }
+    const result = await run(actions.remove(comment.id), {
+      loading: "Suppression du commentaire...",
+      success: "Commentaire supprimé",
+      error: "Échec de la suppression du commentaire",
+    });
+
+    if (result.ok) setConfirmingDelete(false);
   }
 
   return (
@@ -134,7 +133,7 @@ export function CommentItem({
                   variant="ghost"
                   size="sm"
                   className="p-2 text-muted-foreground"
-                  onClick={() => setLoadingDelete(true)}
+                  onClick={() => setConfirmingDelete(true)}
                   aria-label="Delete comment"
                 >
                   <Trash2 />
@@ -143,11 +142,7 @@ export function CommentItem({
             </div>
           )}
 
-          {/* deleteError && (
-            <Alert variant="destructive">
-              <AlertDescription>{deleteError}</AlertDescription>
-            </Alert>
-          )*/}
+          {error && <div>{error.message}</div>}
 
           {replying && (
             <CommentForm
@@ -184,8 +179,8 @@ export function CommentItem({
       )}
 
       <ConfirmDialog
-        open={!!loadingDelete}
-        onOpenChange={(isOpen) => !isOpen && setLoadingDelete(false)}
+        open={!!confirmingDelete}
+        onOpenChange={(isOpen) => !loading && setConfirmingDelete(isOpen)}
         title="Supprimer le commentaire ?"
         description={
           <>
@@ -195,7 +190,7 @@ export function CommentItem({
         }
         onConfirm={handleDelete}
         loading={loading}
-        error={deleteError}
+        error={error?.message}
       />
     </div>
   );

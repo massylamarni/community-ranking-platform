@@ -35,6 +35,7 @@ class ModerationControllerTest {
         ).setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver()).build();
 
         User author = new User();
+        author.setUserId(1);
         author.setUsername("alice");
 
         oeuvre = new Oeuvre();
@@ -55,7 +56,8 @@ class ModerationControllerTest {
         mockMvc.perform(get("/moderation/works"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").value(12))
-                .andExpect(jsonPath("$.content[0].author").value("alice"))
+                .andExpect(jsonPath("$.content[0].author.id").value(1))
+                .andExpect(jsonPath("$.content[0].author.username").value("alice"))
                 .andExpect(jsonPath("$.content[0].status").value("pending"))
                 .andExpect(jsonPath("$.content[0].oeuvreId").doesNotExist())
                 .andExpect(jsonPath("$.content[0].author.passwordHash").doesNotExist());
@@ -69,7 +71,8 @@ class ModerationControllerTest {
         mockMvc.perform(post("/moderation/works/12/accept"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(12))
-                .andExpect(jsonPath("$.author").value("alice"))
+                .andExpect(jsonPath("$.author.id").value(1))
+                .andExpect(jsonPath("$.author.username").value("alice"))
                 .andExpect(jsonPath("$.status").value("approved"))
                 .andExpect(jsonPath("$.oeuvreId").doesNotExist());
     }

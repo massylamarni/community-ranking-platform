@@ -15,16 +15,7 @@ export interface ListWorksQuery {
 }
 
 export function normalizeWorkResponse(response: WorkResponse): Work {
-  return {
-    id: response.id,
-    title: response.title,
-    description: response.description,
-    status: response.status,
-    author: response.author,
-    imageUrl: response.imageUrl,
-    categories: response.categories,
-    totalVotes: response.totalVotes,
-  };
+  return response;
 }
 
 function createFormData(payload: CreateWorkPayload): FormData {

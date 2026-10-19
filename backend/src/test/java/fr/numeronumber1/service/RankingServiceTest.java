@@ -105,7 +105,8 @@ class RankingServiceTest {
         assertEquals("B", first.getTitle());
         assertEquals(15, first.getScore());
         assertEquals(1, first.getPosition());
-        assertEquals("artist1", first.getAuthor());
+        assertEquals(1, first.getAuthor().id());
+        assertEquals("artist1", first.getAuthor().username());
         assertEquals(List.of("Photographie"), first.getCategories());
 
         RankingItemResponse second = result.getContent().get(1);

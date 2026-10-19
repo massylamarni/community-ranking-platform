@@ -1,13 +1,11 @@
-// app/works/[id]/edit/page.tsx
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import type { ApiErrorBody, Work } from "@/types/api";
-import { useWorks } from "@/hooks/use-work";
+import { useParams } from "next/navigation";
+import type { Work } from "@/types/api";
 import { useCategory } from "@/contexts/categoryContext";
 import AuthorWorkGuard from "../../_components/guards/authorWorkGuard";
-import { WorkEdit, type WorkFormData } from "../../_components/workEdit";
+import { WorkEdit } from "../../_components/workEdit";
+import { ApiError } from "@/lib/errors";
 
 export default function EditWork() {
   const { id } = useParams<{ id: string }>();
@@ -22,64 +20,11 @@ export default function EditWork() {
 
 function EditWorkForm({
   work,
-  initialErrors,
 }: {
   work: Work;
-  initialErrors: ApiErrorBody | null;
+  initialErrors: ApiError | null;
 }) {
-  const router = useRouter();
-  const { submit, update, uploadImage, remove } = useWorks();
   const { categories } = useCategory();
-  const [errors, setErrors] = useState<ApiErrorBody | null>(initialErrors);
 
-  async function handleSave(data: WorkFormData) {
-    setErrors(null);
-    try {
-      const updated = await update(work.id, {
-        title: data.title,
-        description: data.description,
-        categoryIds: data.categoryIds,
-      });
-      return data.image ? await uploadImage(work.id, data.image) : updated;
-    } catch (err) {
-      setErrors(err as ApiErrorBody);
-      return undefined;
-    }
-  }
-
-  async function handlePublish(data: WorkFormData) {
-    setErrors(null);
-    try {
-      await submit(work.id, {
-        title: data.title,
-        description: data.description,
-        categoryIds: data.categoryIds ?? [0],
-      });
-      if (data.image) await uploadImage(work.id, data.image);
-      router.push("/works/mine");
-    } catch (err) {
-      setErrors(err as ApiErrorBody);
-    }
-  }
-
-  async function handleRemove() {
-    setErrors(null);
-    try {
-      await remove(work.id);
-      router.push("/works/mine");
-    } catch (err) {
-      setErrors(err as ApiErrorBody);
-    }
-  }
-
-  return (
-    <WorkEdit
-      work={work}
-      categories={categories}
-      errors={errors}
-      handleSave={handleSave}
-      handlePublish={handlePublish}
-      handleRemove={handleRemove}
-    />
-  );
+  return <WorkEdit type="edit" work={work} categories={categories} />;
 }

@@ -58,6 +58,7 @@ class CategoryControllerTest {
         category.setName("Design");
 
         User author = new User();
+        author.setUserId(1);
         author.setUsername("alice");
         Oeuvre oeuvre = new Oeuvre();
         oeuvre.setOeuvreId(12L);
@@ -79,7 +80,8 @@ class CategoryControllerTest {
                 .andExpect(jsonPath("$.id").value("7"))
                 .andExpect(jsonPath("$.name").value("Design"))
                 .andExpect(jsonPath("$.works[0].id").value(12))
-                .andExpect(jsonPath("$.works[0].author").value("alice"))
+                .andExpect(jsonPath("$.works[0].author.id").value(1))
+                .andExpect(jsonPath("$.works[0].author.username").value("alice"))
                 .andExpect(jsonPath("$.categoryId").doesNotExist())
                 .andExpect(jsonPath("$.oeuvreCategories").doesNotExist())
                 .andExpect(jsonPath("$.works[0].oeuvreId").doesNotExist())
@@ -89,6 +91,7 @@ class CategoryControllerTest {
     @Test
     void categoryWorks_returnsOeuvreResponseDtos() throws Exception {
         User author = new User();
+        author.setUserId(1);
         author.setUsername("alice");
 
         Oeuvre oeuvre = new Oeuvre();
@@ -104,7 +107,8 @@ class CategoryControllerTest {
         mockMvc.perform(get("/categories/7/works"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].id").value(12))
-                .andExpect(jsonPath("$.content[0].author").value("alice"))
+                .andExpect(jsonPath("$.content[0].author.id").value(1))
+                .andExpect(jsonPath("$.content[0].author.username").value("alice"))
                 .andExpect(jsonPath("$.content[0].oeuvreId").doesNotExist())
                 .andExpect(jsonPath("$.content[0].oeuvreCategories").doesNotExist());
     }
