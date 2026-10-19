@@ -1,0 +1,30 @@
+# language: en
+Feature: Création d'un compte
+
+  Scenario: Créer un compte avec des informations valides
+    Given un visiteur est sur la page de création de compte
+    When il saisit le pseudo "alice"
+    And il saisit l'adresse e-mail "alice@example.com"
+    And il saisit le mot de passe "MotDePasse123!"
+    And il valide le formulaire
+    Then le compte "alice" est créé
+    And un message de confirmation est affiché
+    And l'utilisateur peut se connecter avec ses identifiants
+
+  Scenario: Refuser la création d'un compte sans pseudo
+    Given un visiteur est sur la page de création de compte
+    When il ne saisit pas de pseudo
+    And il saisit l'adresse e-mail "alice@example.com"
+    And il saisit le mot de passe "MotDePasse123!"
+    And il valide le formulaire
+    Then le compte n'est pas créé
+    And un message indique que le pseudo est obligatoire
+
+  Scenario: Refuser la création d'un compte avec une adresse e-mail invalide
+    Given un visiteur est sur la page de création de compte
+    When il saisit le pseudo "alice"
+    And il saisit l'adresse e-mail "invalide"
+    And il saisit le mot de passe "MotDePasse123!"
+    And il valide le formulaire
+    Then le compte n'est pas créé
+    And un message indique que l'adresse e-mail est invalide

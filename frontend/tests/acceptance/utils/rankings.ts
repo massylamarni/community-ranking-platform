@@ -7,6 +7,88 @@ export interface ScenarioRankingWork {
   score: number;
 }
 
+interface RankingTableRow {
+  cells: Array<{ value: string }>;
+}
+
+export interface RankingWorksTable {
+  hashes?: () => Array<Record<string, string>>;
+  dataTable?: { rows?: RankingTableRow[] };
+  rows?: RankingTableRow[];
+}
+
+export function getOrCreateRankingWorks(
+  context: Record<string, unknown>,
+  key = "rankingWorks",
+): ScenarioRankingWork[] {
+  const existing = context[key];
+  if (existing === undefined) {
+    const works: ScenarioRankingWork[] = [];
+    context[key] = works;
+    return works;
+  }
+
+  if (
+    !Array.isArray(existing) ||
+    !existing.every(
+      (work: unknown): work is ScenarioRankingWork =>
+        typeof work === "object" &&
+        work !== null &&
+        "title" in work &&
+        typeof work.title === "string" &&
+        "category" in work &&
+        typeof work.category === "string" &&
+        "score" in work &&
+        typeof work.score === "number",
+    )
+  ) {
+    throw new Error(`Invalid ranking works stored in scenario context "${key}"`);
+  }
+
+  return existing;
+}
+
+export function parseRankingWorksTable(
+  raw: RankingWorksTable | null | undefined,
+): ScenarioRankingWork[] {
+  if (!raw) return [];
+
+  if (typeof raw.hashes === "function") {
+    return raw.hashes().map((row: Record<string, string>) => ({
+      title: row["Œuvre"] ?? row["Oeuvre"] ?? row["title"] ?? row["Titre"] ?? "",
+      category: row["Catégorie"] ?? row["Categorie"] ?? row["category"] ?? "",
+      score: Number(row["Score"] ?? row["score"] ?? 0),
+    }));
+  }
+
+  const rows = raw?.dataTable?.rows ?? raw?.rows;
+  if (Array.isArray(rows) && rows.length > 1) {
+    const headers = rows[0].cells.map((cell) => cell.value);
+    const results: ScenarioRankingWork[] = [];
+    for (let i = 1; i < rows.length; i++) {
+      const values = rows[i].cells.map((cell) => cell.value);
+      const rowObj: Record<string, string> = {};
+      headers.forEach((header: string, index: number) => {
+        rowObj[header] = values[index] ?? "";
+      });
+      results.push({
+        title:
+          rowObj["Œuvre"] ??
+          rowObj["Oeuvre"] ??
+          rowObj["title"] ??
+          rowObj["Titre"] ??
+          "",
+        category:
+          rowObj["Catégorie"] ?? rowObj["Categorie"] ?? rowObj["category"] ?? "",
+        score: Number(rowObj["Score"] ?? rowObj["score"] ?? 0),
+      });
+    }
+    return results;
+  }
+
+  return [];
+}
+
 export function buildRankingSpringPage(
   items: ScenarioRankingWork[],
 ): SpringPage<RankingEntry> {

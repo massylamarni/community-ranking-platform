@@ -5,7 +5,7 @@ import { act, renderHook } from "@testing-library/react";
 import { useComments } from "@/hooks/use-comments";
 import { buildComment } from "@/tests/unit/shared/factories/comment";
 import { buildCommentPage } from "@/tests/unit/shared/factories/commentPage";
-import { mockCommentsRepository } from "@/tests/unit/shared/mocks/commentsRepository";
+import { mockCommentsRepository } from "@/tests/unit/shared/mocks/repositories/commentsRepository";
 
 jest.mock("@/repositories", () => ({
   commentsRepository: {
