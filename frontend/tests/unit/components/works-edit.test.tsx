@@ -15,6 +15,7 @@ import { WorkEdit } from "@/app/works/_components/workEdit";
 import { mockUser } from "../shared/mocks/auth";
 import { cat, mockCategoriesState } from "../shared/mocks/categories";
 import { mockUploadFile } from "../shared/mocks/ui";
+import { ApiError } from "@/lib/errors";
 
 // Polyfill for BaseUI click controls
 if (typeof window !== "undefined" && !window.PointerEvent) {
@@ -94,7 +95,7 @@ function setup(
         categories: ["Movie"],
       })}
       categories={categories}
-      errors={null}
+      initialError={null}
       handleSave={handleSave}
       handlePublish={handlePublish}
       handleRemove={handleRemove}
@@ -196,7 +197,7 @@ describe("WorkEdit", () => {
 
     it("renders field errors from the API", () => {
       setup({
-        errors: {
+        initialError: new ApiError({
           status: 422,
           error: "Validation failed",
           fields: {
@@ -204,7 +205,7 @@ describe("WorkEdit", () => {
             description: "Description requise",
             categoryIds: "Catégorie invalide",
           },
-        },
+        }),
       });
       expect(screen.getByText("Titre requis")).toBeDefined();
       expect(screen.getByText("Description requise")).toBeDefined();
