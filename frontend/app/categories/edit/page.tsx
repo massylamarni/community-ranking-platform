@@ -52,9 +52,9 @@ export default function EditCategories() {
     e.preventDefault();
 
     const result = await run(createCategory({ name: newName }), {
-      loading: "Creating category...",
-      success: "Category created",
-      error: "Failed to create category",
+      loading: "Création de la catégorie...",
+      success: "Catégorie créée",
+      error: "Échec de la création de la catégorie",
     });
 
     if (result.ok) {
@@ -67,9 +67,9 @@ export default function EditCategories() {
     if (!pendingDelete) return;
 
     const result = await run(removeCategory(pendingDelete.id), {
-      loading: "Deleting category...",
-      success: "Category deleted",
-      error: "Failed to delete category",
+      loading: "Suppression de la catégorie...",
+      success: "Catégorie supprimée",
+      error: "Échec de la suppression de la catégorie",
     });
 
     if (result.ok) {

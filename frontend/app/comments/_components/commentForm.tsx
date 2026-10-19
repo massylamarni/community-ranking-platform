@@ -32,15 +32,15 @@ export function CommentForm({
 
   async function handleSubmit() {
     if (!content.trim()) {
-      setValidationError("Comment cannot be empty.");
+      setValidationError("Le commentaire ne peut pas être vide.");
       return;
     }
     setValidationError(null);
 
     const result = await run(onSubmit(content, image), {
-      loading: "Posting comment...",
-      success: "Comment posted",
-      error: "Failed to post comment",
+      loading: "Envoi du commentaire...",
+      success: "Commentaire envoyé",
+      error: "Échec de l'envoi du commentaire",
     });
 
     if (result.ok) {

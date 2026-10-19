@@ -30,7 +30,7 @@ export default function ModerationPage() {
   const load = useCallback(
     () =>
       run(pendingWorks(1, PAGE_SIZE), {
-        error: "Failed to load pending works",
+        error: "Échec du chargement des œuvres en attente",
       }),
     [run, pendingWorks],
   );
@@ -43,9 +43,9 @@ export default function ModerationPage() {
   async function handleAccept(work: Work) {
     setAcceptingId(work.id);
     await run(accept(work.id), {
-      loading: "Accepting work...",
-      success: "Work accepted",
-      error: "Failed to accept work",
+      loading: "Acceptation de l'œuvre...",
+      success: "Œuvre accepté",
+      error: "Échec de l'acceptation de l'œuvre",
     });
     setAcceptingId(null);
   }
@@ -53,9 +53,9 @@ export default function ModerationPage() {
   async function handleRefuse(work: Work, reason: string) {
     setRefusingId(work.id);
     await run(refuse(work.id, { reason: reason.trim() || undefined }), {
-      loading: "Refusing work...",
-      success: "Work refused",
-      error: "Failed to refuse work",
+      loading: "Refus de l'œuvre...",
+      success: "Œuvre refusé",
+      error: "Échec du refus de l'œuvre",
     });
     setRefusingId(null);
   }
