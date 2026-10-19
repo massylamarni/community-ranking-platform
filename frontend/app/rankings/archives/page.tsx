@@ -10,7 +10,7 @@ import {
   tableFeatures,
   useTable,
 } from "@tanstack/react-table";
-import { AlertCircle, History, RefreshCw } from "lucide-react";
+import { AlertCircle, RefreshCw } from "lucide-react";
 import { cn } from "cn";
 import { useCategories, useRankings } from "@/hooks";
 import type { RankingEntry } from "@/types/api";
@@ -301,7 +301,7 @@ function RankingArchivesContent() {
     ? Math.min((pageIndex + 1) * PAGE_SIZE, ranking.total)
     : 0;
 
-  const loading = rankingsLoading;
+  const loading = rankingsLoading || categoriesLoading;
   const errorMessage = rankingsError
     ? "Impossible de charger les classements archivés. Veuillez vérifier votre connexion ou réessayer."
     : null;

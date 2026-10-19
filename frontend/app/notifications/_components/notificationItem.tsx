@@ -79,7 +79,7 @@ export function NotificationItem({
 
         <ItemDescription
           className={cn(
-            "line-clamp-none break-words",
+            "line-clamp-none wrap-break-word",
             unread && "font-medium text-foreground",
           )}
         >

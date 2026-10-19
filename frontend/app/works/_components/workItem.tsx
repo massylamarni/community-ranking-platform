@@ -12,14 +12,15 @@ import {
 } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { votesRepository } from "@/repositories";
-import { ApiErrorBody, VoteForWorkReponse, Work } from "@/types/api";
+import { VoteForWorkReponse, Work } from "@/types/api";
 import { ArrowBigDown, ArrowBigUp, MessageSquare } from "lucide-react";
 import Image from "next/image";
 import { ReactNode, useState } from "react";
 import { CommentSection } from "../../comments/_components/commentSection";
 import WorkNotFoundGuard from "./guards/workNotFoundGuard";
-import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { ApiError } from "@/lib/errors";
+import { useApi } from "@/hooks";
 
 export type WorkLike = Pick<
   Work,
@@ -30,10 +31,11 @@ export type WorkLike = Pick<
 export function WorkItem<T extends WorkLike = Work>({
   work,
   setWork,
-  setSelectedWork,
+  // setSelectedWork,
   children,
   statusChildren,
   showComments = true,
+  // initialError,
 }: {
   work: T | null;
   setWork?: (work: Work) => void | undefined;
@@ -41,27 +43,27 @@ export function WorkItem<T extends WorkLike = Work>({
   children?: ReactNode;
   statusChildren?: ReactNode;
   showComments?: boolean;
+  initialError?: ApiError | null;
 }) {
   const { user } = useAuth();
-  const [errors, setErrors] = useState<ApiErrorBody | null>(null);
+  const { run, loading } = useApi();
   const [vote, setVote] = useState<VoteForWorkReponse | null>(null);
   const [commentsOpen, setCommentsOpen] = useState(false);
 
   async function handleVote(vt: 1 | -1) {
     if (!work || !setWork) return;
-    setErrors(null);
 
     const next = vote?.value === vt ? null : vt;
+    const result = await run(votesRepository.vote(work.id, { value: next }), {
+      error: "Échec de l'enregistrement du vote",
+    });
 
-    try {
-      const updated = await votesRepository.vote(work.id, { value: next });
-      setWork(updated.oeuvre);
-      setVote(updated);
-    } catch (err) {
-      setErrors(err as ApiErrorBody);
+    if (result.ok) {
+      setWork(result.data.oeuvre);
+      setVote(result.data);
     }
   }
-  const disableVote = !setWork || !user;
+  const disableVote = !setWork || !user || !loading;
   const handleCardClick = undefined; //() => setSelectedWork ? setSelectedWork(work) : null;
 
   if (!work) return <WorkNotFoundGuard />;
@@ -128,16 +130,6 @@ export function WorkItem<T extends WorkLike = Work>({
               {(work.totalVotes - work.score) / 2}
             </Button>
           </ButtonGroup>
-          {showComments && (
-            <Button
-              variant={commentsOpen ? "secondary" : "outline"}
-              onClick={() => setCommentsOpen((v) => !v)}
-              aria-expanded={commentsOpen}
-            >
-              <MessageSquare />
-              Comments
-            </Button>
-          )}
           {showComments && (
             <Button
               variant={commentsOpen ? "secondary" : "outline"}

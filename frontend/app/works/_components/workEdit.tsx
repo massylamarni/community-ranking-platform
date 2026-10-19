@@ -22,8 +22,10 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import VerticalList from "@/components/vertical-list";
 import { useCategory } from "@/contexts/categoryContext";
+import { useApi, useWorks } from "@/hooks";
 import { isAdmin, useAuth } from "@/hooks/use-auth";
-import { ApiErrorBody, Category, Work } from "@/types/api";
+import { Category, Work } from "@/types/api";
+import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 
 const DEFAULT_WORK: Work = {
@@ -47,34 +49,32 @@ export type WorkFormData = {
 };
 
 export function WorkEdit({
+  type,
   work,
   categories,
-  errors,
-  handleSave,
-  handlePublish,
-  handleRemove,
 }: {
+  type: "create" | "edit";
   work: Work | null;
   categories: Category[] | null;
-  errors: ApiErrorBody | null;
-  handleSave: (data: WorkFormData) => Promise<Work | void>;
-  handlePublish?: (data: WorkFormData) => Promise<void>;
-  handleRemove?: () => Promise<void>;
 }) {
   const { user } = useAuth();
+  const router = useRouter();
+
+  const { run, error, loading } = useApi();
   const { categories: categoriesForAdmin } = useCategory();
-  const isEdit = !!handleRemove;
+  const { submit, update, uploadImage, remove, create } = useWorks();
+
   const [newWork, setNewWork] = useState<Work>(work ?? DEFAULT_WORK);
   const [selectedCategories, setSelectedCategories] = useState<string[]>(
     work?.categories ?? [],
   );
   const [image, setImage] = useState<File | null>(null);
-  const [loadingDelete, setLoadingDelete] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [categoryError, setCategoryError] = useState("");
   const asAdmin = isAdmin(user);
 
-  const categoryIds = (categories ?? [])
+  const availableCategories = asAdmin ? categoriesForAdmin : (categories ?? []);
+  const categoryIds = availableCategories
     .filter((category) => selectedCategories.includes(category.name))
     .map((category) => category.id);
 
@@ -87,51 +87,99 @@ export function WorkEdit({
     );
   }
 
-  async function onSubmit(e: FormEvent) {
+  const formData = {
+    title: newWork.title,
+    description: newWork.description,
+    image,
+    categoryIds,
+  };
+
+  async function handleCreate(e: FormEvent) {
     e.preventDefault();
-    if (!handleSave) return;
-    setLoading(true);
-    try {
-      await handleSave({
-        title: newWork.title,
-        description: newWork.description,
-        image,
-        categoryIds,
-      });
-    } finally {
-      setLoading(false);
-    }
+    const submitMessage = asAdmin
+      ? {
+          loading: "Publication de l'œuvre...",
+          success: "Œuvre publiée",
+          error: "Échec de la publication",
+        }
+      : {
+          loading: "Création du brouillon...",
+          success: "Brouillon créé",
+          error: "Échec de la création",
+        };
+    const result = await run(create(formData), submitMessage);
+    if (!result.ok) return undefined;
+    router.push(`/works/${result.data.id}/edit`);
+    return result.data;
   }
 
-  async function onPublish() {
-    if (!handlePublish) return;
+  async function handleSave(e: FormEvent) {
+    e.preventDefault();
+    if (!work) return;
+    const result = await run(
+      (async () => {
+        const updated = await update(work.id, {
+          title: formData.title,
+          description: formData.description,
+          categoryIds: formData.categoryIds,
+        });
+        return formData.image
+          ? await uploadImage(work.id, formData.image)
+          : updated;
+      })(),
+      {
+        loading: "Enregistrement du brouillon...",
+        success: "Brouillon enregistré",
+        error: "Échec de l'enregistrement",
+      },
+    );
+    return result.ok ? result.data : undefined;
+  }
+
+  async function handleRemove() {
+    if (!work) return;
+    const result = await run(remove(work.id), {
+      loading: "Suppression...",
+      success: "Œuvre supprimé",
+      error: "Échec de la suppression",
+    });
+    if (result.ok) router.push("/works/mine");
+  }
+
+  async function handlePublish() {
+    if (!work) return;
     if (categoryIds.length === 0) {
       setCategoryError(
         "Sélectionnez au moins une catégorie pour publier l'œuvre.",
       );
       return;
     }
-    setLoading(true);
-    try {
-      await handlePublish({
-        title: newWork.title,
-        description: newWork.description,
-        image,
-        categoryIds,
-      });
-    } finally {
-      setLoading(false);
-    }
+    const result = await run(
+      (async () => {
+        await submit(work.id, {
+          title: formData.title,
+          description: formData.description,
+          categoryIds: formData.categoryIds ?? [0],
+        });
+        if (formData.image) await uploadImage(work.id, formData.image);
+      })(),
+      {
+        loading: "Publication de l'œuvre...",
+        success: "Œuvre publiée",
+        error: "Échec de la publication",
+      },
+    );
+    if (result.ok) router.push("/works/mine");
   }
 
-  const fe = errors?.fields ?? {};
   const canEdit =
     !work || work.status === "created" || work.status === "rejected";
   const canPublish =
     work && (work.status === "created" || work.status === "rejected");
+  const isEdit = type === "edit";
 
   return (
-    <form onSubmit={onSubmit} className="w-full">
+    <form onSubmit={isEdit ? handleSave : handleCreate} className="w-full">
       <VerticalList>
         <Card>
           <CardContent>
@@ -146,7 +194,7 @@ export function WorkEdit({
                   }
                   required
                 />
-                {fe.title && <FieldError>{fe.title}</FieldError>}
+                <FieldError>{error?.fields?.title}</FieldError>
               </Field>
               <Field>
                 <FieldLabel>Description de l&apos;œuvre</FieldLabel>
@@ -158,15 +206,15 @@ export function WorkEdit({
                   }
                   required
                 />
-                {fe.description && <FieldError>{fe.description}</FieldError>}
+                <FieldError>{error?.fields?.description}</FieldError>
               </Field>
-              {work && !asAdmin && (
+              {(asAdmin || work) && (
                 <Field>
                   <FieldLabel>Sélectionner des catégories</FieldLabel>
-                  <ScrollArea className="rounded-md border [&>[data-slot=scroll-area-viewport]]:max-h-72">
+                  <ScrollArea className="rounded-md border *:data-[slot=scroll-area-viewport]:max-h-72">
                     <div className="flex flex-col gap-2 p-2">
-                      {categories?.length ? (
-                        categories.map((cat) => (
+                      {availableCategories.length ? (
+                        availableCategories.map((cat) => (
                           <Field key={cat.id} orientation="horizontal">
                             <Checkbox
                               id={`category-${cat.id}`}
@@ -186,40 +234,9 @@ export function WorkEdit({
                       )}
                     </div>
                   </ScrollArea>
-                  {(fe.categoryIds || categoryError) && (
-                    <FieldError>{fe.categoryIds ?? categoryError}</FieldError>
-                  )}
-                </Field>
-              )}
-              {asAdmin && (
-                <Field>
-                  <FieldLabel>Sélectionner des catégories</FieldLabel>
-                  <ScrollArea className="rounded-md border [&>[data-slot=scroll-area-viewport]]:max-h-72">
-                    <div className="flex flex-col gap-2 p-2">
-                      {categoriesForAdmin.length ? (
-                        categoriesForAdmin.map((cat) => (
-                          <Field key={cat.id} orientation="horizontal">
-                            <Checkbox
-                              id={`category-${cat.id}`}
-                              name={String(cat.id)}
-                              checked={selectedCategories.includes(cat.name)}
-                              onCheckedChange={() =>
-                                toggleSubmitCategory(cat.name)
-                              }
-                            />
-                            <Label htmlFor={`category-${cat.id}`}>
-                              {cat.name}
-                            </Label>
-                          </Field>
-                        ))
-                      ) : (
-                        <NoCategory />
-                      )}
-                    </div>
-                  </ScrollArea>
-                  {(fe.categoryIds || categoryError) && (
-                    <FieldError>{fe.categoryIds ?? categoryError}</FieldError>
-                  )}
+                  <FieldError>
+                    {error?.fields?.categoryIds ?? categoryError}
+                  </FieldError>
                 </Field>
               )}
               <AttachmentUploader
@@ -244,8 +261,8 @@ export function WorkEdit({
                   ? "Enregistrer le brouillon"
                   : "Créer le brouillon"}
             </Button>
-            {canPublish && handlePublish && (
-              <Button type="button" onClick={onPublish} disabled={loading}>
+            {canPublish && (
+              <Button type="button" onClick={handlePublish} disabled={loading}>
                 Publier
               </Button>
             )}
@@ -266,16 +283,16 @@ export function WorkEdit({
                 <Button
                   type="button"
                   variant="destructive"
-                  onClick={() => setLoadingDelete(true)}
+                  onClick={() => setConfirmingDelete(true)}
                 >
                   Supprimer l&apos;œuvre
                 </Button>
               </CardFooter>
             </Card>
             <ConfirmDialog
-              open={!!loadingDelete}
-              onOpenChange={(isOpen) => !isOpen && setLoadingDelete(false)}
-              title="Supprimer la catégorie ?"
+              open={!!confirmingDelete}
+              onOpenChange={(isOpen) => !isOpen && setConfirmingDelete(false)}
+              title="Supprimer l'œuvre ?"
               description={
                 <>
                   Voulez-vous vraiment supprimer « {work?.title} » ? Les œuvres
@@ -284,7 +301,7 @@ export function WorkEdit({
               }
               onConfirm={handleRemove}
               loading={loading}
-              error={errors}
+              error={error?.message}
             />
           </>
         )}

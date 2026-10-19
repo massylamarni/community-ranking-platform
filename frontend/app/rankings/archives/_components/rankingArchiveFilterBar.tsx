@@ -73,11 +73,8 @@ export default function RankingArchiveFilterBar({
     (Boolean(selectedPeriod) && selectedPeriod !== defaultPeriod);
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="flex flex-wrap items-end gap-3 w-full"
-    >
-      <FieldGroup className="w-80 sm:w-[330px]">
+    <form onSubmit={onSubmit} className="flex flex-wrap items-end gap-3 w-full">
+      <FieldGroup className="w-80 sm:w-82.5">
         <Field>
           <Label
             htmlFor="period-select"

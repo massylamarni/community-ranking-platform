@@ -77,7 +77,7 @@ export const mockWorkEdit = jest.fn();
 type WorkEditProps = {
   work: Work;
   categories: unknown[];
-  errors: unknown;
+  initialError: unknown;
   handleSave: (data: {
     title: string;
     description: string;

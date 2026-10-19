@@ -48,7 +48,7 @@ export function CommentSection({
   if (!currentUser)
     return (
       <p className="text-sm text-muted-foreground">
-        Log in to join the discussion.
+        Connectez-vous pour participer à la discussion.
       </p>
     );
 
@@ -62,8 +62,8 @@ export function CommentSection({
         />
       ) : (
         <p className="text-sm text-muted-foreground">
-          You can&apos;t add a top-level comment on your own work, but you can
-          reply to others.
+          Vous ne pouvez pas ajouter de commentaire de premier niveau sur votre
+          propre travail, mais vous pouvez répondre à ceux des autres.
         </p>
       )}
 
@@ -76,11 +76,13 @@ export function CommentSection({
       )}
 
       {loading && !commentPage && (
-        <p className="text-sm text-muted-foreground">Loading...</p>
+        <p className="text-sm text-muted-foreground">Chargement...</p>
       )}
 
       {noComments && (
-        <p className="text-sm text-muted-foreground">No comments yet.</p>
+        <p className="text-sm text-muted-foreground">
+          Aucun commentaire pour l&apos;instant.
+        </p>
       )}
 
       {commentPage?.items.map((comment) => (
