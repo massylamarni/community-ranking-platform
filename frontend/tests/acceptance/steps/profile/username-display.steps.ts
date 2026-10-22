@@ -1,6 +1,10 @@
 // Feature: Affichage du pseudo
-import { Given, When, Then } from '../fixtures';
+import { resolveUsername } from "../common/shared.steps";
+import { Then } from "../fixtures";
+import { expect } from "@playwright/test";
 
-Then("le pseudo {string} est affiché", async ({ page }, arg1: string) => {
-  // TODO
+Then("le pseudo {string} est affiché", async ({ page }, username: string) => {
+  await expect(
+    page.getByText(resolveUsername(username), { exact: true }).last(),
+  ).toBeVisible();
 });
