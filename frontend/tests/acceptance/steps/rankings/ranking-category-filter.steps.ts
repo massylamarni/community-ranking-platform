@@ -25,11 +25,14 @@ Given(
   },
 );
 
-When("il sélectionne le filtre {string}", async ({ page }, filterSpec: string) => {
-  const match = filterSpec.match(/Catégorie\s*:\s*(.+)/i);
-  const categoryName = match ? match[1].trim() : filterSpec;
-  await selectCategoryFilter(page, categoryName);
-});
+When(
+  "il sélectionne le filtre {string}",
+  async ({ page }, filterSpec: string) => {
+    const match = filterSpec.match(/Catégorie\s*:\s*(.+)/i);
+    const categoryName = match ? match[1].trim() : filterSpec;
+    await selectCategoryFilter(page, categoryName);
+  },
+);
 
 When("il valide le filtre", async ({ page }) => {
   await clickFilterButton(page);

@@ -22,10 +22,13 @@ Given(
   },
 );
 
-When("l'utilisateur accède à la section des classements précédents", async ({ page }) => {
-  await page.goto("/rankings/archives");
-  await expect(page.locator("table")).toBeVisible();
-});
+When(
+  "l'utilisateur accède à la section des classements précédents",
+  async ({ page }) => {
+    await page.goto("/rankings/archives");
+    await expect(page.locator("table")).toBeVisible();
+  },
+);
 
 When("il sélectionne la semaine précédente", async ({ page }) => {
   await selectPeriodFilter(page, "Semaine");

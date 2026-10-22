@@ -31,6 +31,9 @@ When("il valide ce choix", async ({ page }) => {
   await clickFilterButton(page);
 });
 
-Then("le classement affiché est recalculé pour refléter uniquement les votes du mois en cours", async ({ page }) => {
-  await expect(page.locator("table")).toBeVisible();
-});
+Then(
+  "le classement affiché est recalculé pour refléter uniquement les votes du mois en cours",
+  async ({ page }) => {
+    await expect(page.locator("table")).toBeVisible();
+  },
+);
