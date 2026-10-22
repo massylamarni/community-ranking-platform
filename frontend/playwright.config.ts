@@ -16,6 +16,7 @@ export default defineConfig({
   forbidOnly: Boolean(process.env.CI),
   retries: process.env.CI ? 1 : 0,
   workers: process.env.CI ? 1 : undefined,
+  timeout: 10_000,
   reporter: [["html"], ["junit", { outputFile: "results/junit.xml" }]],
   use: {
     baseURL,

@@ -63,7 +63,8 @@ export function WorkItem<T extends WorkLike = Work>({
       setVote(result.data);
     }
   }
-  const disableVote = !setWork || !user || !loading;
+  const isAuthor = work?.author?.username === user?.username;
+  const disableVote = !setWork || !user || loading || isAuthor;
   const handleCardClick = undefined; //() => setSelectedWork ? setSelectedWork(work) : null;
 
   if (!work) return <WorkNotFoundGuard />;
@@ -116,6 +117,7 @@ export function WorkItem<T extends WorkLike = Work>({
               onClick={() => handleVote(1)}
               disabled={disableVote}
               aria-label="Upvote"
+              aria-pressed={vote?.value === 1}
             >
               <ArrowBigUp />
               {work.totalVotes - (work.totalVotes - work.score) / 2}
@@ -125,6 +127,7 @@ export function WorkItem<T extends WorkLike = Work>({
               onClick={() => handleVote(-1)}
               disabled={disableVote}
               aria-label="Downvote"
+              aria-pressed={vote?.value === -1}
             >
               <ArrowBigDown />
               {(work.totalVotes - work.score) / 2}

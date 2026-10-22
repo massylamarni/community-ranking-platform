@@ -1,10 +1,13 @@
 // Feature: Création d'un vote négatif
-import { Given, When, Then } from '../fixtures';
+import { When, Then } from "../fixtures";
+import { expect } from "@playwright/test";
 
 When("l'utilisateur attribue un vote négatif à l'œuvre", async ({ page }) => {
-  // TODO
+  await page.getByRole("button", { name: /Downvote/ }).click();
 });
 
 Then("le vote négatif est enregistré", async ({ page }) => {
-  // TODO
+  await expect(page.getByRole("button", { name: /Downvote/ })).toHaveClass(
+    /bg-primary/,
+  );
 });

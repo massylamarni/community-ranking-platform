@@ -9,8 +9,8 @@ import { useApi } from "@/hooks";
 export function CommentForm({
   initialContent = "",
   initialImageUrl,
-  placeholder = "Write a comment...",
-  submitLabel = "Post",
+  placeholder = "Ecrire un commentaire...",
+  submitLabel = "Publier",
   allowImage = true,
   onSubmit,
   onCancel,
@@ -93,7 +93,12 @@ export function CommentForm({
               Cancel
             </Button>
           )}
-          <Button size="sm" onClick={handleSubmit} disabled={loading}>
+          <Button
+            size="sm"
+            onClick={handleSubmit}
+            aria-label="post-comment"
+            disabled={loading}
+          >
             {submitLabel}
           </Button>
         </div>

@@ -116,7 +116,12 @@ export default function Login() {
         </form>
       </CardContent>
       <CardFooter>
-        <Button type="submit" form="login-form" disabled={loading}>
+        <Button
+          type="submit"
+          form="login-form"
+          aria-label="auth-login"
+          disabled={loading}
+        >
           Se connecter
         </Button>
       </CardFooter>
