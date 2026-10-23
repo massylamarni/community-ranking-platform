@@ -1,25 +1,12 @@
 // Feature: Création d'un commentaire
+import { loginAs, openFirstWork } from "../common/shared.steps";
 import { Given, When, Then } from "../fixtures";
 import { expect } from "@playwright/test";
-
-async function loginAsAlice(page: import("@playwright/test").Page) {
-  await page.goto("/auth/login");
-  await page.getByLabel("Nom d'utilisateur").fill("alice");
-  await page.getByLabel("Mot de passe").fill("Password123!");
-  await page.getByRole("button", { name: "auth-login" }).click();
-  await page.waitForURL((url) => !url.pathname.startsWith("/auth/login"));
-}
-
-async function openFirstWork(page: import("@playwright/test").Page) {
-  await page.goto("/rankings");
-  await page.getByRole("row").nth(1).getByRole("link").first().click();
-  await page.getByRole("button", { name: /Comments/ }).click();
-}
 
 Given(
   "un utilisateur authentifié consulte une œuvre qu'il n'a pas déposée",
   async ({ page }) => {
-    await loginAsAlice(page);
+    await loginAs(page, "alice");
     await openFirstWork(page);
     await expect(
       page.getByRole("textbox", { name: "comment-text" }),
