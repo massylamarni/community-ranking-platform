@@ -1,10 +1,13 @@
 // Feature: Création d'un vote positif
-import { Given, When, Then } from '../fixtures';
+import { When, Then } from "../fixtures";
+import { expect } from "@playwright/test";
 
 When("l'utilisateur attribue un vote positif à l'œuvre", async ({ page }) => {
-  // TODO
+  await page.getByRole("button", { name: /Upvote/ }).click();
 });
 
 Then("le vote positif est enregistré", async ({ page }) => {
-  // TODO
+  await expect(page.getByRole("button", { name: /Upvote/ })).toHaveClass(
+    /bg-primary/,
+  );
 });

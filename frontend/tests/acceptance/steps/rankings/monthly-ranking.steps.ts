@@ -15,12 +15,9 @@ Given(
   },
 );
 
-Given(
-  "l'œuvre {string} a reçu un vote positif le mois précédent",
-  async () => {
-    // The vote is outside the current month's ranking period.
-  },
-);
+Given("l'œuvre {string} a reçu un vote positif le mois précédent", async () => {
+  // The vote is outside the current month's ranking period.
+});
 
 Then(
   "le vote de {string} datant du mois précédent n'est pas comptabilisé dans ce classement",

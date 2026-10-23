@@ -13,6 +13,7 @@ import type {
   ApiErrorBody,
   PublicProfileVotedWork,
   PublicProfileWork,
+  Work,
 } from "@/types/api";
 import { WorkItem } from "@/app/works/_components/workItem";
 import ProfileNotFoundGuard from "../_components/guards/profileNotFoundGuard";
@@ -49,6 +50,14 @@ export default function PublicProfilePage() {
   const { profile, error, getPublicProfile } = useProfile();
   const [notFoundId, setNotFoundId] = useState<number | null>(null);
 
+  // Vote results patched on top of the loaded profile.
+  // `source` ties them to the profile they were made against,
+  // so a fresh fetch invalidates them without an effect.
+  const [overrides, setOverrides] = useState<{
+    source: typeof profile;
+    byId: Record<number, Pick<Work, "score" | "totalVotes">>;
+  }>({ source: null, byId: {} });
+
   useEffect(() => {
     if (!validId) return;
     getPublicProfile(userId).catch((err) => {
@@ -74,9 +83,28 @@ export default function PublicProfilePage() {
     return <LoadingGuard />;
   }
 
-  const favorites = current.votedWorks.filter((w) => w.voteValue === 1);
+  const byId = overrides.source === profile ? overrides.byId : {};
+  const withVotes = <T extends { oeuvreId: number }>(w: T): T => ({
+    ...w,
+    ...byId[w.oeuvreId],
+  });
+
+  const publishedWorks = current.publishedWorks.map(withVotes);
+  const votedWorks = current.votedWorks.map(withVotes);
+  const favorites = votedWorks.filter((w) => w.voteValue === 1);
+
   const openWork = (w: { id: number } | null) => {
     if (w) router.push(`/works/${w.id}`);
+  };
+
+  const handleSetWork = (updated: Work) => {
+    setOverrides((prev) => ({
+      source: profile,
+      byId: {
+        ...(prev.source === profile ? prev.byId : {}),
+        [updated.id]: { score: updated.score, totalVotes: updated.totalVotes },
+      },
+    }));
   };
 
   return (
@@ -97,7 +125,7 @@ export default function PublicProfilePage() {
           <TabsList className="w-full justify-start overflow-x-auto">
             <TabsTrigger value="works">
               Œuvres
-              <Badge variant="secondary">{current.publishedWorks.length}</Badge>
+              <Badge variant="secondary">{publishedWorks.length}</Badge>
             </TabsTrigger>
             <TabsTrigger value="comments">
               Commentaires
@@ -110,16 +138,17 @@ export default function PublicProfilePage() {
           </TabsList>
 
           <TabsContent value="works" className="flex flex-col gap-4">
-            {current.publishedWorks.length === 0 ? (
+            {publishedWorks.length === 0 ? (
               <ProfileEmpty text="Aucune œuvre publiée pour le moment." />
             ) : (
-              current.publishedWorks.map((w) => (
+              publishedWorks.map((w) => (
                 <WorkItem
                   key={w.oeuvreId}
                   work={fromPublishedWork(w, {
                     id: current.userId,
                     username: current.username,
                   })}
+                  setWork={handleSetWork}
                   setSelectedWork={openWork}
                 />
               ))
@@ -144,6 +173,7 @@ export default function PublicProfilePage() {
                 <WorkItem
                   key={w.oeuvreId}
                   work={fromVotedWork(w)}
+                  setWork={handleSetWork}
                   setSelectedWork={openWork}
                 />
               ))
