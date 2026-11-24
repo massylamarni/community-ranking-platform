@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Filter, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import type { Category, RankingPeriod } from "@/types/api";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup } from "@/components/ui/field";
@@ -21,7 +21,6 @@ export interface RankingFilterBarProps {
   selectedPeriod: RankingPeriod;
   onCategoryChange: (category: string) => void;
   onPeriodChange: (period: RankingPeriod) => void;
-  onSubmit: (e?: React.FormEvent) => void;
   onReset: () => void;
   loading?: boolean;
 }
@@ -39,7 +38,6 @@ export default function RankingFilterBar({
   selectedPeriod,
   onCategoryChange,
   onPeriodChange,
-  onSubmit,
   onReset,
   loading = false,
 }: RankingFilterBarProps) {
@@ -52,10 +50,7 @@ export default function RankingFilterBar({
     selectedCategory !== "all" || selectedPeriod !== "all";
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="flex flex-wrap items-end gap-3 w-full"
-    >
+    <div className="flex flex-wrap items-end gap-3 w-full">
       <FieldGroup className="w-48 sm:w-56">
         <Field>
           <Label
@@ -126,30 +121,18 @@ export default function RankingFilterBar({
         </Field>
       </FieldGroup>
 
-      <div className="flex items-center gap-2">
+      {hasActiveFilters && (
         <Button
-          type="submit"
-          disabled={loading}
+          type="button"
+          variant="outline"
+          onClick={onReset}
           className="gap-1.5"
-          aria-label="Filtrer"
+          aria-label="Réinitialiser les filtres"
         >
-          <Filter className="size-4" />
-          Filtrer
+          <RotateCcw className="size-4" />
+          Réinitialiser
         </Button>
-
-        {hasActiveFilters && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onReset}
-            className="gap-1.5"
-            aria-label="Réinitialiser les filtres"
-          >
-            <RotateCcw className="size-4" />
-            Réinitialiser
-          </Button>
-        )}
-      </div>
-    </form>
+      )}
+    </div>
   );
 }

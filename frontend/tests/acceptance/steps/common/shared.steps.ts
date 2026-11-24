@@ -118,7 +118,7 @@ async function createWork(
 export async function openFirstWork(page: import("@playwright/test").Page) {
   await page.goto("/rankings");
   await page.getByRole("row").nth(1).getByRole("link").first().click();
-  await page.getByRole("button", { name: /Comments/ }).click();
+  await page.getByRole("button", { name: /Commentaires/ }).click();
 }
 
 async function findOtherUserWork(page: Page, ctx: ScenarioContext) {

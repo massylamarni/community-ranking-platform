@@ -55,7 +55,7 @@ const columns: ColumnDef<typeof features, RankingEntry>[] = [
   {
     accessorKey: "position",
     header: "Position",
-    meta: { className: "w-24 text-left px-6" } as CellMeta,
+    meta: { className: "w-24 text-left px-6 text-center" } as CellMeta,
     cell: ({ row }) => (
       <Badge variant="secondary">#{row.original.position}</Badge>
     ),
@@ -67,7 +67,12 @@ const columns: ColumnDef<typeof features, RankingEntry>[] = [
     cell: ({ row }) => {
       const entry = row.original;
       return (
-        <div className="flex items-center justify-between gap-3 min-w-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <RankingWorkThumbnail
+            imageUrl={entry.imageUrl}
+            title={entry.title}
+            workId={entry.id}
+          />
           <div className="min-w-0">
             <Button
               variant="link"
@@ -77,7 +82,6 @@ const columns: ColumnDef<typeof features, RankingEntry>[] = [
             />
             {entry.author && (
               <div className="text-xs text-muted-foreground mt-0.5">
-                {/* pour garantir l'espace */}
                 par{" "}
                 {entry.author.id ? (
                   <Link
@@ -92,11 +96,6 @@ const columns: ColumnDef<typeof features, RankingEntry>[] = [
               </div>
             )}
           </div>
-          <RankingWorkThumbnail
-            imageUrl={entry.imageUrl}
-            title={entry.title}
-            workId={entry.id}
-          />
         </div>
       );
     },
@@ -127,7 +126,7 @@ const columns: ColumnDef<typeof features, RankingEntry>[] = [
     accessorKey: "score",
     header: "Score",
     meta: {
-      className: "w-28 text-right px-6 tabular-nums font-bold",
+      className: "w-28 text-right px-6 tabular-nums font-bold text-center",
     } as CellMeta,
     cell: ({ row }) => (
       <span className="font-bold text-foreground">{row.original.score}</span>
@@ -226,22 +225,30 @@ function RankingsContent() {
     ? "Impossible de charger le classement. Veuillez vérifier votre connexion ou réessayer."
     : null;
 
-  function handleFilterSubmit(e?: React.FormEvent) {
-    if (e) e.preventDefault();
+  function applyFilters(category: string, period: RankingPeriod) {
     const params = new URLSearchParams();
 
-    if (selectedCategory && selectedCategory !== "all") {
-      params.set("category", selectedCategory);
+    if (category && category !== "all") {
+      params.set("category", category);
     }
 
-    if (selectedPeriod && selectedPeriod !== "all") {
-      params.set("period", selectedPeriod);
+    if (period && period !== "all") {
+      params.set("period", period);
     }
 
     const qs = params.toString();
     router.push(qs ? `/rankings?${qs}` : "/rankings");
   }
 
+  function handleCategoryChange(category: string) {
+    setSelectedCategory(category);
+    applyFilters(category, selectedPeriod);
+  }
+
+  function handlePeriodChange(period: RankingPeriod) {
+    setSelectedPeriod(period);
+    applyFilters(selectedCategory, period);
+  }
   function handleReset() {
     setSelectedCategory("all");
     setSelectedPeriod("all");
@@ -292,9 +299,8 @@ function RankingsContent() {
           categories={categories}
           selectedCategory={selectedCategory}
           selectedPeriod={selectedPeriod}
-          onCategoryChange={setSelectedCategory}
-          onPeriodChange={setSelectedPeriod}
-          onSubmit={handleFilterSubmit}
+          onCategoryChange={handleCategoryChange}
+          onPeriodChange={handlePeriodChange}
           onReset={handleReset}
           loading={loading}
         />

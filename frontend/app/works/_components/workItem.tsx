@@ -140,7 +140,7 @@ export function WorkItem<T extends WorkLike = Work>({
               aria-expanded={commentsOpen}
             >
               <MessageSquare />
-              Comments
+              Commentaires
             </Button>
           )}
         </div>

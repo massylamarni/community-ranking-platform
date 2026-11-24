@@ -46,7 +46,7 @@ async function seedCommentFromBob(page: Page): Promise<number> {
 }
 
 async function openOwnWorkComments(page: Page) {
-  if (!(await page.getByRole("button", { name: /Comments/ }).count())) {
+  if (!(await page.getByRole("button", { name: /Commentaires/ }).count())) {
     if (page.url() === "about:blank" || page.url().includes("/auth/login")) {
       await loginAs(page, "alice");
     }
@@ -54,7 +54,7 @@ async function openOwnWorkComments(page: Page) {
     await page.getByRole("button", { name: "Voir" }).first().click();
     await page.waitForURL(/\/works\/\d+/);
   }
-  const toggle = page.getByRole("button", { name: /Comments/ }).first();
+  const toggle = page.getByRole("button", { name: /Commentaires/ }).first();
   if ((await toggle.getAttribute("aria-expanded")) !== "true")
     await toggle.click();
 }

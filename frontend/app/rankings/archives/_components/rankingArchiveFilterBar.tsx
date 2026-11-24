@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Filter, RotateCcw } from "lucide-react";
+import { RotateCcw } from "lucide-react";
 import type { Category } from "@/types/api";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup } from "@/components/ui/field";
@@ -22,7 +22,6 @@ export interface RankingArchiveFilterBarProps {
   periods: string[];
   selectedPeriod: string;
   onPeriodChange: (period: string) => void;
-  onSubmit: (e?: React.FormEvent) => void;
   onReset: () => void;
   loading?: boolean;
 }
@@ -48,7 +47,6 @@ export default function RankingArchiveFilterBar({
   periods,
   selectedPeriod,
   onPeriodChange,
-  onSubmit,
   onReset,
   loading = false,
 }: RankingArchiveFilterBarProps) {
@@ -73,7 +71,7 @@ export default function RankingArchiveFilterBar({
     (Boolean(selectedPeriod) && selectedPeriod !== defaultPeriod);
 
   return (
-    <form onSubmit={onSubmit} className="flex flex-wrap items-end gap-3 w-full">
+    <div className="flex flex-wrap items-end gap-3 w-full">
       <FieldGroup className="w-80 sm:w-82.5">
         <Field>
           <Label
@@ -142,30 +140,18 @@ export default function RankingArchiveFilterBar({
         </Field>
       </FieldGroup>
 
-      <div className="flex items-center gap-2">
+      {hasActiveFilters && (
         <Button
-          type="submit"
-          disabled={loading}
+          type="button"
+          variant="outline"
+          onClick={onReset}
           className="gap-1.5"
-          aria-label="Filtrer"
+          aria-label="Réinitialiser les filtres"
         >
-          <Filter className="size-4" />
-          Filtrer
+          <RotateCcw className="size-4" />
+          Réinitialiser
         </Button>
-
-        {hasActiveFilters && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onReset}
-            className="gap-1.5"
-            aria-label="Réinitialiser les filtres"
-          >
-            <RotateCcw className="size-4" />
-            Réinitialiser
-          </Button>
-        )}
-      </div>
-    </form>
+      )}
+    </div>
   );
 }

@@ -3,11 +3,11 @@ import { Given, When, Then } from "../fixtures";
 import { expect } from "@playwright/test";
 
 async function openComments(page: import("@playwright/test").Page) {
-  const toggle = page.getByRole("button", { name: /Comments/ }).first();
+  const toggle = page.getByRole("button", { name: /Commentaires/ }).first();
   if (!(await toggle.count())) {
     await page.goto("/profiles/3");
   }
-  const target = page.getByRole("button", { name: /Comments/ }).first();
+  const target = page.getByRole("button", { name: /Commentaires/ }).first();
   if ((await target.getAttribute("aria-expanded")) !== "true")
     await target.click();
 }

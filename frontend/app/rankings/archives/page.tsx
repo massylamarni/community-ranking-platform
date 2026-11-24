@@ -167,26 +167,34 @@ function RankingArchivesContent() {
     listArchives,
   ]);
 
-  function handleFilterSubmit(e?: React.FormEvent) {
-    if (e) e.preventDefault();
+  function applyFilters(category: string, periodStart: string) {
     const params = new URLSearchParams();
 
-    const chosenPeriod = selectedPeriodStart || (periods[0] ?? "");
-    if (chosenPeriod && periods.length > 0 && chosenPeriod !== periods[0]) {
-      params.set("periodStart", chosenPeriod);
-    } else if (chosenPeriod && periods.length === 0) {
+    const chosenPeriod = periodStart || (periods[0] ?? "");
+    if (chosenPeriod && (periods.length === 0 || chosenPeriod !== periods[0])) {
       params.set("periodStart", chosenPeriod);
     }
 
-    if (selectedCategory && selectedCategory !== "all") {
-      params.set("category", selectedCategory);
+    if (category && category !== "all") {
+      params.set("category", category);
     }
 
     setPagination((prev) =>
       prev.pageIndex === 0 ? prev : { ...prev, pageIndex: 0 },
     );
+
     const qs = params.toString();
     router.push(qs ? `/rankings/archives?${qs}` : "/rankings/archives");
+  }
+
+  function handleCategoryChange(category: string) {
+    setSelectedCategory(category);
+    applyFilters(category, selectedPeriodStart);
+  }
+
+  function handlePeriodChange(period: string) {
+    setSelectedPeriodStart(period);
+    applyFilters(selectedCategory, period);
   }
 
   function handleReset() {
@@ -204,7 +212,7 @@ function RankingArchivesContent() {
       {
         accessorKey: "position",
         header: "Position",
-        meta: { className: "w-24 text-left px-6" } as CellMeta,
+        meta: { className: "w-24 text-center px-6" } as CellMeta,
         cell: ({ row }) => (
           <Badge variant="secondary">#{row.original.position}</Badge>
         ),
@@ -216,13 +224,20 @@ function RankingArchivesContent() {
         cell: ({ row }) => {
           const entry = row.original;
           return (
-            <div className="flex items-center justify-between gap-3 min-w-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <RankingWorkThumbnail
+                imageUrl={entry.imageUrl}
+                title={entry.title}
+                workId={entry.id}
+              />
               <div className="min-w-0">
                 <Button
                   variant="link"
                   className="h-auto p-0 font-medium text-foreground hover:underline text-sm justify-start text-left"
                   nativeButton={false}
-                  render={<Link href={`/works/${entry.id}`}>{entry.title}</Link>}
+                  render={
+                    <Link href={`/works/${entry.id}`}>{entry.title}</Link>
+                  }
                 />
                 {entry.author && (
                   <div className="text-xs text-muted-foreground mt-0.5">
@@ -240,11 +255,6 @@ function RankingArchivesContent() {
                   </div>
                 )}
               </div>
-              <RankingWorkThumbnail
-                imageUrl={entry.imageUrl}
-                title={entry.title}
-                workId={entry.id}
-              />
             </div>
           );
         },
@@ -273,9 +283,9 @@ function RankingArchivesContent() {
       },
       {
         accessorKey: "score",
-        header: "Score final",
+        header: "Score",
         meta: {
-          className: "w-28 text-right px-6 tabular-nums font-bold",
+          className: "w-28 text-center px-6 tabular-nums font-bold",
         } as CellMeta,
         cell: ({ row }) => (
           <span className="font-bold text-foreground">
@@ -329,7 +339,7 @@ function RankingArchivesContent() {
           )}
         </div>
         <CardDescription>
-          Consultez les résultats finaux des classements hebdomadaires clôturés.
+          Consultez les résultats finaux des classements hebdomadaires.
         </CardDescription>
       </CardHeader>
 
@@ -337,11 +347,10 @@ function RankingArchivesContent() {
         <RankingArchiveFilterBar
           categories={categories}
           selectedCategory={selectedCategory}
-          onCategoryChange={setSelectedCategory}
+          onCategoryChange={handleCategoryChange}
           periods={periods}
           selectedPeriod={selectedPeriodStart || (effectivePeriodStart ?? "")}
-          onPeriodChange={setSelectedPeriodStart}
-          onSubmit={handleFilterSubmit}
+          onPeriodChange={handlePeriodChange}
           onReset={handleReset}
           loading={loading}
         />

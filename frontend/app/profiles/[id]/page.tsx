@@ -120,7 +120,7 @@ export default function PublicProfilePage() {
         </div>
       </CardHeader>
 
-      <CardContent className="min-w-0 max-w-none flex flex-col gap-4">
+      <CardContent className="min-w-0 max-w-none flex flex-col gap-4 pb-4">
         <Tabs defaultValue="works">
           <TabsList className="w-full justify-start overflow-x-auto">
             <TabsTrigger value="works">

@@ -80,11 +80,6 @@ const data = {
         },
       ],
     },
-    {
-      title: "Notifications",
-      url: "/notifications",
-      icon: <Bell />,
-    },
   ],
 };
 
@@ -129,6 +124,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             ...data.navMain,
             ...(isAdmin(user) ? [navModeration] : []),
             navCategories,
+            {
+              title: "Notifications",
+              url: "/notifications",
+              icon: <Bell />,
+            },
           ]}
         />
       </SidebarContent>

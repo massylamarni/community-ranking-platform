@@ -4,11 +4,11 @@ import { Given, When, Then } from "../fixtures";
 import { expect } from "@playwright/test";
 
 async function openComments(page: import("@playwright/test").Page) {
-  if (!(await page.getByRole("button", { name: /Comments/ }).count())) {
+  if (!(await page.getByRole("button", { name: /Commentaires/ }).count())) {
     await page.goto("/rankings");
     await page.getByRole("row").nth(1).getByRole("link").first().click();
   }
-  const toggle = page.getByRole("button", { name: /Comments/ });
+  const toggle = page.getByRole("button", { name: /Commentaires/ });
   if ((await toggle.getAttribute("aria-expanded")) !== "true")
     await toggle.click();
 }

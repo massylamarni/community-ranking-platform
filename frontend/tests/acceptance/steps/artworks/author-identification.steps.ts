@@ -4,11 +4,11 @@ import { When, Then } from "../fixtures";
 import { expect } from "@playwright/test";
 
 When("l'œuvre est consultée", async ({ page }) => {
-  if (!(await page.getByRole("button", { name: /Comments/ }).count())) {
+  if (!(await page.getByRole("button", { name: /Commentaires/ }).count())) {
     await page.goto("/rankings");
     await page.getByRole("row").nth(1).getByRole("link").first().click();
   }
-  const comments = page.getByRole("button", { name: /Comments/ });
+  const comments = page.getByRole("button", { name: /Commentaires/ });
   if (
     !(await comments.getAttribute("aria-expanded")) ||
     (await comments.getAttribute("aria-expanded")) !== "true"
