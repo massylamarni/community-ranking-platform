@@ -1,0 +1,41 @@
+@startuml architecture
+left to right direction
+skinparam defaultTextAlignment center
+skinparam backgroundColor transparent
+<style>
+root {
+  BackgroundColor #1E1E1E
+  FontColor #White
+}
+arrow {
+  LineColor #White
+  FontColor #White
+}
+rectangle, component, database, storage {
+  BackgroundColor #282A2E
+  LineColor #White
+  FontColor #White
+}
+
+</style>
+rectangle "Docker Compose host" {
+  rectangle "frontend-net (bridge)" {
+    component "Frontend\nNext.js 16 / React 19\n:8182 -> 3000" as front
+    component "Backend\nJava Spring REST API\n:8181 -> 8080" as back
+    component "phpMyAdmin\n(profile: tools)\n:8180" as pma
+  }
+  rectangle "data-net (internal)" {
+    database "MySQL 8.4\n:3306" as db
+  }
+  rectangle "Volumes" {
+    storage "uploads_data" as uploads
+    storage "mysql_data" as dbdata
+  }
+}
+
+front --> back : /backend-api\n(proxy)
+back --> db : JDBC
+pma --> db : SQL
+back . uploads
+db . dbdata
+@enduml

@@ -1,93 +1,173 @@
-# TF26Numero1
+# Number1
 
+A community ranking app where people submit works, comment on them, and vote. The site automatically publishes a **top works per category** for the **week, month and year**.
 
+Built with a **Next.js** frontend and a **Spring Boot** REST backend, coordinated through an **OpenAPI** contract, and covered by unit and BDD acceptance tests on both sides.
+
+> Originally developed as a Master 2 ISL project (Université Marie et Louis Pasteur): one team wrote the specifications and Gherkin acceptance tests in Squash TM, another team (this repository) implemented them.
+
+## Features
+
+| Role                   | Capabilities                                                                                                                             |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| **Visitor**            | Browse works, categories and rankings, view user profiles, register / login in                                                           |
+| **Authenticated user** | Submit works, edit / delete their own works, comment and reply, edit or delete their own comments, vote on any work **except their own** |
+| **Administrator**      | Approve or reject submitted works, add or remove categories, delete comments                                                             |
+
+**Rankings:** a scheduler periodically computes and archives the most-voted works of each category for the current week, month and year.
+
+## Screenshots
+
+> The interface is in French and supports light and dark themes.
+
+|                Add new work                |                  User works                  |
+| :----------------------------------------: | :------------------------------------------: |
+| ![My works](docs/screenshots/new-work.png) | ![User works](docs/screenshots/my-works.png) |
+
+|                   Admin moderation                   |                    Rankings                     |
+| :--------------------------------------------------: | :---------------------------------------------: |
+| ![Admin moderation](docs/screenshots/moderation.png) | ![Global ranking](docs/screenshots/ranking.png) |
+
+|                               Category feed                               |                         Category feed light                          |
+| :-----------------------------------------------------------------------: | :------------------------------------------------------------------: |
+| ![Category feed with votes and comments](docs/screenshots/categories.png) | ![Category feed light themed](docs/screenshots/categories-light.png) |
+
+|                      Category feed Mobile version                       |                     Add new work Mobile version                      |
+| :---------------------------------------------------------------------: | :------------------------------------------------------------------: |
+| ![Category feed Mobile version](docs/screenshots/categories-mobile.png) | ![Add new work Mobile version](docs/screenshots/new-work-mobile.png) |
+
+## Tech stack
+
+**Backend**
+
+- Java 26, Spring Boot 4.1 (Web MVC, Data JPA, Security, Validation, Mail)
+- MySQL 8.4, schema managed by Flyway
+- Tests: JUnit, MockMvc, Mockito, Cucumber, H2
+
+**Frontend**
+
+- Next.js 16, React 19, TypeScript
+- Tailwind CSS 4, shadcn/ui, Base UI
+- Tests: Jest + React Testing Library, Playwright + playwright-bdd (Gherkin)
+
+**Infrastructure**
+
+- Docker & Docker Compose, GitLab CI/CD
+
+## Architecture
+
+![Deployment architecture](docs/images/architecture.svg)
+
+- The browser only talks to the **frontend**. Requests to `/backend-api/*` are proxied by Next.js to the backend.
+- The **database** sits on an internal-only Docker network (`data-net`) and is not reachable from outside.
+- Uploaded images and database files live in named Docker volumes.
+- Health checks are chained: backend waits for the database, frontend waits for the backend.
 
 ## Getting started
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+### Prerequisites
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
+- Docker and Docker Compose v2 (to run everything in containers)
+- For local development without Docker: Java 26, Maven 3.9+, Node.js 22, MySQL 8.4
 
-## Add your files
+### Run with Docker Compose
 
-* [Create](https://docs.gitlab.com/user/project/repository/web_editor/#create-a-file) or [upload](https://docs.gitlab.com/user/project/repository/web_editor/#upload-a-file) files
-* [Add files using the command line](https://docs.gitlab.com/topics/git/add_files/#add-files-to-a-git-repository) or push an existing Git repository with the following command:
+```bash
+git clone https://github.com/massylamarni/community-ranking-platform
+cd community-ranking-platform
+
+# Create the backend environment file
+cp backend/.env.example backend/.env
+
+cd infrastructure/docker && docker compose up -d --build
+```
+
+| Service     | URL                   |
+| ----------- | --------------------- |
+| Frontend    | http://localhost:8182 |
+| Backend API | http://localhost:8181 |
+| phpMyAdmin  | http://localhost:8180 |
+
+phpMyAdmin is behind the `tools` profile and bound to localhost only:
+
+````bash
+docker compose --profile tools up -d
+
+### Run locally for development
+
+**Backend**
+
+```bash
+cd backend
+# needs a MySQL database named numero_number_one, see Configuration
+./mvnw spring-boot:run
+````
+
+**Frontend**
+
+```bash
+cd frontend
+npm ci
+npm run dev        # http://localhost:3000
+```
+
+**For a hybrid run**
+
+```bash
+# Run with Docker Compose
+cd frontend
+BACKEND_URL=http://127.0.0.1:8181 INTERNAL_API_URL=http://127.0.0.1:8181 NEXT_PUBLIC_API_BASE_URL=/backend-api npm run dev -- --hostname 127.0.0.1 --port 3100
 
 ```
-cd existing_repo
-git remote add origin https://disc.univ-fcomte.fr/cr700-gitlab/group3/tf26numero1.git
-git branch -M main
-git push -uf origin main
+
+## Configuration
+
+### Docker Compose variables
+
+| Variable              | Default | Description                                                      |
+| --------------------- | ------- | ---------------------------------------------------------------- |
+| `MYSQL_ROOT_PASSWORD` | `root`  | MySQL root password. **Change it outside of local development.** |
+
+### Backend
+
+The backend reads `backend/.env` (loaded by Compose) and these variables set by the Compose file:
+
+| Variable                      | Description                                |
+| ----------------------------- | ------------------------------------------ |
+| `DB_URL`                      | JDBC URL of the MySQL database             |
+| `DB_USERNAME` / `DB_PASSWORD` | Database credentials                       |
+| `UPLOAD_DIR`                  | Directory where uploaded images are stored |
+
+Add any other secrets (e.g. SMTP settings for the mail starter) to `backend/.env`.
+
+### Frontend
+
+| Variable                           | Description                                                    |
+| ---------------------------------- | -------------------------------------------------------------- |
+| `NEXT_PUBLIC_API_BASE_URL`         | Base path used by the browser to call the API (`/backend-api`) |
+| `INTERNAL_API_URL` / `BACKEND_URL` | Backend URL used server-side by the Next.js proxy              |
+| `NEXT_PUBLIC_API_MOCKING`          | `enabled` to use MSW mocks, `disabled` to use the real API     |
+
+## Testing
+
+Acceptance scenarios are written in Gherkin and derived from the specification. The `.feature` files live in `tests/acceptance/` and are shared with the backend test classpath.
+
+```bash
+# Backend: unit + Cucumber acceptance tests
+cd backend && ./mvnw test
+
+# Frontend: unit tests
+cd frontend && npm run test:unit
+
+# Frontend: end-to-end acceptance tests (requires the stack to be running)
+cd frontend && npx playwright install chromium
+cd frontend && npm run test:e2e
 ```
 
-## Integrate with your tools
+## API documentation
 
-* [Set up project integrations](https://disc.univ-fcomte.fr/cr700-gitlab/group3/tf26numero1/-/settings/integrations)
+The REST API is described by an OpenAPI contract, See ![openapi.yml](openapi/openapi.yml).
 
-## Collaborate with your team
+## CI/CD
 
-* [Invite team members and collaborators](https://docs.gitlab.com/user/project/members/)
-* [Create a new merge request](https://docs.gitlab.com/user/project/merge_requests/creating_merge_requests/)
-* [Automatically close issues from merge requests](https://docs.gitlab.com/user/project/issues/managing_issues/#closing-issues-automatically)
-* [Enable merge request approvals](https://docs.gitlab.com/user/project/merge_requests/approvals/)
-* [Set auto-merge](https://docs.gitlab.com/user/project/merge_requests/auto_merge/)
-
-## Test and Deploy
-
-Use the built-in continuous integration in GitLab.
-
-* [Get started with GitLab CI/CD](https://docs.gitlab.com/ci/quick_start/)
-* [Analyze your code for known vulnerabilities with Static Application Security Testing (SAST)](https://docs.gitlab.com/user/application_security/sast/)
-* [Deploy to Kubernetes, Amazon EC2, or Amazon ECS using Auto Deploy](https://docs.gitlab.com/topics/autodevops/requirements/)
-* [Use pull-based deployments for improved Kubernetes management](https://docs.gitlab.com/user/clusters/agent/)
-* [Set up protected environments](https://docs.gitlab.com/ci/environments/protected_environments/)
-
-***
-
-# Editing this README
-
-When you're ready to make this README your own, just edit this file and use the handy template below (or feel free to structure it however you want - this is just a starting point!). Thanks to [makeareadme.com](https://www.makeareadme.com/) for this template.
-
-## Suggestions for a good README
-
-Every project is different, so consider which of these sections apply to yours. The sections used in the template are suggestions for most open source projects. Also keep in mind that while a README can be too long and detailed, too long is better than too short. If you think your README is too long, consider utilizing another form of documentation rather than cutting out information.
-
-## Name
-Choose a self-explaining name for your project.
-
-## Description
-Let people know what your project can do specifically. Provide context and add a link to any reference visitors might be unfamiliar with. A list of Features or a Background subsection can also be added here. If there are alternatives to your project, this is a good place to list differentiating factors.
-
-## Badges
-On some READMEs, you may see small images that convey metadata, such as whether or not all the tests are passing for the project. You can use Shields to add some to your README. Many services also have instructions for adding a badge.
-
-## Visuals
-Depending on what you are making, it can be a good idea to include screenshots or even a video (you'll frequently see GIFs rather than actual videos). Tools like ttygif can help, but check out Asciinema for a more sophisticated method.
-
-## Installation
-Within a particular ecosystem, there may be a common way of installing things, such as using Yarn, NuGet, or Homebrew. However, consider the possibility that whoever is reading your README is a novice and would like more guidance. Listing specific steps helps remove ambiguity and gets people to using your project as quickly as possible. If it only runs in a specific context like a particular programming language version or operating system or has dependencies that have to be installed manually, also add a Requirements subsection.
-
-## Usage
-Use examples liberally, and show the expected output if you can. It's helpful to have inline the smallest example of usage that you can demonstrate, while providing links to more sophisticated examples if they are too long to reasonably include in the README.
-
-## Support
-Tell people where they can go to for help. It can be any combination of an issue tracker, a chat room, an email address, etc.
-
-## Roadmap
-If you have ideas for releases in the future, it is a good idea to list them in the README.
-
-## Contributing
-State if you are open to contributions and what your requirements are for accepting them.
-
-For people who want to make changes to your project, it's helpful to have some documentation on how to get started. Perhaps there is a script that they should run or some environment variables that they need to set. Make these steps explicit. These instructions could also be useful to your future self.
-
-You can also document commands to lint the code or run tests. These steps help to ensure high code quality and reduce the likelihood that the changes inadvertently break something. Having instructions for running tests is especially helpful if it requires external setup, such as starting a Selenium server for testing in a browser.
-
-## Authors and acknowledgment
-Show your appreciation to those who have contributed to the project.
-
-## License
-For open source projects, say how it is licensed.
-
-## Project status
-If you have run out of energy or time for your project, put a note at the top of the README saying that development has slowed down or stopped completely. Someone may choose to fork your project or volunteer to step in as a maintainer or owner, allowing your project to keep going. You can also make an explicit request for maintainers.
+GitLab CI/CD runs the backend unit tests and acceptance tests on every push and merge request, and deploys over SSH when changes land on `main`.
